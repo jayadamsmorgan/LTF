@@ -99,6 +99,15 @@ if is_macos
 endif
 #----------------------------------------------------------------------
 
+#--- libssh2 ----------------------------------------------------
+libssh_dep = dependency(
+  'libssh2',
+  method : 'pkg-config',
+  required : true,
+  static : true
+)
+#----------------------------------------------------------------------
+
 main_source = 'src/main.c'
 sources = [
   version_h,
