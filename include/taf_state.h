@@ -45,6 +45,8 @@ typedef struct {
     da_t *teardown_outputs;
     da_t *teardown_errors;
 
+    da_t *keyword_statuses;
+
 } taf_state_test_t;
 
 typedef void (*test_run_cb)();
@@ -96,6 +98,8 @@ void taf_state_test_failed(taf_state_t *state, const char *file, int line,
                            const char *msg);
 
 void taf_state_test_passed(taf_state_t *state);
+
+void taf_state_test_set_keyword_statuses(taf_state_t *state, da_t *statuses);
 
 void taf_state_test_defer_queue_finished(taf_state_t *state);
 

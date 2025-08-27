@@ -3,7 +3,7 @@
 #include "cmd_parser.h"
 #include "headless.h"
 #include "internal_logging.h"
-#include "modules/hooks/taf-hooks.h"
+#include "keyword_status.h"
 #include "project_parser.h"
 #include "taf_hooks.h"
 #include "taf_secrets.h"
@@ -13,6 +13,7 @@
 #include "test_logs.h"
 #include "version.h"
 
+#include "modules/hooks/taf-hooks.h"
 #include "modules/http/taf-http.h"
 #include "modules/json/taf-json.h"
 #include "modules/proc/taf-proc.h"
@@ -21,6 +22,7 @@
 
 #include "util/files.h"
 #include "util/line_cache.h"
+#include "util/lua_hooks.h"
 #include "util/string.h"
 #include "util/time.h"
 
@@ -28,51 +30,38 @@
 #include <lua.h>
 #include <lualib.h>
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 static int g_first = 0;
 static int g_last = 0;
 
-static char *module_path = NULL;
-static char *test_dir_path = NULL;
-static char *test_common_dir_path = NULL;
-static char *lib_dir_path = NULL;
-static char *hooks_dir_path = NULL;
+static char *taf_lib_dir_path = NULL;
+static char *project_hooks_dir_path = NULL;
+static char *project_test_dir_path = NULL;
+static char *project_common_test_dir_path = NULL;
+static char *project_lib_dir_path = NULL;
 
 static bool test_marked_failed = false;
 static size_t current_test_index = 0;
 
 void taf_mark_test_failed() { test_marked_failed = true; }
 
-static void line_hook(lua_State *L, lua_Debug *ar) {
-    if (lua_getinfo(L, "Sl", ar) && ar->currentline > 0) {
+keyword_status_t *kw_root = NULL;
 
-        const char *src = ar->source;
-        if (src[0] == '@')
-            src++;
+static void line_hook(lua_State *, lua_Debug *ar, const char *src) {
 
-        if (string_has_prefix(src, module_path) ||
-            string_has_prefix(src, hooks_dir_path)) {
-            // Skip internal module lines and hook lines
-            return;
-        }
+    const char *text = get_line_text(src, ar->currentline);
 
-        const char *text = get_line_text(src, ar->currentline);
+    taf_tui_set_current_line(src, ar->currentline,
+                             text ? text : "(source unavailable)");
 
-        taf_tui_set_current_line(src, ar->currentline,
-                                 text ? text : "(source unavailable)");
-
-        if (string_has_prefix(src, test_dir_path) ||
-            string_has_prefix(src, test_common_dir_path)) {
-            int div = g_last - g_first;
-            double progress;
-            progress = div == 0 ? 0 : (double)(ar->currentline - g_first) / div;
-            taf_tui_set_test_progress(progress);
-        }
+    if (string_has_prefix(src, project_test_dir_path) ||
+        string_has_prefix(src, project_common_test_dir_path)) {
+        int div = g_last - g_first;
+        double progress;
+        progress = div == 0 ? 0 : (double)(ar->currentline - g_first) / div;
+        taf_tui_set_test_progress(progress);
     }
 }
 
@@ -211,7 +200,7 @@ static int run_all_tests(lua_State *L, taf_state_t *state) {
         char *trace = NULL;
 
         if (rc != LUA_OK) {
-            trace = strdup(lua_tostring(L, -1)); /* traceback string */
+            trace = strdup(lua_tostring(L, -1));
             LOG("Test '%s' traceback: %s", tc->name, trace);
 
             if (trace) {
@@ -224,7 +213,7 @@ static int run_all_tests(lua_State *L, taf_state_t *state) {
                     }
                 }
             }
-            lua_pop(L, 1); /* pop traceback */
+            lua_pop(L, 1);
         }
 
         LOG("Popping error handler...");
@@ -255,7 +244,7 @@ static int run_all_tests(lua_State *L, taf_state_t *state) {
     return passed == amount ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-static char *get_lib_dir() {
+static char *get_taf_lib_dir() {
     LOG("Getting TAF library directory location...");
 
     // Check argument first
@@ -288,7 +277,7 @@ static char *get_lib_dir() {
     if (!home_path || !*home_path) {
         fprintf(stderr, "Unable to load taf lua library: 'HOME' "
                         "environment variable is not set.\n"
-                        "Use --libpath path_to_taf_lib_dir or set "
+                        "Use --taf-lib-path path_to_taf_lib_dir or set "
                         "'TAF_LIB_PATH' environment variable.\n");
         LOG("Unable to find TAF library directory: HOME is not set.");
         internal_logging_deinit();
@@ -305,24 +294,26 @@ static char *get_lib_dir() {
 static void inject_modules_dir(lua_State *L) {
     LOG("Injecting TAF library directory...");
 
-    module_path = get_lib_dir();
+    taf_lib_dir_path = get_taf_lib_dir();
 
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "path"); /* pkg.path string */
     const char *old_path = lua_tostring(L, -1);
-    if (directory_exists(test_common_dir_path)) {
-        lua_pushfstring(L,
-                        "%s;%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
-                        "?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua",
-                        old_path, module_path, module_path, lib_dir_path,
-                        lib_dir_path, test_dir_path, test_dir_path,
-                        test_common_dir_path, test_common_dir_path);
+    if (directory_exists(project_common_test_dir_path)) {
+        lua_pushfstring(
+            L,
+            "%s;%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
+            "?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua",
+            old_path, taf_lib_dir_path, taf_lib_dir_path, project_lib_dir_path,
+            project_lib_dir_path, project_test_dir_path, project_test_dir_path,
+            project_common_test_dir_path, project_common_test_dir_path);
     } else {
         lua_pushfstring(L,
                         "%s;%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
                         "?.lua;%s/?/init.lua",
-                        old_path, module_path, module_path, lib_dir_path,
-                        lib_dir_path, test_dir_path, test_dir_path);
+                        old_path, taf_lib_dir_path, taf_lib_dir_path,
+                        project_lib_dir_path, project_lib_dir_path,
+                        project_test_dir_path, project_test_dir_path);
     }
     lua_setfield(L, -3, "path"); /* package.path = … */
     lua_pop(L, 2);               /* pop path + package */
@@ -463,13 +454,14 @@ int taf_test() {
     LOG("Opening Lua libs...");
     luaL_openlibs(L);
 
-    asprintf(&lib_dir_path, "%s/lib", proj->project_path);
+    asprintf(&project_lib_dir_path, "%s/lib", proj->project_path);
     if (proj->multitarget) {
-        asprintf(&test_common_dir_path, "%s/tests/common", proj->project_path);
-        asprintf(&test_dir_path, "%s/tests/%s", proj->project_path,
+        asprintf(&project_common_test_dir_path, "%s/tests/common",
+                 proj->project_path);
+        asprintf(&project_test_dir_path, "%s/tests/%s", proj->project_path,
                  opts->target);
     } else {
-        asprintf(&test_dir_path, "%s/tests", proj->project_path);
+        asprintf(&project_test_dir_path, "%s/tests", proj->project_path);
     }
 
     register_test_api(L);
@@ -477,18 +469,19 @@ int taf_test() {
     int exitcode = EXIT_FAILURE;
 
     taf_state_t *state = NULL;
+    da_t *lua_hooks_whitelist = NULL;
 
-    LOG("Project lib directory path: %s", lib_dir_path);
-    if (load_lua_dir(lib_dir_path, L) == -2) {
+    LOG("Project lib directory path: %s", project_lib_dir_path);
+    if (load_lua_dir(project_lib_dir_path, L) == -2) {
         goto deinit;
     }
 
     if (proj->multitarget) {
-        if (load_lua_dir(test_common_dir_path, L) == -2) {
+        if (load_lua_dir(project_common_test_dir_path, L) == -2) {
             goto deinit;
         }
     }
-    if (load_lua_dir(test_dir_path, L) == -2) {
+    if (load_lua_dir(project_test_dir_path, L) == -2) {
         goto deinit;
     }
 
@@ -517,8 +510,8 @@ int taf_test() {
     }
 
     taf_hooks_init(state);
-    asprintf(&hooks_dir_path, "%s/hooks", proj->project_path);
-    if (load_lua_dir(hooks_dir_path, L) == -2) {
+    asprintf(&project_hooks_dir_path, "%s/hooks", proj->project_path);
+    if (load_lua_dir(project_hooks_dir_path, L) == -2) {
         goto deinit;
     }
 
@@ -530,10 +523,17 @@ int taf_test() {
         taf_headless_init(state);
     }
 
+    lua_hooks_whitelist = da_init(2, sizeof(char *));
+    da_append(lua_hooks_whitelist, &project_test_dir_path);
+    da_append(lua_hooks_whitelist, &project_lib_dir_path);
+    lua_hooks_init(L, lua_hooks_whitelist);
+
     if (!opts->headless) {
         LOG("Enabling line hook...");
-        lua_sethook(L, line_hook, LUA_MASKLINE, 0);
+        lua_hooks_add(LUA_HOOKLINE, line_hook);
     }
+
+    keyword_status_init(state);
 
     exitcode = run_all_tests(L, state);
 
@@ -547,18 +547,20 @@ deinit:
 
     test_case_free_all(L);
     taf_hooks_deinit(L);
+    lua_hooks_deinit();
     lua_close(L);
     project_parser_free();
     internal_logging_deinit();
     taf_free_vars();
     taf_free_secrets();
     taf_state_free(state);
-    free(hooks_dir_path);
-    free(module_path);
-    free(test_common_dir_path);
-    free(test_dir_path);
-    free(lib_dir_path);
     cmd_parser_free_test_options();
+    da_free(lua_hooks_whitelist);
+    free(project_hooks_dir_path);
+    free(taf_lib_dir_path);
+    free(project_common_test_dir_path);
+    free(project_test_dir_path);
+    free(project_lib_dir_path);
 
     return exitcode;
 }
