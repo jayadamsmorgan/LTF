@@ -5,7 +5,9 @@
 #include <stddef.h>
 
 typedef struct pico_t pico_t;
-
+typedef struct {
+    int rows, cols;
+} term_size_t;
 /* Render callback: draw inside the reserved bottom UI region. */
 typedef void (*pico_render_fn)(pico_t *ui, void *userdata);
 
@@ -109,4 +111,5 @@ void pico_reset_colors(pico_t *ui); /* resets attributes (SGR 0) */
 void pico_underline_on(pico_t *ui);
 void pico_underline_off(pico_t *ui);
 
+term_size_t get_term_size(void);
 #endif // PICOTUI_H

@@ -330,7 +330,14 @@ static void render_result(pico_t *ui, void *ud) {
 void taf_tui_test_started(taf_state_test_t *test) {
 
     render_ui(ui, NULL);
-    // taf_tui_update();
+
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+
+    // Test Finished message
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_print(ui, "[TAF]");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_printf(ui, " %s Started\n", test->name);
 }
 
 void taf_tui_defer_queue_started(taf_state_test_t *test) {}
@@ -341,14 +348,82 @@ void taf_tui_defer_failed(taf_state_test_t *test,
                           taf_state_test_output_t *output) {}
 
 void taf_tui_test_finished(taf_state_test_t *test) {
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
 
-    // taf_tui_update();
+    // Test Finished message
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_print(ui, "[TAF]");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_printf(ui, " %s Finished\n", test->name);
+
+    //  "-" Gap  between logs
+    term_size_t terminal_size = get_term_size();
+    for (int i = 0; i < terminal_size.cols - 1; ++i) {
+        pico_print(ui, "-");
+    }
+    pico_println(ui, "-");
 }
 void taf_tui_tests_set_finished() { render_result(ui, NULL); }
 
-void taf_tui_hook_started(taf_hook_fn fn) {}
+void taf_tui_hook_started(taf_hook_fn fn) {
 
-void taf_tui_hook_finished(taf_hook_fn fn) {}
+    render_ui(ui, NULL);
+
+    char *str = "";
+    switch (fn) {
+    case 0:
+        str = "TEST_RUN_STARTED_HOOK";
+        break;
+    case 1:
+        str = "TEST_STARTED_HOOK";
+        break;
+    case 2:
+        str = "TEST_FINISHED_HOOK";
+        break;
+    case 3:
+        str = "TEST_RUN_FINISHED_HOOK";
+        break;
+    }
+    // Test Finished message
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_print(ui, "[TAF]");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_printf(ui, " Hook Started: %s\n", str);
+}
+
+void taf_tui_hook_finished(taf_hook_fn fn) {
+    // Update UI
+    render_ui(ui, NULL);
+
+    // Update log
+    char *str = "";
+    switch (fn) {
+    case 0:
+        str = "TEST_RUN_STARTED_HOOK";
+        break;
+    case 1:
+        str = "TEST_STARTED_HOOK";
+        break;
+    case 2:
+        str = "TEST_FINISHED_HOOK";
+        break;
+    case 3:
+        str = "TEST_RUN_FINISHED_HOOK";
+        break;
+    }
+    // Test Finished message
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_print(ui, "[TAF]");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_printf(ui, " Hook Finished: %s\n", str);
+
+    //  "-" Gap  between logs
+    term_size_t terminal_size = get_term_size();
+    for (int i = 0; i < terminal_size.cols - 1; ++i) {
+        pico_print(ui, "-");
+    }
+    pico_println(ui, "-");
+}
 
 void taf_tui_hook_failed(taf_hook_fn fn, const char *msg) {}
 

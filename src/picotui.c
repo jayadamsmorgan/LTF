@@ -11,10 +11,6 @@
 #include <unibilium.h>
 #include <unistd.h>
 
-typedef struct {
-    int rows, cols;
-} term_size_t;
-
 struct pico_t {
     int ui_rows;
     term_size_t sz;
@@ -107,7 +103,7 @@ static void write_vprintf(const char *prefix, const char *fmt, va_list ap) {
 }
 
 /* ---------- size / signals ---------- */
-static term_size_t get_term_size(void) {
+term_size_t get_term_size(void) {
     struct winsize ws;
     term_size_t r = {.rows = 24, .cols = 80};
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_row && ws.ws_col) {
