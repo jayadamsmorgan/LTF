@@ -24,7 +24,7 @@ typedef enum {
     RUNNING = 2U,
 } ui_test_progress_state;
 
-// I have no idea what this is...
+//  Helping struct for test representstion in UI
 typedef struct {
 
     taf_log_level log_level;
@@ -50,7 +50,6 @@ static int log_level_to_palindex_map[] = {
 };
 
 void taf_tui_set_test_progress(double progress) {
-    //
     ui_state.current_test_progress = progress;
 }
 
@@ -331,7 +330,13 @@ void taf_tui_test_started(taf_state_test_t *test) {
 
     render_ui(ui, NULL);
 
+    //  "-" Gap  between logs
     pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    term_size_t terminal_size = get_term_size();
+    for (int i = 0; i < terminal_size.cols - 1; ++i) {
+        pico_print(ui, "_");
+    }
+    pico_println(ui, "_");
 
     // Test Finished message
     pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
@@ -340,28 +345,32 @@ void taf_tui_test_started(taf_state_test_t *test) {
     pico_printf(ui, " %s Started\n", test->name);
 }
 
-void taf_tui_defer_queue_started(taf_state_test_t *test) {}
+void taf_tui_defer_queue_started(taf_state_test_t *test) {
 
-void taf_tui_defer_queue_finished(taf_state_test_t *test) {}
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_print(ui, "[TAF]");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_printf(ui, " Started Defer For %s \n", test->name);
+}
+
+void taf_tui_defer_queue_finished(taf_state_test_t *test) {
+
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_print(ui, "[TAF]");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_printf(ui, " Finished Defer For %s \n", test->name);
+}
 
 void taf_tui_defer_failed(taf_state_test_t *test,
                           taf_state_test_output_t *output) {}
 
 void taf_tui_test_finished(taf_state_test_t *test) {
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
 
     // Test Finished message
     pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
     pico_print(ui, "[TAF]");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
     pico_printf(ui, " %s Finished\n", test->name);
-
-    //  "-" Gap  between logs
-    term_size_t terminal_size = get_term_size();
-    for (int i = 0; i < terminal_size.cols - 1; ++i) {
-        pico_print(ui, "-");
-    }
-    pico_println(ui, "-");
 }
 void taf_tui_tests_set_finished() { render_result(ui, NULL); }
 
@@ -384,7 +393,7 @@ void taf_tui_hook_started(taf_hook_fn fn) {
         str = "TEST_RUN_FINISHED_HOOK";
         break;
     }
-    // Test Finished message
+    // Hook Started message
     pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
     pico_print(ui, "[TAF]");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
@@ -416,13 +425,6 @@ void taf_tui_hook_finished(taf_hook_fn fn) {
     pico_print(ui, "[TAF]");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
     pico_printf(ui, " Hook Finished: %s\n", str);
-
-    //  "-" Gap  between logs
-    term_size_t terminal_size = get_term_size();
-    for (int i = 0; i < terminal_size.cols - 1; ++i) {
-        pico_print(ui, "-");
-    }
-    pico_println(ui, "-");
 }
 
 void taf_tui_hook_failed(taf_hook_fn fn, const char *msg) {}
@@ -500,5 +502,4 @@ void taf_tui_set_current_line(const char *file, int line,
     ui_state.current_line = line;
     ui_state.current_line_str = string_strip(line_str);
     render_progress(ui, NULL);
-    // taf_tui_update();
 }
