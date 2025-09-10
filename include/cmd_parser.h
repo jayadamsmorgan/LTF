@@ -52,6 +52,7 @@ typedef struct {
     char *arg;
 
     bool include_outputs;
+    bool keyword_tree;
 
     bool internal_logging;
 } cmd_logs_info_options;

@@ -1,8 +1,8 @@
 #include "util/da.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 
 struct da_t {
     void *data;
@@ -93,9 +93,31 @@ const void *da_cget(const da_t *da, size_t index) {
     return (const char *)da->data + index * da->elem_size;
 }
 
+bool da_set(da_t *da, size_t index, const void *elem) {
+    if (!da || !elem)
+        return false;
+    if (index >= da->size)
+        return false;
+
+    memcpy((char *)da->data + index * da->elem_size, elem, da->elem_size);
+    return true;
+}
+
 size_t da_size(const da_t *da) {
     //
     return da ? da->size : 0;
+}
+
+bool da_resize(da_t *da, size_t new_size) {
+    if (!da)
+        return false;
+    if (new_size <= da->size)
+        return false;
+
+    da_reserve(da, new_size);
+    da->size = new_size;
+
+    return true;
 }
 
 size_t da_capacity(const da_t *da) {
