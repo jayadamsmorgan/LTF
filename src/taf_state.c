@@ -1,6 +1,7 @@
 #include "taf_state.h"
 
 #include "cmd_parser.h"
+#include "keyword_status.h"
 #include "project_parser.h"
 #include "taf_test.h"
 #include "taf_vars.h"
@@ -117,6 +118,19 @@ static da_t *json_object_to_vars(json_object *v) {
     return out;
 }
 
+static json_object *taf_state_vars_to_json(da_t *vars) {
+    json_object *o = json_object_new_object();
+
+    size_t vars_size = da_size(vars);
+    for (size_t i = 0; i < vars_size; ++i) {
+        taf_var_entry_t *var = da_get(vars, i);
+        json_object_object_add(o, var->name,
+                               json_object_new_string(var->final_value));
+    }
+
+    return o;
+}
+
 static json_object *da_outputs_to_json_array(const da_t *arr) {
     json_object *a = json_object_new_array();
     size_t n = da_size((da_t *)arr);
@@ -145,6 +159,68 @@ static da_t *json_array_to_da_outputs(json_object *a) {
     return out;
 }
 
+static json_object *da_keywords_to_json_array(const da_t *arr);
+
+static da_t *json_array_to_da_keywords(json_object *a);
+
+static json_object *
+taf_state_test_keyword_to_json(const keyword_status_t *keyword) {
+    json_object *o = json_object_new_object();
+    add_string_if(o, "name", keyword->name);
+    add_string_if(o, "started", keyword->started);
+    add_string_if(o, "finished", keyword->finished);
+    add_string_if(o, "file", keyword->file);
+    json_object_object_add(o, "line", json_object_new_int(keyword->line));
+    json_object_object_add(o, "children",
+                           da_keywords_to_json_array(keyword->children));
+    return o;
+}
+
+static void taf_state_test_keyword_from_json(json_object *jk,
+                                             keyword_status_t *out) {
+    memset(out, 0, sizeof *out);
+    JGET_STR_DUP(jk, "name", out->name);
+    JGET_STR_DUP(jk, "started", out->started);
+    JGET_STR_DUP(jk, "finished", out->finished);
+    JGET_STR_DUP(jk, "file", out->file);
+
+    JGET_INT(jk, "line", out->line);
+
+    json_object *tmp;
+
+    if (json_object_object_get_ex(jk, "children", &tmp))
+        out->children = json_array_to_da_keywords(tmp);
+}
+
+static json_object *da_keywords_to_json_array(const da_t *arr) {
+    json_object *a = json_object_new_array();
+    size_t n = da_size((da_t *)arr);
+    for (size_t i = 0; i < n; ++i) {
+        const keyword_status_t *s =
+            (const keyword_status_t *)da_get((da_t *)arr, i);
+        json_object_array_add(a, taf_state_test_keyword_to_json(s));
+    }
+    return a;
+}
+
+static da_t *json_array_to_da_keywords(json_object *a) {
+    if (!a || !json_object_is_type(a, json_type_array))
+        return NULL;
+    size_t n = (size_t)json_object_array_length(a);
+    da_t *out = da_init(n, sizeof(keyword_status_t));
+    for (size_t i = 0; i < n; ++i) {
+        json_object *jk = json_object_array_get_idx(a, (int)i);
+        keyword_status_t item;
+        taf_state_test_keyword_from_json(jk, &item);
+        if (!da_append(out, &item)) {
+            da_free(out);
+            return NULL;
+        }
+    }
+
+    return out;
+}
+
 static json_object *taf_state_test_to_json(const taf_state_test_t *t) {
     json_object *o = json_object_new_object();
 
@@ -155,46 +231,16 @@ static json_object *taf_state_test_to_json(const taf_state_test_t *t) {
     add_string_if(o, "teardown_start", t->teardown_start);
     add_string_if(o, "status", t->status_str);
 
-    /* tags */
     json_object_object_add(o, "tags", da_strings_to_json_array(t->tags));
-
-    /* failure_reasons / output / teardown_output / teardown_errors */
-    if (t->failure_reasons)
-        json_object_object_add(o, "failure_reasons",
-                               da_outputs_to_json_array(t->failure_reasons));
-    else
-        json_object_object_add(o, "failure_reasons", json_object_new_array());
-
-    if (t->outputs)
-        json_object_object_add(o, "output",
-                               da_outputs_to_json_array(t->outputs));
-    else
-        json_object_object_add(o, "output", json_object_new_array());
-
-    if (t->teardown_outputs)
-        json_object_object_add(o, "teardown_output",
-                               da_outputs_to_json_array(t->teardown_outputs));
-    else
-        json_object_object_add(o, "teardown_output", json_object_new_array());
-
-    if (t->teardown_errors)
-        json_object_object_add(o, "teardown_errors",
-                               da_outputs_to_json_array(t->teardown_errors));
-    else
-        json_object_object_add(o, "teardown_errors", json_object_new_array());
-
-    return o;
-}
-
-static json_object *taf_state_vars_to_json(da_t *vars) {
-    json_object *o = json_object_new_object();
-
-    size_t vars_size = da_size(vars);
-    for (size_t i = 0; i < vars_size; ++i) {
-        taf_var_entry_t *var = da_get(vars, i);
-        json_object_object_add(o, var->name,
-                               json_object_new_string(var->final_value));
-    }
+    json_object_object_add(o, "failure_reasons",
+                           da_outputs_to_json_array(t->failure_reasons));
+    json_object_object_add(o, "output", da_outputs_to_json_array(t->outputs));
+    json_object_object_add(o, "teardown_output",
+                           da_outputs_to_json_array(t->teardown_outputs));
+    json_object_object_add(o, "teardown_errors",
+                           da_outputs_to_json_array(t->teardown_errors));
+    json_object_object_add(o, "keywords",
+                           da_keywords_to_json_array(t->keyword_statuses));
 
     return o;
 }
@@ -226,6 +272,9 @@ static void taf_state_test_from_json(json_object *jt, da_t *tests) {
 
     if (json_object_object_get_ex(jt, "teardown_errors", &tmp))
         t.teardown_errors = json_array_to_da_outputs(tmp);
+
+    if (json_object_object_get_ex(jt, "keywords", &tmp))
+        t.keyword_statuses = json_array_to_da_keywords(tmp);
 
     da_append(tests, &t);
 }
@@ -404,6 +453,11 @@ void taf_state_test_log(taf_state_t *state, taf_log_level level,
             (*cb)(test, &o);
         }
     }
+}
+
+void taf_state_test_set_keyword_statuses(taf_state_t *state, da_t *statuses) {
+    taf_state_test_t *test = taf_state_get_current_test(state);
+    test->keyword_statuses = statuses;
 }
 
 void taf_state_test_defer_queue_started(taf_state_t *state) {
@@ -724,6 +778,19 @@ static void da_free_outputs(da_t *arr) {
     da_free(arr);
 }
 
+static void free_keyword_status(keyword_status_t *status) {
+    size_t children_count = da_size(status->children);
+    for (size_t i = 0; i < children_count; ++i) {
+        keyword_status_t *child = da_get(status->children, i);
+        free_keyword_status(child);
+    }
+    da_free(status->children);
+    free(status->name);
+    free(status->started);
+    free(status->finished);
+    free(status->file);
+}
+
 static void taf_state_test_free(taf_state_test_t *t) {
     if (!t)
         return;
@@ -734,6 +801,12 @@ static void taf_state_test_free(taf_state_test_t *t) {
     free(t->finished);
     free(t->teardown_start);
     free(t->status_str);
+
+    size_t keyword_statuses_count = da_size(t->keyword_statuses);
+    for (size_t i = 0; i < keyword_statuses_count; ++i) {
+        keyword_status_t *status = da_get(t->keyword_statuses, i);
+        free_keyword_status(status);
+    }
 
     da_free_strings(t->tags);
     da_free_outputs(t->failure_reasons);

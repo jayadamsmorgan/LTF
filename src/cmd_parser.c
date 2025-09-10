@@ -76,6 +76,7 @@ static void print_logs_info_help(FILE *file) {
                   "Options:\n"
                   "  -o, --outputs            Include outputs\n"
                   "  -i, --internal-log       Dump internal logging file\n"
+                  "  -k, --keyword-tree       Draw tests keyword trees\n"
                   "  -h, --help               Display help\n");
 }
 
@@ -403,8 +404,13 @@ static void set_logs_info_outputs(const char *) {
     logs_info_opts.include_outputs = true;
 }
 
+static void set_logs_info_keyword_tree(const char *) {
+    logs_info_opts.keyword_tree = true;
+}
+
 static cmd_option all_logs_info_options[] = {
     {"--internal-log", "-i", false, set_internal_logging},
+    {"--keyword-tree", "-k", false, set_logs_info_keyword_tree},
     {"--outputs", "-o", false, set_logs_info_outputs},
     {"--help", "-h", false, get_logs_info_help},
     {NULL, NULL, false, NULL},
@@ -426,6 +432,7 @@ static cmd_category parse_logs_options(int argc, char **argv) {
         logs_info_opts.arg = argv[3];
         logs_info_opts.internal_logging = false;
         logs_info_opts.include_outputs = false;
+        logs_info_opts.keyword_tree = false;
         parse_additional_options(all_logs_info_options, 3, argc, argv);
         return CMD_LOGS_INFO;
     } else if (STR_EQ(argv[2], "help") || STR_EQ(argv[2], "-h") ||

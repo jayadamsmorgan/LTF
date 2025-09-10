@@ -1,9 +1,33 @@
 local taf = require("taf")
 local json = taf.json
 
+local keyword3 = function()
+end
+
+local keyword2 = function()
+    keyword3()
+    keyword3()
+end
+
+local keyword1 = function()
+    keyword2()
+    keyword2()
+    keyword3()
+    keyword3()
+end
+
+local keyword_fail = function()
+    taf.log_critical("WOW")
+end
+
 taf.test({
 	name = "json serialization",
 	body = function()
+
+        keyword1()
+        keyword1()
+        keyword_fail()
+
 		local test_obj = {
 			testint = 1,
 			teststr = "test",
