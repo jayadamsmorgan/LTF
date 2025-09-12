@@ -380,14 +380,22 @@ void taf_tui_test_finished(taf_state_test_t *test) {
     size_t errors_count = da_size(test->failure_reasons);
 
     // Check if there any failed reasons
-    if (errors_count) {
+    if (errors_count > 1) {
         pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
         pico_print(ui, " Failure Reasons: \n");
         for (size_t i = 0; i < errors_count; ++i) {
             taf_state_test_output_t *error = da_get(test->failure_reasons, i);
+            pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+            pico_printf(ui, " [%d] ", i + 1);
             pico_set_colors(ui, PICO_COLOR_BRIGHT_RED, -1);
             pico_print_block(ui, error->msg);
         }
+    } else if (errors_count == 1) {
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+        pico_print(ui, " Failure Reason: \n");
+        taf_state_test_output_t *error = da_get(test->failure_reasons, 0);
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_RED, -1);
+        pico_print_block(ui, error->msg);
     } else {
         pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
         pico_printf(ui, " %s Finished\n", test->name);
