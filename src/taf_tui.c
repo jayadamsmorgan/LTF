@@ -350,7 +350,7 @@ void taf_tui_defer_queue_started(taf_state_test_t *test) {
     pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
     pico_print(ui, "[TAF]");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    pico_printf(ui, " Started Defer For %s \n", test->name);
+    pico_printf(ui, " Defers Started For %s \n", test->name);
 }
 
 void taf_tui_defer_queue_finished(taf_state_test_t *test) {
@@ -358,20 +358,42 @@ void taf_tui_defer_queue_finished(taf_state_test_t *test) {
     pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
     pico_print(ui, "[TAF]");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    pico_printf(ui, " Finished Defer For %s \n", test->name);
+    pico_printf(ui, " Defers Finished For %s \n", test->name);
 }
 
 void taf_tui_defer_failed(taf_state_test_t *test,
-                          taf_state_test_output_t *output) {}
+                          taf_state_test_output_t *output) {
 
-void taf_tui_test_finished(taf_state_test_t *test) {
-
-    // Test Finished message
     pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
     pico_print(ui, "[TAF]");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    pico_printf(ui, " %s Finished\n", test->name);
+    pico_print(ui, " Defer failed with message: \n");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_RED, -1);
+    pico_print_block(ui, output->msg);
 }
+
+void taf_tui_test_finished(taf_state_test_t *test) {
+
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_print(ui, "[TAF]");
+
+    size_t errors_count = da_size(test->failure_reasons);
+
+    // Check if there any failed reasons
+    if (errors_count) {
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+        pico_print(ui, " Failure Reasons: \n");
+        for (size_t i = 0; i < errors_count; ++i) {
+            taf_state_test_output_t *error = da_get(test->failure_reasons, i);
+            pico_set_colors(ui, PICO_COLOR_BRIGHT_RED, -1);
+            pico_print_block(ui, error->msg);
+        }
+    } else {
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+        pico_printf(ui, " %s Finished\n", test->name);
+    }
+}
+
 void taf_tui_tests_set_finished() { render_result(ui, NULL); }
 
 void taf_tui_hook_started(taf_hook_fn fn) {
@@ -381,23 +403,23 @@ void taf_tui_hook_started(taf_hook_fn fn) {
     char *str = "";
     switch (fn) {
     case 0:
-        str = "TEST_RUN_STARTED_HOOK";
+        str = "Test Run Started";
         break;
     case 1:
-        str = "TEST_STARTED_HOOK";
+        str = "Test Started";
         break;
     case 2:
-        str = "TEST_FINISHED_HOOK";
+        str = "Test Finished";
         break;
     case 3:
-        str = "TEST_RUN_FINISHED_HOOK";
+        str = "Test Run Finished";
         break;
     }
     // Hook Started message
     pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
     pico_print(ui, "[TAF]");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    pico_printf(ui, " Hook Started: %s\n", str);
+    pico_printf(ui, " Hooks Started: %s\n", str);
 }
 
 void taf_tui_hook_finished(taf_hook_fn fn) {
@@ -408,23 +430,23 @@ void taf_tui_hook_finished(taf_hook_fn fn) {
     char *str = "";
     switch (fn) {
     case 0:
-        str = "TEST_RUN_STARTED_HOOK";
+        str = "Test Run Started";
         break;
     case 1:
-        str = "TEST_STARTED_HOOK";
+        str = "Test Started";
         break;
     case 2:
-        str = "TEST_FINISHED_HOOK";
+        str = "Test Finished";
         break;
     case 3:
-        str = "TEST_RUN_FINISHED_HOOK";
+        str = "Test Run Finished";
         break;
     }
     // Test Finished message
     pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
     pico_print(ui, "[TAF]");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    pico_printf(ui, " Hook Finished: %s\n", str);
+    pico_printf(ui, " Hooks Finished: %s\n", str);
 }
 
 void taf_tui_hook_failed(taf_hook_fn fn, const char *msg) {}
