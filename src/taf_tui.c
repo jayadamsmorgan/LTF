@@ -210,6 +210,7 @@ static void taf_tui_project_header_render(pico_t *ui) {
     pico_set_colors(ui, log_level_to_palindex_map[ui_state.log_level], -1);
     pico_ui_printf_yx(ui, 7, 17, "%s",
                       taf_log_level_to_str(ui_state.log_level));
+    pico_reset_colors(ui);
 }
 
 static void taf_tui_test_progress_render(pico_t *ui) {
@@ -244,10 +245,11 @@ static void taf_tui_test_progress_render(pico_t *ui) {
     pico_ui_puts_yx(ui, 10, 0, "│  ├─ ");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
     pico_ui_puts_yx(ui, 10, 6, "Progress: ");
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
     pico_ui_printf_yx(ui, 10, 16, "%d%%",
                       (unsigned int)(ui_state.current_test_progress * 100));
 
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
     pico_ui_printf_yx(ui, 10, strlen(test->name) + 13, "[ %lums ]",
                       millis_since_start());
 
@@ -277,21 +279,38 @@ static void taf_tui_test_progress_render(pico_t *ui) {
                 "%s", ui_state.current_line_str);
         }
     }
+    pico_reset_colors(ui);
 }
 static void taf_tui_summary_render(pico_t *ui, size_t size) {
 
     /* Line 12: Test Case Summary */
     pico_ui_clear_line(ui, size);
-    pico_ui_puts_yx(ui, size, 0, "└─ Summary:");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_ui_puts_yx(ui, size, 0, "└─ ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_ui_puts_yx(ui, size, 3, "Summary:");
 
     /* Line 13: Test Case Status */
     pico_ui_clear_line(ui, size + 1);
-    pico_ui_printf_yx(
-        ui, size + 1, 0,
-        "   ├─ Test Case Status: Total: %zu | Passed: %zu | Failed: %zu",
-        taf_state->total_amount, taf_state->passed_amount,
-        taf_state->failed_amount);
-
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_ui_puts_yx(ui, size + 1, 0, "   ├─ ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_ui_puts_yx(ui, size + 1, 6, "Test Case Status: ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_ui_puts_yx(ui, size + 1, 24, "          |");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
+    pico_ui_puts_yx(ui, size + 1, 24, "Total:    ");
+    pico_ui_printf_yx(ui, size + 1, 31, "%zu", taf_state->total_amount);
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_ui_puts_yx(ui, size + 1, 36, "           |");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_ui_puts_yx(ui, size + 1, 36, "Passed:    ");
+    pico_ui_printf_yx(ui, size + 1, 44, "%zu", taf_state->passed_amount);
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_RED, -1);
+    pico_ui_puts_yx(ui, size + 1, 49, "Failed:     ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_RED, -1);
+    pico_ui_printf_yx(ui, size + 1, 57, "%zu", taf_state->failed_amount);
+    pico_reset_colors(ui);
     /* Line 14: Test Elapsed Time */
     uint64_t ms;
     ms = millis_since_taf_start();
@@ -300,8 +319,14 @@ static void taf_tui_summary_render(pico_t *ui, size_t size) {
     const unsigned long millis = ms % 1000;
 
     pico_ui_clear_line(ui, size + 2);
-    pico_ui_printf_yx(ui, size + 2, 0, "   └─ Elapsed Time: %lum %lu.%03lus ",
-                      minutes, seconds, millis);
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_ui_puts_yx(ui, size + 2, 0, "   └─ ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_ui_puts_yx(ui, size + 2, 6, "Elapsed Time: ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
+    pico_ui_printf_yx(ui, size + 2, 20, "%lum %lu.%03lus ", minutes, seconds,
+                      millis);
+    pico_reset_colors(ui);
 }
 
 static int test_result_to_color(taf_state_test_t *test) {
@@ -320,7 +345,9 @@ static void taf_tui_test_run_result(pico_t *ui, size_t tests_count) {
 
     /* Line 8: Test Progress */
     pico_ui_clear_line(ui, 8);
-    pico_ui_puts_yx(ui, 8, 0, "├─ Test Results:");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_ui_puts_yx(ui, 8, 0, "├─ ");
+    pico_ui_puts_yx(ui, 8, 3, "Test Results:");
 
     /* Line 9: Test Name and millis from the start*/
     for (size_t i = 0; i < tests_count - 1; ++i) {
@@ -330,17 +357,32 @@ static void taf_tui_test_run_result(pico_t *ui, size_t tests_count) {
         pico_ui_clear_line(ui, 11 + i * 4);
         pico_ui_clear_line(ui, 12 + i * 4);
 
-        pico_ui_printf_yx(ui, 9 + i * 4, 0, "│  ├─ Name: %s ", test->name);
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+        pico_ui_puts_yx(ui, 9 + i * 4, 0, "│  ├─ ");
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+        pico_ui_puts_yx(ui, 9 + i * 4, 6, "Name: ");
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
+        pico_ui_printf_yx(ui, 9 + i * 4, 12, "%s ", test->name);
 
-        pico_ui_puts_yx(ui, 9 + i * 4 + 1, 0, "│  │  ├─ Result:    ");
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+        pico_ui_puts_yx(ui, 9 + i * 4 + 1, 0, "│  │  ├─ ");
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+        pico_ui_puts_yx(ui, 9 + i * 4 + 1, 9, "Result:    ");
         pico_set_colors(ui, test_result_to_color(test), -1);
-        pico_ui_printf_yx(ui, 9 + i * 4 + 1, 21, "%s", test->status_str);
+        pico_ui_printf_yx(ui, 9 + i * 4 + 1, 19, "%s", test->status_str);
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+        pico_ui_puts_yx(ui, 9 + i * 4 + 2, 0, "│  │  ├─ ");
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+        pico_ui_puts_yx(ui, 9 + i * 4 + 2, 9, "Started:  ");
         pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
-        pico_ui_printf_yx(ui, 9 + i * 4 + 2, 0, "│  │  ├─ Started:  %s",
-                          test->started);
+        pico_ui_printf_yx(ui, 9 + i * 4 + 2, 19, "%s", test->started + 9);
 
-        pico_ui_printf_yx(ui, 9 + i * 4 + 3, 0, "│  │  └─ Finished: %s",
-                          test->finished);
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+        pico_ui_puts_yx(ui, 9 + i * 4 + 3, 0, "│  │  └─ ");
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+        pico_ui_puts_yx(ui, 9 + i * 4 + 3, 9, "Finished: ");
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
+        pico_ui_printf_yx(ui, 9 + i * 4 + 3, 19, "%s", test->finished + 9);
     }
 
     size_t offset = tests_count - 1;
@@ -350,18 +392,34 @@ static void taf_tui_test_run_result(pico_t *ui, size_t tests_count) {
     pico_ui_clear_line(ui, 11 + offset * 4);
     pico_ui_clear_line(ui, 12 + offset * 4);
 
-    pico_ui_printf_yx(ui, 9 + offset * 4, 0, "│  └─ Name: %s", test->name);
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_ui_puts_yx(ui, 9 + offset * 4, 0, "│  └─ ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_ui_puts_yx(ui, 9 + offset * 4, 6, "Name: ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
+    pico_ui_printf_yx(ui, 9 + offset * 4, 12, "%s", test->name);
 
-    pico_ui_puts_yx(ui, 9 + offset * 4 + 1, 0, "│     ├─ Result:   ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_ui_puts_yx(ui, 9 + offset * 4 + 1, 0, "│     ├─ ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_ui_puts_yx(ui, 9 + offset * 4 + 1, 9, "Result:   ");
     pico_set_colors(ui, test_result_to_color(test), -1);
-    pico_ui_printf_yx(ui, 9 + offset * 4 + 1, 21, "%s", test->status_str);
+    pico_ui_printf_yx(ui, 9 + offset * 4 + 1, 19, "%s", test->status_str);
+
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_ui_puts_yx(ui, 9 + offset * 4 + 2, 0, "│     ├─ ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_ui_puts_yx(ui, 9 + offset * 4 + 2, 9, "Started:  ");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
+    pico_ui_printf_yx(ui, 9 + offset * 4 + 2, 19, "%s", test->started + 9);
 
-    pico_ui_printf_yx(ui, 9 + offset * 4 + 2, 0, "│     ├─ Started:  %s",
-                      test->started);
-
-    pico_ui_printf_yx(ui, 9 + offset * 4 + 3, 0, "│     └─ Finished: %s ",
-                      test->finished);
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_ui_puts_yx(ui, 9 + offset * 4 + 3, 0, "│     └─ ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_ui_puts_yx(ui, 9 + offset * 4 + 3, 9, "Finished: ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
+    pico_ui_printf_yx(ui, 9 + offset * 4 + 3, 19, "%s", test->finished + 9);
+    pico_reset_colors(ui);
 }
 
 static void render_ui(pico_t *ui, void *ud) {
@@ -410,8 +468,10 @@ void taf_tui_test_started(taf_state_test_t *test) {
     pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
     term_size_t terminal_size = get_term_size();
     for (int i = 0; i < terminal_size.cols - 1; ++i) {
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
         pico_print(ui, "_");
     }
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
     pico_println(ui, "_");
 
     // Test Finished message
@@ -531,9 +591,62 @@ void taf_tui_hook_finished(taf_hook_fn fn) {
     pico_print(ui, "[TAF]");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
     pico_printf(ui, " Hooks Finished: %s\n", str);
+
+    //  "-" Gap  between logs
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    term_size_t terminal_size = get_term_size();
+    for (int i = 0; i < terminal_size.cols - 1; ++i) {
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+        pico_print(ui, "_");
+    }
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_println(ui, "_");
 }
 
-void taf_tui_hook_failed(taf_hook_fn fn, const char *msg) {}
+void taf_tui_hook_failed(taf_hook_fn fn, const char *msg) {
+
+    // Update UI
+    render_ui(ui, NULL);
+
+    // Update log
+    char *str = "";
+    switch (fn) {
+    case 0:
+        str = "Test Run Started";
+        break;
+    case 1:
+        str = "Test Started";
+        break;
+    case 2:
+        str = "Test Finished";
+        break;
+    case 3:
+        str = "Test Run Finished";
+        break;
+    }
+
+    // Test Finished message
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_print(ui, "[TAF]");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_printf(ui, " Hooks Failed: %s\n", str);
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
+    pico_print(ui, "[TAF] ");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
+    pico_print(ui, "Failure Reason:\n");
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_RED, -1);
+    pico_print_block(ui, msg);
+
+    //  "-" Gap  between logs
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    term_size_t terminal_size = get_term_size();
+    for (int i = 0; i < terminal_size.cols - 1; ++i) {
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+        pico_print(ui, "_");
+    }
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_println(ui, "_");
+}
 
 int taf_tui_init(taf_state_t *state) {
 
