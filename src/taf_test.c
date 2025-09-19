@@ -171,9 +171,7 @@ static int run_all_tests(lua_State *L, taf_state_t *state) {
         current_test_index = i;
 
         taf_state_test_started(state, tc);
-
         taf_hooks_run(L, TAF_HOOK_FN_TEST_STARTED);
-
         LOG("Setting up error handler...");
         lua_pushcfunction(L, taf_errhandler);
         int erridx = lua_gettop(L);
@@ -457,7 +455,7 @@ int taf_test() {
     asprintf(&project_lib_dir_path, "%s/lib", proj->project_path);
     if (proj->multitarget) {
         asprintf(&project_common_test_dir_path, "%s/tests/common",
-                 proj->project_path);
+                 taf_hooks_add_to_queuu proj->project_path);
         asprintf(&project_test_dir_path, "%s/tests/%s", proj->project_path,
                  opts->target);
     } else {
@@ -563,4 +561,3 @@ deinit:
     free(project_lib_dir_path);
 
     return exitcode;
-}

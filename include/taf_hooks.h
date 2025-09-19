@@ -17,17 +17,18 @@ typedef struct {
 
 void taf_hooks_init(taf_state_t *state);
 
-void taf_hooks_add_to_queue(taf_hook_t hook);
+void taf_hooks_add_to_queue(taf_state_t *state,taf_hook_t hook);
 
 void taf_hooks_run(lua_State *L, taf_hook_fn fn);
 
 typedef void (*hook_cb)(taf_hook_fn);
 typedef void (*hook_err_cb)(taf_hook_fn, const char *trace);
+typedef void (*hook_log_cb)(taf_state_t *,taf_state_test_output_t *);
 
-void taf_hooks_register_hook_started_cb(hook_cb cb);
-void taf_hooks_register_hook_finished_cb(hook_cb cb);
-void taf_hooks_register_hook_failed_cb(hook_err_cb cb);
-
+void taf_hooks_register_hook_started_cb(taf_state_t *state,hook_cb cb);
+void taf_hooks_register_hook_finished_cb(taf_state_t *state,hook_cb cb);
+void taf_hooks_register_hook_failed_cb(taf_state_t *state,hook_err_cb cb);
+void taf_hooks_register_hook_log_cb(taf_state_t *state,hook_log_cb cb);
 void taf_hooks_deinit(lua_State *L);
 
 #endif // TAF_HOOKS_H

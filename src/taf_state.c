@@ -405,9 +405,8 @@ static taf_state_test_t *taf_state_get_current_test(taf_state_t *state) {
     return test;
 }
 
-void taf_state_test_log(taf_state_t *state, taf_log_level level,
-                        const char *file, int line, const char *buffer,
-                        size_t buffer_len) {
+void taf_state_log(taf_state_t *state, taf_log_level level, const char *file,
+                   int line, const char *buffer, size_t buffer_len) {
     char time[TS_LEN];
     get_date_time_now(time);
 

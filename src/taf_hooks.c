@@ -1,44 +1,41 @@
 #include "taf_hooks.h"
 
+#include "taf_state.h"
+
 #include "internal_logging.h"
 
 #include "test_logs.h"
 
 #include <stdlib.h>
 
-static da_t *hooks_test_run_started;
-static da_t *hooks_test_started;
-static da_t *hooks_test_finished;
-static da_t *hooks_test_run_finished;
-
-static da_t *hook_started_cbs;
-static da_t *hook_finished_cbs;
-static da_t *hook_failed_cbs;
-
 static taf_state_t *taf_state = NULL;
 
-void taf_hooks_register_hook_started_cb(hook_cb cb) {
-    da_append(hook_started_cbs, (void *)&cb);
+void taf_hooks_register_hook_started_cb(taf_state_t *state, hook_cb cb) {
+    da_append(state->hook_started_cbs, (void *)&cb);
 }
 
-void taf_hooks_register_hook_finished_cb(hook_cb cb) {
-    da_append(hook_finished_cbs, (void *)&cb);
+void taf_hooks_register_hook_finished_cb(taf_state_t *state, hook_cb cb) {
+    da_append(state->hook_finished_cbs, (void *)&cb);
 }
 
-void taf_hooks_register_hook_failed_cb(hook_err_cb cb) {
-    da_append(hook_failed_cbs, (void *)&cb);
+void taf_hooks_register_hook_failed_cb(taf_state_t *state, hook_err_cb cb) {
+    da_append(state->hook_failed_cbs, (void *)&cb);
 }
 
-static inline da_t *taf_get_hooks(taf_hook_fn fn) {
+void taf_hooks_register_hook_log_cb(taf_state_t *state, hook_log_cb cb) {
+    da_append(state->hook_log_cbs, (void *)&cb);
+}
+
+static inline da_t *taf_get_hooks(taf_state_t *state, taf_hook_fn fn) {
     switch (fn) {
     case TAF_HOOK_FN_TEST_RUN_STARTED:
-        return hooks_test_run_started;
+        return state->hooks_test_run_started;
     case TAF_HOOK_FN_TEST_STARTED:
-        return hooks_test_started;
+        return state->hooks_test_started;
     case TAF_HOOK_FN_TEST_FINISHED:
-        return hooks_test_finished;
+        return state->hooks_test_finished;
     case TAF_HOOK_FN_TEST_RUN_FINISHED:
-        return hooks_test_run_finished;
+        return state->hooks_test_run_finished;
     }
     return NULL;
 }
@@ -48,21 +45,22 @@ void taf_hooks_init(taf_state_t *state) {
 
     taf_state = state;
 
-    hooks_test_run_started = da_init(1, sizeof(taf_hook_t));
-    hooks_test_started = da_init(1, sizeof(taf_hook_t));
-    hooks_test_finished = da_init(1, sizeof(taf_hook_t));
-    hooks_test_run_finished = da_init(1, sizeof(taf_hook_t));
+    state->hooks_test_run_started = da_init(1, sizeof(taf_hook_t));
+    state->hooks_test_started = da_init(1, sizeof(taf_hook_t));
+    state->hooks_test_finished = da_init(1, sizeof(taf_hook_t));
+    state->hooks_test_run_finished = da_init(1, sizeof(taf_hook_t));
 
-    hook_started_cbs = da_init(1, sizeof(hook_cb));
-    hook_finished_cbs = da_init(1, sizeof(hook_cb));
-    hook_failed_cbs = da_init(1, sizeof(hook_err_cb));
+    state->hook_started_cbs = da_init(1, sizeof(hook_cb));
+    state->hook_finished_cbs = da_init(1, sizeof(hook_cb));
+    state->hook_failed_cbs = da_init(1, sizeof(hook_err_cb));
+    state->hook_log_cbs = da_init(1, sizeof(hook_log_cb));
 
     LOG("Successfully initialized TAF hooks.");
 }
 
-void taf_hooks_add_to_queue(taf_hook_t hook) {
+void taf_hooks_add_to_queue(taf_state_t *state, taf_hook_t hook) {
     LOG("Adding hook with type %d and ref %d", hook.fn, hook.ref);
-    da_t *hooks_da = taf_get_hooks(hook.fn);
+    da_t *hooks_da = taf_get_hooks(state, hook.fn);
     da_append(hooks_da, &hook);
     LOG("Successfully added hook.");
 }
