@@ -115,6 +115,34 @@ void taf_tui_log(taf_state_test_t *test, taf_state_test_output_t *output) {
     free(tmp);
 }
 
+void taf_tui_hook_log(taf_state_test_output_t *output) {
+
+    // Filter for logs with lower log level
+    if (output->level > ui_state.log_level) {
+        return;
+    }
+
+    // Allocate space for logs  and remove inapropriate synbols from it
+    char *tmp = malloc(output->msg_len + 1);
+    memcpy(tmp, output->msg, output->msg_len);
+    tmp[output->msg_len] = '\0';
+    sanitize_inplace(tmp, output->msg_len);
+
+    // Wrie Log Level information for current run
+    pico_set_colors(ui, log_level_to_palindex_map[output->level], -1);
+    pico_printf(ui, "[%s]", ll_to_str[output->level]);
+    pico_print(ui, "");
+
+    // Write time form test start (time in format hh:mm:ss)
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_printf(ui, "(%s)", output->date_time + 9);
+    pico_print(ui, " ");
+
+    // Write logs body
+    pico_reset_colors(ui);
+    pico_print_block(ui, tmp);
+    free(tmp);
+}
 /*------------------- TAF UI functions -------------------*/
 static void taf_tui_project_header_render(pico_t *ui) {
 
@@ -668,7 +696,7 @@ int taf_tui_init(taf_state_t *state) {
     taf_hooks_register_hook_started_cb(taf_tui_hook_started);
     taf_hooks_register_hook_finished_cb(taf_tui_hook_finished);
     taf_hooks_register_hook_failed_cb(taf_tui_hook_failed);
-
+    taf_hooks_register_hook_log_cb(taf_tui_hook_log);
     // Get project information
     cmd_test_options *opts = cmd_parser_get_test_options();
     ui_state.log_level = opts->log_level;

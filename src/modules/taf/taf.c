@@ -425,7 +425,7 @@ static inline void log_helper(taf_log_level level, int n, int s, lua_State *L) {
     LOG("File: %s, line: %d", file, line);
 
     if (taf_state) {
-        taf_state_test_log(taf_state, level, file, line, copy, mlen);
+        taf_state_log(taf_state, level, file, line, copy, mlen);
     }
 
     if (level == TAF_LOG_LEVEL_CRITICAL) {

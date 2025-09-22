@@ -27,6 +27,13 @@ typedef enum {
     TEST_STATUS_PASSED = 4U,
 } taf_state_test_status;
 
+typedef enum
+{
+    HOOK_STAGE = 0U,
+    TEST_STAGE = 1U,
+    TEARDOWN_STAGE = 2U,
+} taf_state_stage_t; 
+
 typedef struct {
     char *name;
     char *description;
@@ -66,21 +73,35 @@ typedef struct {
     size_t passed_amount;
     size_t failed_amount;
     size_t finished_amount;
-
+    
     da_t *vars;
 
     da_t *tags;
 
     da_t *tests;
+    
+    da_t *hooks_test_run_started;
+    da_t *hooks_test_started;
+    da_t *hooks_test_finished;
+    da_t *hooks_test_run_finished;
+
+    taf_state_stage_t current_stage;  
+    
+    da_t *hook_started_cbs;           // hook_cb
+    da_t *hook_finished_cbs;          // hook_cb
+    da_t *hook_failed_cbs;            // hook_err_cb
+    da_t *hook_log_cbs;               // hook_log_cb
 
     da_t *test_run_started_cbs;       // test_run_cb
+    da_t *test_run_finished_cbs;      // test_run_cb
+    
     da_t *test_started_cbs;           // test_cb
     da_t *test_finished_cbs;          // test_cb
     da_t *test_log_cbs;               // test_log_cb
+    
     da_t *test_teardown_started_cbs;  // test_cb
     da_t *test_teardown_finished_cbs; // test_cb
     da_t *test_defer_failed_cbs;      // test_log_cb
-    da_t *test_run_finished_cbs;      // test_run_cb
 
 } taf_state_t;
 
@@ -108,7 +129,7 @@ void taf_state_test_defer_failed(taf_state_t *state, const char *file, int line,
 
 void taf_state_test_defer_queue_started(taf_state_t *state);
 
-void taf_state_test_log(taf_state_t *state, taf_log_level level,
+void taf_state_log(taf_state_t *state, taf_log_level level,
                         const char *file, int line, const char *buffer,
                         size_t buffer_len);
 

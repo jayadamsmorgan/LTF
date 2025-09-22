@@ -171,9 +171,7 @@ static int run_all_tests(lua_State *L, taf_state_t *state) {
         current_test_index = i;
 
         taf_state_test_started(state, tc);
-
         taf_hooks_run(L, TAF_HOOK_FN_TEST_STARTED);
-
         LOG("Setting up error handler...");
         lua_pushcfunction(L, taf_errhandler);
         int erridx = lua_gettop(L);
@@ -500,7 +498,6 @@ int taf_test() {
         fprintf(stderr, "No tests to execute.\n");
         goto deinit;
     }
-
     state = taf_state_new();
 
     l_module_taf_init(state);
