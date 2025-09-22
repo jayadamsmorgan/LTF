@@ -10,32 +10,32 @@
 
 static taf_state_t *taf_state = NULL;
 
-void taf_hooks_register_hook_started_cb(taf_state_t *state, hook_cb cb) {
-    da_append(state->hook_started_cbs, (void *)&cb);
+void taf_hooks_register_hook_started_cb(hook_cb cb) {
+    da_append(taf_state->hook_started_cbs, (void *)&cb);
 }
 
-void taf_hooks_register_hook_finished_cb(taf_state_t *state, hook_cb cb) {
-    da_append(state->hook_finished_cbs, (void *)&cb);
+void taf_hooks_register_hook_finished_cb(hook_cb cb) {
+    da_append(taf_state->hook_finished_cbs, (void *)&cb);
 }
 
-void taf_hooks_register_hook_failed_cb(taf_state_t *state, hook_err_cb cb) {
-    da_append(state->hook_failed_cbs, (void *)&cb);
+void taf_hooks_register_hook_failed_cb(hook_err_cb cb) {
+    da_append(taf_state->hook_failed_cbs, (void *)&cb);
 }
 
-void taf_hooks_register_hook_log_cb(taf_state_t *state, hook_log_cb cb) {
-    da_append(state->hook_log_cbs, (void *)&cb);
+void taf_hooks_register_hook_log_cb(hook_log_cb cb) {
+    da_append(taf_state->hook_log_cbs, (void *)&cb);
 }
 
-static inline da_t *taf_get_hooks(taf_state_t *state, taf_hook_fn fn) {
+static inline da_t *taf_get_hooks(taf_hook_fn fn) {
     switch (fn) {
     case TAF_HOOK_FN_TEST_RUN_STARTED:
-        return state->hooks_test_run_started;
+        return taf_state->hooks_test_run_started;
     case TAF_HOOK_FN_TEST_STARTED:
-        return state->hooks_test_started;
+        return taf_state->hooks_test_started;
     case TAF_HOOK_FN_TEST_FINISHED:
-        return state->hooks_test_finished;
+        return taf_state->hooks_test_finished;
     case TAF_HOOK_FN_TEST_RUN_FINISHED:
-        return state->hooks_test_run_finished;
+        return taf_state->hooks_test_run_finished;
     }
     return NULL;
 }
@@ -58,9 +58,9 @@ void taf_hooks_init(taf_state_t *state) {
     LOG("Successfully initialized TAF hooks.");
 }
 
-void taf_hooks_add_to_queue(taf_state_t *state, taf_hook_t hook) {
+void taf_hooks_add_to_queue(taf_hook_t hook) {
     LOG("Adding hook with type %d and ref %d", hook.fn, hook.ref);
-    da_t *hooks_da = taf_get_hooks(state, hook.fn);
+    da_t *hooks_da = taf_get_hooks(hook.fn);
     da_append(hooks_da, &hook);
     LOG("Successfully added hook.");
 }
@@ -200,9 +200,9 @@ static int hooks_context_push(lua_State *L) {
 }
 
 static void run_taf_hook_started_cbs(taf_hook_fn fn) {
-    size_t size = da_size(hook_started_cbs);
+    size_t size = da_size(taf_state->hook_started_cbs);
     for (size_t i = 0; i < size; ++i) {
-        hook_cb *cb = da_get(hook_started_cbs, i);
+        hook_cb *cb = da_get(taf_state->hook_started_cbs, i);
         if (cb && *cb) {
             (*cb)(fn);
         }
@@ -210,9 +210,9 @@ static void run_taf_hook_started_cbs(taf_hook_fn fn) {
 }
 
 static void run_taf_hook_finished_cbs(taf_hook_fn fn) {
-    size_t size = da_size(hook_finished_cbs);
+    size_t size = da_size(taf_state->hook_finished_cbs);
     for (size_t i = 0; i < size; ++i) {
-        hook_cb *cb = da_get(hook_finished_cbs, i);
+        hook_cb *cb = da_get(taf_state->hook_finished_cbs, i);
         if (cb && *cb) {
             (*cb)(fn);
         }
@@ -220,9 +220,9 @@ static void run_taf_hook_finished_cbs(taf_hook_fn fn) {
 }
 
 static void run_taf_hook_failed_cbs(taf_hook_fn fn, const char *msg) {
-    size_t size = da_size(hook_failed_cbs);
+    size_t size = da_size(taf_state->hook_failed_cbs);
     for (size_t i = 0; i < size; ++i) {
-        hook_err_cb *cb = da_get(hook_failed_cbs, i);
+        hook_err_cb *cb = da_get(taf_state->hook_failed_cbs, i);
         if (cb && *cb) {
             (*cb)(fn, msg);
         }
@@ -233,6 +233,7 @@ void taf_hooks_run(lua_State *L, taf_hook_fn fn) {
     LOG("Running all hooks with type %d...", fn);
     da_t *hooks = taf_get_hooks(fn);
     size_t hooks_count = da_size(hooks);
+    taf_state->current_stage = HOOK_STAGE;
     if (hooks_count == 0) {
         LOG("No hooks found for type %d", fn);
         return;
@@ -253,6 +254,7 @@ void taf_hooks_run(lua_State *L, taf_hook_fn fn) {
         }
         LOG("Successfully ran hook with type %d and ref %d", fn, ref);
         run_taf_hook_finished_cbs(fn);
+        taf_state->current_stage = TEST_STAGE;
     }
     LOG("Successfully ran all hooks with type %d.", fn);
 }
@@ -268,15 +270,15 @@ static void free_hooks_da(da_t *hooks, lua_State *L) {
 void taf_hooks_deinit(lua_State *L) {
     LOG("Deinitializing TAF hooks...");
 
-    free_hooks_da(hooks_test_run_started, L);
-    free_hooks_da(hooks_test_run_started, L);
-    free_hooks_da(hooks_test_started, L);
-    free_hooks_da(hooks_test_finished, L);
-    free_hooks_da(hooks_test_run_finished, L);
+    free_hooks_da(taf_state->hooks_test_run_started, L);
+    free_hooks_da(taf_state->hooks_test_started, L);
+    free_hooks_da(taf_state->hooks_test_finished, L);
+    free_hooks_da(taf_state->hooks_test_run_finished, L);
 
-    da_free(hook_started_cbs);
-    da_free(hook_finished_cbs);
-    da_free(hook_failed_cbs);
+    da_free(taf_state->hook_started_cbs);
+    da_free(taf_state->hook_finished_cbs);
+    da_free(taf_state->hook_failed_cbs);
+    da_free(taf_state->hook_log_cbs);
 
     LOG("Successfully deinitialized TAF hooks.");
 }

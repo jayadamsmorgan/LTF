@@ -5,6 +5,7 @@
 #include "project_parser.h"
 #include "taf_test.h"
 #include "taf_vars.h"
+#include "taf_hooks.h"
 #include "version.h"
 
 #include "util/os.h"
@@ -419,6 +420,7 @@ void taf_state_log(taf_state_t *state, taf_log_level level, const char *file,
         .msg_len = buffer_len,
     };
 
+    if(state->current_stage ==TEST_STAGE){
     taf_state_test_t *test = taf_state_get_current_test(state);
 
     switch (test->status) {
@@ -451,6 +453,16 @@ void taf_state_log(taf_state_t *state, taf_log_level level, const char *file,
         if (cb && *cb) {
             (*cb)(test, &o);
         }
+    }
+    } else if (state->current_stage == HOOK_STAGE)
+                {
+    size_t count = da_size(state->hook_log_cbs);
+    for (size_t i = 0; i < count; ++i) {
+        hook_log_cb *cb = da_get(state->hook_log_cbs, i);
+        if (cb && *cb) {
+            (*cb)(&o);
+        }
+    }
     }
 }
 
@@ -626,6 +638,7 @@ taf_state_t *taf_state_new() {
     taf_state->total_amount = amount;
     size_t tags_size = da_size(opts->tags);
     taf_state->tags = da_init(tags_size, sizeof(char *));
+    taf_state->current_stage = TEST_STAGE;
     for (size_t i = 0; i < tags_size; i++) {
         char **tag = da_get(opts->tags, i);
         char *to_cpy = strdup(*tag);

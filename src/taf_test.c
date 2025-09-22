@@ -455,7 +455,7 @@ int taf_test() {
     asprintf(&project_lib_dir_path, "%s/lib", proj->project_path);
     if (proj->multitarget) {
         asprintf(&project_common_test_dir_path, "%s/tests/common",
-                 taf_hooks_add_to_queuu proj->project_path);
+                 proj->project_path);
         asprintf(&project_test_dir_path, "%s/tests/%s", proj->project_path,
                  opts->target);
     } else {
@@ -498,7 +498,6 @@ int taf_test() {
         fprintf(stderr, "No tests to execute.\n");
         goto deinit;
     }
-
     state = taf_state_new();
 
     l_module_taf_init(state);
@@ -561,3 +560,4 @@ deinit:
     free(project_lib_dir_path);
 
     return exitcode;
+}
