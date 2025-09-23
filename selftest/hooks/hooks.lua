@@ -1,6 +1,6 @@
-local taf = require("taf")
-local hooks = taf.hooks
-local json = taf.json
+local ltf = require("ltf")
+local hooks = ltf.hooks
+local json = ltf.json
 
 local output = {}
 local tests_ran = 0

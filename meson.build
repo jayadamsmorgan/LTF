@@ -1,5 +1,5 @@
 project(
-  'taf',
+  'ltf',
   'c',
   version: '2.0.0',
   default_options: [
@@ -29,10 +29,10 @@ ver_minor = ver_parts[1].to_int()
 ver_patch = ver_parts[2].to_int()
 
 cfg = configuration_data()
-cfg.set('TAF_VERSION_MAJOR', ver_major)
-cfg.set('TAF_VERSION_MINOR', ver_minor)
-cfg.set('TAF_VERSION_PATCH', ver_patch)
-cfg.set_quoted('TAF_VERSION', ver_full)
+cfg.set('LTF_VERSION_MAJOR', ver_major)
+cfg.set('LTF_VERSION_MINOR', ver_minor)
+cfg.set('LTF_VERSION_PATCH', ver_patch)
+cfg.set_quoted('LTF_VERSION', ver_full)
 
 version_h = configure_file(
   input: 'include/version.h.in',
@@ -103,16 +103,16 @@ main_source = 'src/main.c'
 sources = [
   version_h,
   git_header,
-  'src/taf_hooks.c',
-  'src/taf_init.c',
-  'src/taf_logs.c',
-  'src/taf_log_level.c',
-  'src/taf_target.c',
-  'src/taf_test.c',
-  'src/taf_tui.c',
-  'src/taf_vars.c',
-  'src/taf_secrets.c',
-  'src/taf_state.c',
+  'src/ltf_hooks.c',
+  'src/ltf_init.c',
+  'src/ltf_logs.c',
+  'src/ltf_log_level.c',
+  'src/ltf_target.c',
+  'src/ltf_test.c',
+  'src/ltf_tui.c',
+  'src/ltf_vars.c',
+  'src/ltf_secrets.c',
+  'src/ltf_state.c',
   'src/headless.c',
   'src/cmd_parser.c',
   'src/internal_logging.c',
@@ -129,12 +129,12 @@ sources = [
   'src/util/string.c',
   'src/util/time.c',
   'src/util/line_cache.c',
-  'src/modules/hooks/taf-hooks.c',
-  'src/modules/http/taf-http.c',
-  'src/modules/json/taf-json.c',
-  'src/modules/proc/taf-proc.c',
-  'src/modules/serial/taf-serial.c',
-  'src/modules/taf/taf.c',
+  'src/modules/hooks/ltf-hooks.c',
+  'src/modules/http/ltf-http.c',
+  'src/modules/json/ltf-json.c',
+  'src/modules/proc/ltf-proc.c',
+  'src/modules/serial/ltf-serial.c',
+  'src/modules/ltf/ltf.c',
 ]
 
 include_dir = include_directories('include')
@@ -143,21 +143,21 @@ need_setgid = get_option('install_setgid')
 if is_linux and need_setgid
   #   rwx r-s r-x   → set-gid + 2755
   #   this is needed to be able to open serial ports
-  taf_install_mode = ['rwxr-sr-x', 'root', 'dialout']
+  ltf_install_mode = ['rwxr-sr-x', 'root', 'dialout']
 else
-  taf_install_mode = 'rwxr-xr-x'
+  ltf_install_mode = 'rwxr-xr-x'
 endif
 
-taf_dir_path = get_option('taf_dir_path')
-add_project_arguments('-DTAF_DIR_PATH="@0@"'.format(taf_dir_path), language: 'c')
+ltf_dir_path = get_option('ltf_dir_path')
+add_project_arguments('-DLTF_DIR_PATH="@0@"'.format(ltf_dir_path), language: 'c')
 
-if taf_dir_path == ''
-  # default: ~/.taf
-  taf_dir_path = fs.expanduser('~/.taf')
+if ltf_dir_path == ''
+  # default: ~/.ltf
+  ltf_dir_path = fs.expanduser('~/.ltf')
 endif
 
-taf_lib = static_library(
-  'taf_core',
+ltf_lib = static_library(
+  'ltf_core',
   sources,
   include_directories: [include_dir],
   dependencies: opt_deps
@@ -172,8 +172,8 @@ taf_lib = static_library(
   install: false,
 )
 
-taf_dep = declare_dependency(
-  link_with: taf_lib,
+ltf_dep = declare_dependency(
+  link_with: ltf_lib,
   include_directories: [include_dir],
   dependencies: opt_deps
   + [
@@ -187,9 +187,9 @@ taf_dep = declare_dependency(
 )
 
 executable(
-  'taf',
+  'ltf',
   main_source,
-  link_with: taf_lib,
+  link_with: ltf_lib,
   include_directories: [include_dir],
   dependencies: opt_deps
   + [
@@ -201,7 +201,7 @@ executable(
     picotui_dep,
   ],
   install: true,
-  install_mode: taf_install_mode,
+  install_mode: ltf_install_mode,
 )
 
-install_subdir('lib', install_dir: taf_dir_path)
+install_subdir('lib', install_dir: ltf_dir_path)

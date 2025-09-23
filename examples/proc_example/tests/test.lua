@@ -1,7 +1,7 @@
-local taf = require("taf")
-local proc = taf.proc
+local ltf = require("ltf")
+local proc = ltf.proc
 
-taf.test({
+ltf.test({
 	name = "Testing 'ls' command",
 	body = function()
 		local result, err = proc.run({ exe = "ls" })

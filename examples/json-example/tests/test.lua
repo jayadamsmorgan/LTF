@@ -1,5 +1,5 @@
-local taf = require("taf")
-local json = taf.json
+local ltf = require("ltf")
+local json = ltf.json
 
 local keyword3 = function()
 end
@@ -17,10 +17,10 @@ local keyword1 = function()
 end
 
 local keyword_fail = function()
-    taf.log_critical("WOW")
+    ltf.log_critical("WOW")
 end
 
-taf.test({
+ltf.test({
 	name = "json serialization",
 	body = function()
 

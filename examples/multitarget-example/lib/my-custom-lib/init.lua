@@ -1,7 +1,7 @@
 local M = {}
 
-local taf = require("taf")
-local target = taf.get_current_target()
+local ltf = require("ltf")
+local target = ltf.get_current_target()
 local keyword_impl = require("my-custom-lib." .. target)
 
 M.keyword1 = function(str1, str2)

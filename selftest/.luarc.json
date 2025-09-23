@@ -17,10 +17,10 @@
     "checkThirdParty": false,
 
     "library": [
-      "~/.taf/lib",
-      "/home/linuxbrew/.linuxbrew/opt/taf/share/taf/lib",
-      "/opt/homebrew/opt/taf/share/taf/lib",
-      "/usr/local/opt/taf/share/taf/lib"
+      "~/.ltf/lib",
+      "/home/linuxbrew/.linuxbrew/opt/ltf/share/ltf/lib",
+      "/opt/homebrew/opt/ltf/share/ltf/lib",
+      "/usr/local/opt/ltf/share/ltf/lib"
     ]
 
   }

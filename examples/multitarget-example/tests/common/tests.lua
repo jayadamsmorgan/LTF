@@ -1,14 +1,14 @@
-local taf = require("taf")
+local ltf = require("ltf")
 
-local target = taf.get_current_target()
+local target = ltf.get_current_target()
 local custom_lib = require("my-custom-lib")
 local variables = require("variables." .. target)
 
-taf.test({
+ltf.test({
 	name = "Testing multitarget project",
 	body = function()
 		local baudrate = variables.serial.baudrate
-		print("Serial baudrate for target '" .. taf.get_current_target() .. "' is " .. baudrate)
+		print("Serial baudrate for target '" .. ltf.get_current_target() .. "' is " .. baudrate)
 		local result = custom_lib.keyword2("this is ", "test ")
 		print(result)
 		if target == "target1" then
@@ -19,7 +19,7 @@ taf.test({
 			assert(result == "this is test hello")
 		else
 			-- Should never be reached
-			taf.log_critical("Unknown target '" .. target .. "'")
+			ltf.log_critical("Unknown target '" .. target .. "'")
 		end
 	end,
 })

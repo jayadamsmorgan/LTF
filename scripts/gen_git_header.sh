@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 # Generates a header with release metadata.
-# - TAF_IS_RELEASE: 1 if HEAD has a tag beginning with "v", else 0
-# - TAF_GIT_VERSION: git describe
-# - TAF_GIT_BRANCH: current branch
+# - LTF_IS_RELEASE: 1 if HEAD has a tag beginning with "v", else 0
+# - LTF_GIT_VERSION: git describe
+# - LTF_GIT_BRANCH: current branch
 
 # Don't crash if git isn't available; still emit a header.
 set -u
@@ -20,6 +20,6 @@ if [ -n "${tag:-}" ]; then
 fi
 
 printf '#pragma once\n'
-printf '#define TAF_IS_RELEASE %s\n' "$is_release"
-printf '#define TAF_GIT_VERSION "%s"\n' "$ver"
-printf '#define TAF_GIT_BRANCH "%s"\n' "$branch"
+printf '#define LTF_IS_RELEASE %s\n' "$is_release"
+printf '#define LTF_GIT_VERSION "%s"\n' "$ver"
+printf '#define LTF_GIT_BRANCH "%s"\n' "$branch"

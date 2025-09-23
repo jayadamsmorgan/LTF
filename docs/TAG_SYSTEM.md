@@ -1,6 +1,6 @@
 # Tag System
 
-The TAF tag system is a powerful feature for categorizing, organizing, and selectively running your tests. By assigning tags to your test cases, you can easily create and execute different test suites on the fly.
+The LTF tag system is a powerful feature for categorizing, organizing, and selectively running your tests. By assigning tags to your test cases, you can easily create and execute different test suites on the fly.
 
 This is especially useful for:
 *   Creating subsets of tests, like `smoke`, `regression`, or `performance`.
@@ -9,23 +9,23 @@ This is especially useful for:
 
 ## Defining Tags in Your Tests
 
-You can assign tags to any test by passing a table of strings as the second argument to the `taf.test` function.
+You can assign tags to any test by passing a table of strings as the second argument to the `ltf.test` function.
 
 ```lua
-local taf = require("taf")
+local ltf = require("ltf")
 
 -- This test is tagged as both "api" and "smoke"
-taf.test("Verify user login endpoint", { "api", "smoke" }, function()
+ltf.test("Verify user login endpoint", { "api", "smoke" }, function()
     -- ... Test logic ...
 end)
 
 -- This test is only tagged as "api"
-taf.test("Check user profile data", { "api" }, function()
+ltf.test("Check user profile data", { "api" }, function()
     -- ... Test logic ...
 end)
 
 -- This test has no tags
-taf.test("Simple utility function check", function()
+ltf.test("Simple utility function check", function()
     -- ... Test logic ...
 end)
 ```
@@ -45,13 +45,13 @@ To run only the tests that match specific tags, use the `--tags` or `-t` command
 
 ```bash
 # Run all tests with the "api" tag
-taf test --tags api
+ltf test --tags api
 
 # Run all tests with the "smoke" tag (short form)
-taf test -t smoke
+ltf test -t smoke
 
 # Run tests that have EITHER the "api" OR "smoke" tag
-taf test -t api,smoke
+ltf test -t api,smoke
 ```
 
 ## Understanding the Filtering Logic
@@ -65,23 +65,23 @@ Let's use our code example from above to see how this works in practice.
 #### Scenario 1: Running with a specific feature tag
 
 ```bash
-taf test -t api
+ltf test -t api
 ```
 *   **Result:** This will execute both "Verify user login endpoint" and "Check user profile data" because both tests include the `api` tag.
 
 #### Scenario 2: Running with a suite tag
 
 ```bash
-taf test -t smoke
+ltf test -t smoke
 ```
 *   **Result:** This will **only** execute "Verify user login endpoint" because it's the only test with the `smoke` tag.
 
 #### Scenario 3: Running with multiple tags
 
 ```bash
-taf test -t api,smoke
+ltf test -t api,smoke
 ```
 *   **Result:** This will execute both "Verify user login endpoint" and "Check user profile data".
     *   The first test runs because it has both `api` and `smoke` tags.
     *   The second test runs because it has the `api` tag.
-*   The un-tagged test, "Simple utility function check," will not run in any of these scenarios. It will only run if you execute `taf test` without any tag filters.
+*   The un-tagged test, "Simple utility function check," will not run in any of these scenarios. It will only run if you execute `ltf test` without any tag filters.

@@ -72,32 +72,32 @@ static int project_parse_json(json_object *project_obj) {
     proj_parsed->project_name = strdup(str_res);
     LOG("Project.project_name: %s", proj_parsed->project_name);
 
-    str_res = json_get_string(project_obj, "min_taf_version");
+    str_res = json_get_string(project_obj, "min_ltf_version");
     if (!str_res) {
         LOG("Project mimimum version not found.");
         return -1;
     }
-    proj_parsed->min_taf_ver_str = strdup(str_res);
-    LOG("Project.min_taf_version: %s", proj_parsed->min_taf_ver_str);
+    proj_parsed->min_ltf_ver_str = strdup(str_res);
+    LOG("Project.min_ltf_version: %s", proj_parsed->min_ltf_ver_str);
 
-    if (json_get_int(project_obj, "min_taf_version_major",
-                     &proj_parsed->min_taf_ver_major)) {
+    if (json_get_int(project_obj, "min_ltf_version_major",
+                     &proj_parsed->min_ltf_ver_major)) {
         LOG("Project minimum major version not found.");
         return -1;
     }
-    LOG("Projcet.min_taf_ver_major: %d", proj_parsed->min_taf_ver_major);
-    if (json_get_int(project_obj, "min_taf_version_minor",
-                     &proj_parsed->min_taf_ver_minor)) {
+    LOG("Projcet.min_ltf_ver_major: %d", proj_parsed->min_ltf_ver_major);
+    if (json_get_int(project_obj, "min_ltf_version_minor",
+                     &proj_parsed->min_ltf_ver_minor)) {
         LOG("Project minimum minor version not found.");
         return -1;
     }
-    LOG("Project.min_taf_ver_minor: %d", proj_parsed->min_taf_ver_minor);
-    if (json_get_int(project_obj, "min_taf_version_patch",
-                     &proj_parsed->min_taf_ver_patch)) {
+    LOG("Project.min_ltf_ver_minor: %d", proj_parsed->min_ltf_ver_minor);
+    if (json_get_int(project_obj, "min_ltf_version_patch",
+                     &proj_parsed->min_ltf_ver_patch)) {
         LOG("Project minimum patch version not found.");
         return -1;
     }
-    LOG("Project.min_taf_ver_patch: %d", proj_parsed->min_taf_ver_patch);
+    LOG("Project.min_ltf_ver_patch: %d", proj_parsed->min_ltf_ver_patch);
 
     if (json_get_bool(project_obj, "multitarget", &proj_parsed->multitarget)) {
         LOG("Project multitarget field not found.");
@@ -139,14 +139,14 @@ void project_parser_save() {
     json_object_object_add(obj, "project_name",
                            json_object_new_string(proj_parsed->project_name));
     json_object_object_add(
-        obj, "min_taf_version",
-        json_object_new_string(proj_parsed->min_taf_ver_str));
-    json_object_object_add(obj, "min_taf_version_major",
-                           json_object_new_int(proj_parsed->min_taf_ver_major));
-    json_object_object_add(obj, "min_taf_version_minor",
-                           json_object_new_int(proj_parsed->min_taf_ver_minor));
-    json_object_object_add(obj, "min_taf_version_patch",
-                           json_object_new_int(proj_parsed->min_taf_ver_patch));
+        obj, "min_ltf_version",
+        json_object_new_string(proj_parsed->min_ltf_ver_str));
+    json_object_object_add(obj, "min_ltf_version_major",
+                           json_object_new_int(proj_parsed->min_ltf_ver_major));
+    json_object_object_add(obj, "min_ltf_version_minor",
+                           json_object_new_int(proj_parsed->min_ltf_ver_minor));
+    json_object_object_add(obj, "min_ltf_version_patch",
+                           json_object_new_int(proj_parsed->min_ltf_ver_patch));
 
     json_object_object_add(obj, "multitarget",
                            json_object_new_boolean(proj_parsed->multitarget));
@@ -161,7 +161,7 @@ void project_parser_save() {
     }
 
     char path[PATH_MAX];
-    snprintf(path, PATH_MAX, "%s/.taf.json", proj_parsed->project_path);
+    snprintf(path, PATH_MAX, "%s/.ltf.json", proj_parsed->project_path);
     if (json_object_to_file_ext(path, obj,
                                 JSON_C_TO_STRING_SPACED |
                                     JSON_C_TO_STRING_PRETTY |
@@ -184,7 +184,7 @@ bool project_parser_parse() {
 
     proj_parsed = malloc(sizeof *proj_parsed);
 
-    const char *project_file = file_find_upwards(".taf.json");
+    const char *project_file = file_find_upwards(".ltf.json");
     if (!project_file) {
         LOG("Project file not found.");
         fprintf(stderr,
@@ -213,7 +213,7 @@ bool project_parser_parse() {
         fprintf(
             stderr,
             "Unable to parse project file, it may be corrupt.\n "
-            "Please delete it and regenerate the project with 'taf init'\n");
+            "Please delete it and regenerate the project with 'ltf init'\n");
         return true;
     }
 
@@ -227,7 +227,7 @@ bool project_parser_parse() {
 void project_parser_free() {
     LOG("Freeing parsed project...");
     free(proj_parsed->project_path);
-    free(proj_parsed->min_taf_ver_str);
+    free(proj_parsed->min_ltf_ver_str);
     free(proj_parsed->project_name);
     for (size_t i = 0; i < proj_parsed->targets_amount; i++)
         free(proj_parsed->targets[i]);

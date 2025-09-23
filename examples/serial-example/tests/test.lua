@@ -1,8 +1,8 @@
-local taf = require("taf")
-local serial = taf.serial
+local ltf = require("ltf")
+local serial = ltf.serial
 local vars = require("variables")
 
-taf.test({
+ltf.test({
 	name = "List serial devices",
 	tags = { "tag1", "tag2" },
 	body = function()
@@ -13,7 +13,7 @@ taf.test({
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Get port info",
 	tags = { "tag2", "tag3" },
 	body = function()
@@ -23,7 +23,7 @@ taf.test({
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Reading from serial device",
 	tags = { "tag2" },
 	body = function()
@@ -31,7 +31,7 @@ taf.test({
 
 		port:open("rw")
 
-		taf.defer(function()
+		ltf.defer(function()
 			port:close()
 		end)
 

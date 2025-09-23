@@ -1,9 +1,9 @@
 #include "cmd_parser.h"
 
-#include "taf_init.h"
-#include "taf_logs.h"
-#include "taf_target.h"
-#include "taf_test.h"
+#include "ltf_init.h"
+#include "ltf_logs.h"
+#include "ltf_target.h"
+#include "ltf_test.h"
 
 #include <stdlib.h>
 
@@ -14,15 +14,15 @@ int main(int argc, char **argv) {
 
     switch (cmd) {
     case CMD_INIT:
-        return taf_init();
+        return ltf_init();
     case CMD_TEST:
-        return taf_test();
+        return ltf_test();
     case CMD_LOGS_INFO:
-        return taf_logs_info();
+        return ltf_logs_info();
     case CMD_TARGET_ADD:
-        return taf_target_add();
+        return ltf_target_add();
     case CMD_TARGET_REMOVE:
-        return taf_target_remove();
+        return ltf_target_remove();
     case CMD_HELP:
         // Should be already handled in cmd_parser
         return EXIT_SUCCESS;

@@ -1,7 +1,7 @@
-local taf = require("taf")
-local proc = taf.proc
+local ltf = require("ltf")
+local proc = ltf.proc
 
-taf.test({
+ltf.test({
 	name = "Test proc.run() existing binary",
 	tags = { "module-proc" },
 	body = function()
@@ -9,13 +9,13 @@ taf.test({
 			exe = "ls",
 			args = { "-a" },
 		})
-		taf.log_info(handle.exitcode)
-		taf.log_info(handle.stderr)
-		taf.log_info(handle.stdout)
+		ltf.log_info(handle.exitcode)
+		ltf.log_info(handle.stderr)
+		ltf.log_info(handle.stdout)
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test proc.run() non-existent binary",
 	tags = { "module-proc" },
 	body = function()
@@ -30,7 +30,7 @@ taf.test({
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test proc.run() with timeout not triggered",
 	tags = { "module-proc" },
 	body = function()
@@ -39,13 +39,13 @@ taf.test({
 			exe = "sleep",
 			args = { "0.5" },
 		}, 1000)
-		taf.log_info(handle.exitcode)
-		taf.log_info(handle.stderr)
-		taf.log_info(handle.stdout)
+		ltf.log_info(handle.exitcode)
+		ltf.log_info(handle.stderr)
+		ltf.log_info(handle.stdout)
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test proc.run() with timeout triggered",
 	tags = { "module-proc" },
 	body = function()
@@ -57,7 +57,7 @@ taf.test({
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test proc:wait()",
 	tags = { "module-proc" },
 	body = function()
@@ -65,18 +65,18 @@ taf.test({
 			exe = "sleep",
 			args = { "0.5" },
 		})
-		taf.defer(function()
+		ltf.defer(function()
 			handle:kill()
 		end)
 		local status = handle:wait()
-		taf.log_info(status)
-		taf.sleep(1000)
+		ltf.log_info(status)
+		ltf.sleep(1000)
 		status = handle:wait()
-		taf.log_info(status)
+		ltf.log_info(status)
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test proc.spawn() with non-existent binary",
 	tags = { "module-proc" },
 	body = function()
@@ -88,7 +88,7 @@ taf.test({
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test proc:read() stdio",
 	tags = { "module-proc" },
 	body = function()
@@ -96,16 +96,16 @@ taf.test({
 			exe = "echo",
 			args = { "hello" },
 		})
-		taf.defer(function()
+		ltf.defer(function()
 			handle:kill()
 		end)
-		taf.sleep(100) -- just to make sure
+		ltf.sleep(100) -- just to make sure
 		local result = handle:read()
-		taf.log_info(result)
+		ltf.log_info(result)
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test proc:read() stderr",
 	tags = { "module-proc" },
 	body = function()
@@ -113,11 +113,11 @@ taf.test({
 			exe = "sleep",
 			args = { "some_argument" },
 		})
-		taf.defer(function()
+		ltf.defer(function()
 			handle:kill()
 		end)
-		taf.sleep(100) -- just to make sure
+		ltf.sleep(100) -- just to make sure
 		local result = handle:read("stderr")
-		taf.log_info(result)
+		ltf.log_info(result)
 	end,
 })

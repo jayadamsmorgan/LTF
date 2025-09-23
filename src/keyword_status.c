@@ -11,21 +11,21 @@ static da_t *keyword_statuses = NULL;
 
 static size_t stack_count = 0;
 
-static taf_state_t *taf_state = NULL;
+static ltf_state_t *ltf_state = NULL;
 
 static bool test_running = false;
 
-static void keyword_status_test_started(taf_state_test_t *) {
+static void keyword_status_test_started(ltf_state_test_t *) {
     test_running = true;
     stack_count = 0;
     keyword_statuses = da_init(10, sizeof(keyword_status_t));
 }
 
-static void keyword_status_test_finished(taf_state_test_t *) {
+static void keyword_status_test_finished(ltf_state_test_t *) {
     test_running = false;
-    taf_state_test_set_keyword_statuses(taf_state, keyword_statuses);
+    ltf_state_test_set_keyword_statuses(ltf_state, keyword_statuses);
     stack_count = 0;
-    // Freeing keywords is handled in taf_state.c,
+    // Freeing keywords is handled in ltf_state.c,
     // so here we just NULLify them just in case
     keyword_statuses = NULL;
 }
@@ -82,7 +82,7 @@ static void ret_hook(lua_State *, lua_Debug *, const char *) {
         // Means we just exited test scope.
         // The test was either passed or marked failed.
         // If it would truly error and fail, we should not get here.
-        // That's why the final handling to the taf_state should be in
+        // That's why the final handling to the ltf_state should be in
         // `keyword_status_test_finished()`
         return;
     }
@@ -97,11 +97,11 @@ static void ret_hook(lua_State *, lua_Debug *, const char *) {
     status->finished = strdup(time);
 }
 
-void keyword_status_init(taf_state_t *state) {
-    taf_state = state;
+void keyword_status_init(ltf_state_t *state) {
+    ltf_state = state;
     lua_hooks_add(LUA_HOOKCALL, call_hook);
     lua_hooks_add(LUA_HOOKRET, ret_hook);
 
-    taf_state_register_test_started_cb(state, keyword_status_test_started);
-    taf_state_register_test_finished_cb(state, keyword_status_test_finished);
+    ltf_state_register_test_started_cb(state, keyword_status_test_started);
+    ltf_state_register_test_finished_cb(state, keyword_status_test_finished);
 }

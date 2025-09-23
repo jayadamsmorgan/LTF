@@ -27,12 +27,12 @@ jobs:
         run: |
           cd selftest
           set +e
-          modules=(http json proc taf webdriver)
+          modules=(http json proc ltf webdriver)
           FAILED=0
 
           for m in "${modules[@]}"; do
             echo "::group::module-$m"
-            taf test selftest -t module-"$m" -e
+            ltf test selftest -t module-"$m" -e
             STATUS=$?
             echo "::endgroup::"
 

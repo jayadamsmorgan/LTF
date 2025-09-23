@@ -1,6 +1,6 @@
 local M = {}
 
-local taf = require("taf")
+local ltf = require("ltf")
 local util = require("util")
 
 --- @alias status_t
@@ -38,16 +38,16 @@ local util = require("util")
 --- @param expected_status status_t
 M.check_test = function(test, expected_name, expected_status)
 	if test == nil then
-		taf.log_error(("Test '%s': %s"):format(expected_name, "test is nil"))
+		ltf.log_error(("Test '%s': %s"):format(expected_name, "test is nil"))
 		return
 	end
 
 	if test.name == nil then
-		taf.log_error(("Test '%s': %s"):format(expected_name, "test.name is nil"))
+		ltf.log_error(("Test '%s': %s"):format(expected_name, "test.name is nil"))
 		return
 	end
 	if test.name ~= expected_name then
-		taf.log_error(
+		ltf.log_error(
 			("Test '%s': %s"):format(
 				expected_name,
 				("test.name is '%s', expected '%s"):format(test.name, expected_name)

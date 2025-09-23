@@ -1,11 +1,11 @@
-local taf = require("taf")
-local http = taf.http
+local ltf = require("ltf")
+local http = ltf.http
 
-taf.test({
-	name = "test taf.http",
+ltf.test({
+	name = "test ltf.http",
 	body = function()
 		local handle = http.new()
-		taf.defer(function()
+		ltf.defer(function()
 			handle:cleanup()
 		end)
 

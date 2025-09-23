@@ -1,7 +1,7 @@
-local taf = require("taf")
-local webdriver = taf.webdriver
+local ltf = require("ltf")
+local webdriver = ltf.webdriver
 
-taf.test({
+ltf.test({
 	name = "testing web session start",
 	body = function()
 		local webdriver_port = 9515
@@ -13,11 +13,11 @@ taf.test({
 		})
 
 		-- Kill webdriver instance on test finish
-		taf.defer(function()
+		ltf.defer(function()
 			proc_handle:kill()
 		end)
 
-		taf.sleep(1000)
+		ltf.sleep(1000)
 
 		-- Start webdriver session on port 9515
 		local session = webdriver.session_start({
@@ -27,36 +27,36 @@ taf.test({
 
 		print("Webdriver session id: " .. session.id)
 
-		taf.defer(function()
+		ltf.defer(function()
 			webdriver.session_end(session)
 		end)
 
-		taf.sleep(1000)
+		ltf.sleep(1000)
 
 		-- Open google.com
 		webdriver.open_url(session, "https://google.com/")
 
-		taf.sleep(1000)
+		ltf.sleep(1000)
 
 		-- Open yahoo.com
 		webdriver.open_url(session, "https://github.com/")
 
-		taf.sleep(1000)
+		ltf.sleep(1000)
 
 		-- Go back to google.com
 		webdriver.go_back(session)
 
-		taf.sleep(1000)
+		ltf.sleep(1000)
 
 		-- Go forward to yahoo.com
 		webdriver.go_forward(session)
 
-		taf.sleep(1000)
+		ltf.sleep(1000)
 
 		-- Refresh the site
 		webdriver.refresh(session)
 
-		taf.sleep(1000)
+		ltf.sleep(1000)
 
 		-- Get the site url
 		local url = webdriver.get_current_url(session)
@@ -68,6 +68,6 @@ taf.test({
 		print(title)
 		assert(title == "GitHub · Build and ship software on a single, collaborative platform · GitHub")
 
-		taf.sleep(500)
+		ltf.sleep(500)
 	end,
 })

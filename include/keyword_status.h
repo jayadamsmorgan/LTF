@@ -1,7 +1,7 @@
 #ifndef KEYWORD_STATUS_H
 #define KEYWORD_STATUS_H
 
-#include "taf_state.h"
+#include "ltf_state.h"
 
 #include "util/da.h"
 
@@ -18,6 +18,6 @@ typedef struct {
 
 } keyword_status_t;
 
-void keyword_status_init(taf_state_t *state);
+void keyword_status_init(ltf_state_t *state);
 
 #endif // KEYWORD_STATUS_H

@@ -21,7 +21,7 @@ struct pico_t {
     const char *cap_csr;   /* change_scroll_region */
     const char *cap_el;    /* clr_eol */
     const char *cap_sgr0;  /* exit_attribute_mode (reset) */
-    const char *cap_setaf; /* set_a_foreground (16/256 palette) */
+    const char *cap_seltf; /* set_a_foreground (16/256 palette) */
     const char *cap_setab; /* set_a_background (16/256 palette) */
 
     pico_render_fn render;
@@ -206,10 +206,10 @@ int pico_set_colors(pico_t *ui, int fg16, int bg16) {
     fg16 = clamp16(fg16);
     bg16 = clamp16(bg16);
 
-    /* Try terminfo setaf/setab (expects color index) */
+    /* Try terminfo seltf/setab (expects color index) */
     if (fg16 >= 0) {
-        if (ui->cap_setaf)
-            emit_unibi_fmt1(ui->cap_setaf, fg16);
+        if (ui->cap_seltf)
+            emit_unibi_fmt1(ui->cap_seltf, fg16);
         else {
             /* ANSI fallback: map 0..7 -> 30..37, 8..15 -> 90..97 */
             int code = (fg16 < 8 ? 30 + fg16 : 90 + (fg16 - 8));
@@ -486,7 +486,7 @@ pico_t *pico_init(int ui_rows, pico_render_fn render, void *userdata) {
         ui->cap_csr = unibi_get_str(ui->ut, unibi_change_scroll_region);
         ui->cap_el = unibi_get_str(ui->ut, unibi_clr_eol);
         ui->cap_sgr0 = unibi_get_str(ui->ut, unibi_exit_attribute_mode);
-        ui->cap_setaf = unibi_get_str(ui->ut, unibi_set_a_foreground);
+        ui->cap_seltf = unibi_get_str(ui->ut, unibi_set_a_foreground);
         ui->cap_setab = unibi_get_str(ui->ut, unibi_set_a_background);
         ui->cap_sav = unibi_get_str(ui->ut, unibi_save_cursor);
         ui->cap_res = unibi_get_str(ui->ut, unibi_restore_cursor);

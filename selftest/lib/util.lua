@@ -1,8 +1,8 @@
 local M = {}
 
-local taf = require("taf")
-local proc = taf.proc
-local json = taf.json
+local ltf = require("ltf")
+local proc = ltf.proc
+local json = ltf.json
 
 --- @param s string
 --- @return boolean
@@ -36,7 +36,7 @@ end
 --- @param test test_t
 --- @param message string
 M.test_error = function(test, message)
-	taf.log_error(("Test '%s': %s"):format(test.name, message))
+	ltf.log_error(("Test '%s': %s"):format(test.name, message))
 end
 
 --- @param condition boolean
@@ -65,7 +65,7 @@ M.test_tags = function(tag_test, tag_array)
 end
 
 --- @class log_obj_t
---- @field taf_version string
+--- @field ltf_version string
 --- @field os string
 --- @field os_version string
 --- @field started string
@@ -78,7 +78,7 @@ end
 --- @return log_obj_t
 M.load_log = function(args)
 	local proc_handle = proc.spawn({
-		exe = "taf",
+		exe = "ltf",
 		args = args,
 	})
 	while proc_handle:wait() == nil do
@@ -97,8 +97,8 @@ M.load_log = function(args)
 
 	local log_obj = json.deserialize(str)
 
-	assert(log_obj.taf_version ~= nil)
-	assert(log_obj.taf_version ~= "")
+	assert(log_obj.ltf_version ~= nil)
+	assert(log_obj.ltf_version ~= "")
 
 	assert(log_obj.os ~= nil)
 	assert(log_obj.os == "macos" or log_obj.os == "linux")

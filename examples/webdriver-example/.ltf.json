@@ -1,0 +1,8 @@
+{
+  "project_name": "webdriver-example",
+  "min_ltf_version": "1.0.2",
+  "min_ltf_version_major": 1,
+  "min_ltf_version_minor": 0,
+  "min_ltf_version_patch": 2,
+  "multitarget": false
+}

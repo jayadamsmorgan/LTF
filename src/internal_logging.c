@@ -22,7 +22,7 @@ int internal_logging_init() {
     char date_time_now[TS_LEN];
     get_date_time_now(date_time_now);
 
-    snprintf(internal_log_file_path, PATH_MAX, "taf_log_internal_%s.log",
+    snprintf(internal_log_file_path, PATH_MAX, "ltf_log_internal_%s.log",
              date_time_now);
 
     internal_log_file = fopen(internal_log_file_path, "w");
@@ -30,8 +30,8 @@ int internal_logging_init() {
         return -1;
     }
 
-    fputs("TAF INTERNAL LOG START\n", internal_log_file);
-    fputs("TAF version " TAF_VERSION "\n", internal_log_file);
+    fputs("LTF INTERNAL LOG START\n", internal_log_file);
+    fputs("LTF version " LTF_VERSION "\n", internal_log_file);
 
     char *os_string = get_os_string();
     fprintf(internal_log_file, "OS: %s\n", os_string);
@@ -68,7 +68,7 @@ void internal_logging_deinit() {
     if (!internal_log_file)
         return;
 
-    fputs("TAF INTERNAL LOG END\n", internal_log_file);
+    fputs("LTF INTERNAL LOG END\n", internal_log_file);
 
     fflush(internal_log_file);
     fclose(internal_log_file);

@@ -14,9 +14,9 @@
 static void print_init_help(FILE *file) {
     fprintf(
         file,
-        "Usage: taf init project-name [<options>]\n"
+        "Usage: ltf init project-name [<options>]\n"
         "\n"
-        "Initialize new TAF project.\n"
+        "Initialize new LTF project.\n"
         "\n"
         "Options:\n"
         "  -m, --multitarget        Initialize project for multiple targets\n"
@@ -26,8 +26,8 @@ static void print_init_help(FILE *file) {
 
 static void print_test_help(FILE *file) {
     fprintf(file,
-            "Usage: taf test [<options>]\n"
-            "       taf test <target_name> [<options>]\n"
+            "Usage: ltf test [<options>]\n"
+            "       ltf test <target_name> [<options>]\n"
             "\n"
             "Perform project tests.\n"
             "Must specify target name if project "
@@ -41,8 +41,8 @@ static void print_test_help(FILE *file) {
             "not output "
             "log files after a "
             "test run\n"
-            "  -p, --taf-lib-path <path>                                   "
-            "Specify custom path to TAF Lua libraries\n"
+            "  -p, --ltf-lib-path <path>                                   "
+            "Specify custom path to LTF Lua libraries\n"
             "  -t, --tags <tag1,tag2>                                      "
             "Perform tests "
             "with specified tags\n"
@@ -55,9 +55,9 @@ static void print_test_help(FILE *file) {
 }
 
 static void print_logs_help(FILE *file) {
-    fprintf(file, "Usage: taf logs [<info>] [<options>]\n"
+    fprintf(file, "Usage: ltf logs [<info>] [<options>]\n"
                   "\n"
-                  "Perform actions on TAF logs.\n"
+                  "Perform actions on LTF logs.\n"
                   "\n"
                   "Categories:\n"
                   "  info               Get information about the test run\n"
@@ -68,8 +68,8 @@ static void print_logs_help(FILE *file) {
 }
 
 static void print_logs_info_help(FILE *file) {
-    fprintf(file, "Usage: taf logs info <latest>\n"
-                  "       taf logs info <test_run_raw_json_file>\n"
+    fprintf(file, "Usage: ltf logs info <latest>\n"
+                  "       ltf logs info <test_run_raw_json_file>\n"
                   "\n"
                   "Display information about the test run.\n"
                   "\n"
@@ -82,7 +82,7 @@ static void print_logs_info_help(FILE *file) {
 
 static void print_target_help(FILE *file) {
     fprintf(file,
-            "Usage: taf target [<add|remove>]\n"
+            "Usage: ltf target [<add|remove>]\n"
             "\n"
             "Categories:\n"
             "  add                Add new target to multitarget project\n"
@@ -93,7 +93,7 @@ static void print_target_help(FILE *file) {
 }
 
 static void print_target_add_help(FILE *file) {
-    fprintf(file, "Usage: taf target add <target_name>\n"
+    fprintf(file, "Usage: ltf target add <target_name>\n"
                   "\n"
                   "Add new target to multitarget project.\n"
                   "\n"
@@ -103,7 +103,7 @@ static void print_target_add_help(FILE *file) {
 }
 
 static void print_target_remove_help(FILE *file) {
-    fprintf(file, "Usage: taf target remove <target_name>\n"
+    fprintf(file, "Usage: ltf target remove <target_name>\n"
                   "\n"
                   "Remove target from multitarget project.\n"
                   "\n"
@@ -113,26 +113,26 @@ static void print_target_remove_help(FILE *file) {
 }
 
 static void print_help(FILE *file) {
-    fprintf(file, "Usage: taf [<init|logs|target|test|help|version>]\n"
+    fprintf(file, "Usage: ltf [<init|logs|target|test|help|version>]\n"
                   "\n"
-                  "TAF Testing Suite.\n"
+                  "LTF Testing Suite.\n"
                   "\n"
                   "Categories:\n"
-                  "  init               Initialize new TAF project\n"
-                  "  logs               Perform actions on TAF logs\n"
+                  "  init               Initialize new LTF project\n"
+                  "  logs               Perform actions on LTF logs\n"
                   "  target             Perform actions on project targets "
                   "(multitarget)\n"
                   "  test               Perform project tests\n"
                   "  help               Display help\n"
-                  "  version            Display TAF version\n"
+                  "  version            Display LTF version\n"
                   "\n"
                   "Options:\n"
                   "  -h, --help         Display help\n"
-                  "  -v, --version      Display TAF version\n");
+                  "  -v, --version      Display LTF version\n");
 }
 
 static void print_version() {
-    fprintf(stdout, "TAF Testing Suite version " TAF_VERSION "\n");
+    fprintf(stdout, "LTF Testing Suite version " LTF_VERSION "\n");
 }
 
 static cmd_init_options init_opts;
@@ -332,7 +332,7 @@ static void set_test_no_logs(const char *) {
 }
 
 static void set_log_level(const char *arg) {
-    taf_log_level log_level = taf_log_level_from_str(arg);
+    ltf_log_level log_level = ltf_log_level_from_str(arg);
     if (log_level < 0) {
         fprintf(stderr, "Unknown log level %s", arg);
         exit(EXIT_FAILURE);
@@ -346,8 +346,8 @@ static void get_test_help(const char *) {
     exit(EXIT_SUCCESS);
 }
 
-static void set_test_taf_lib_path(const char *arg) {
-    test_opts.custom_taf_lib_path = strdup(arg);
+static void set_test_ltf_lib_path(const char *arg) {
+    test_opts.custom_ltf_lib_path = strdup(arg);
 }
 
 static void set_test_headless(const char *) {
@@ -358,7 +358,7 @@ static void set_test_headless(const char *) {
 static cmd_option all_test_options[] = {
     {"--log-level", "-l", true, set_log_level},
     {"--no-logs", "-n", false, set_test_no_logs},
-    {"--taf-lib-path", "-p", true, set_test_taf_lib_path},
+    {"--ltf-lib-path", "-p", true, set_test_ltf_lib_path},
     {"--tags", "-t", true, set_test_tags},
     {"--vars", "-v", true, set_test_vars},
     {"--internal-log", "-i", false, set_internal_logging},
@@ -372,9 +372,9 @@ static cmd_category parse_test_options(int argc, char **argv) {
     test_opts.tags = da_init(1, sizeof(char *));
     test_opts.target = NULL;
     test_opts.no_logs = false;
-    test_opts.log_level = TAF_LOG_LEVEL_INFO;
+    test_opts.log_level = LTF_LOG_LEVEL_INFO;
     test_opts.internal_logging = false;
-    test_opts.custom_taf_lib_path = NULL;
+    test_opts.custom_ltf_lib_path = NULL;
     test_opts.headless = NULL;
     test_opts.vars = da_init(1, sizeof(kv_pair_t));
 
@@ -419,7 +419,7 @@ static cmd_option all_logs_info_options[] = {
 static cmd_category parse_logs_options(int argc, char **argv) {
 
     if (argc < 3) {
-        fprintf(stderr, "'taf logs' requires category [info]\n");
+        fprintf(stderr, "'ltf logs' requires category [info]\n");
         print_logs_help(stderr);
         return CMD_UNKNOWN;
     }
@@ -471,14 +471,14 @@ static cmd_option all_target_remove_options[] = {
 static cmd_category parse_target_options(int argc, char **argv) {
 
     if (argc < 3) {
-        fprintf(stderr, "'taf target' requires category [add|remove]\n");
+        fprintf(stderr, "'ltf target' requires category [add|remove]\n");
         print_target_help(stderr);
         return CMD_UNKNOWN;
     }
 
     if (STR_EQ(argv[2], "add")) {
         if (argc < 4) {
-            fprintf(stderr, "'taf target add' requires target_name\n");
+            fprintf(stderr, "'ltf target add' requires target_name\n");
             print_target_add_help(stderr);
             return CMD_UNKNOWN;
         }
@@ -488,7 +488,7 @@ static cmd_category parse_target_options(int argc, char **argv) {
         return CMD_TARGET_ADD;
     } else if (STR_EQ(argv[2], "remove")) {
         if (argc < 4) {
-            fprintf(stderr, "'taf target remove' requires target_name\n");
+            fprintf(stderr, "'ltf target remove' requires target_name\n");
             print_target_remove_help(stderr);
             return CMD_UNKNOWN;
         }
@@ -550,7 +550,7 @@ void cmd_parser_free_test_options() {
         free(*tag);
     }
     da_free(test_opts.tags);
-    free(test_opts.custom_taf_lib_path);
+    free(test_opts.custom_ltf_lib_path);
     free(test_opts.target);
     size_t vars_count = da_size(test_opts.vars);
     for (size_t i = 0; i < vars_count; ++i) {

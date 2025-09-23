@@ -3,7 +3,7 @@
 #include "cmd_parser.h"
 #include "internal_logging.h"
 #include "project_parser.h"
-#include "taf_state.h"
+#include "ltf_state.h"
 
 #include "util/files.h"
 #include "util/time.h"
@@ -12,7 +12,7 @@
 
 #include <string.h>
 
-static taf_log_level log_level;
+static ltf_log_level log_level;
 
 static FILE *output_log_file;
 
@@ -20,46 +20,46 @@ static char *logs_dir;
 static char *output_log_file_path;
 static char *raw_log_file_path;
 
-static taf_state_t *taf_state = NULL;
+static ltf_state_t *ltf_state = NULL;
 
-char *taf_log_get_logs_dir() {
+char *ltf_log_get_logs_dir() {
     //
     return logs_dir;
 }
 
-char *taf_log_get_output_log_file_path() {
+char *ltf_log_get_output_log_file_path() {
     //
     return output_log_file_path;
 }
 
-char *taf_log_get_raw_log_file_path() {
+char *ltf_log_get_raw_log_file_path() {
     //
     return raw_log_file_path;
 }
 
-void taf_log_test(taf_state_test_t *test, taf_state_test_output_t *output) {
+void ltf_log_test(ltf_state_test_t *test, ltf_state_test_output_t *output) {
 
     if (output->level <= log_level) {
         LOG("Writing to output log file...");
         fprintf(output_log_file, "[%s][%s][%s][%s:%d]: ", output->date_time,
-                taf_log_level_to_str(output->level), test->name, output->file,
+                ltf_log_level_to_str(output->level), test->name, output->file,
                 output->line);
         fwrite(output->msg, 1, output->msg_len, output_log_file);
         fputs("\n\n", output_log_file);
         LOG("Wrote to output log file.");
     }
 
-    LOG("Successfully TAF logged.");
+    LOG("Successfully LTF logged.");
 }
 
-void taf_log_test_started(taf_state_test_t *test) {
+void ltf_log_test_started(ltf_state_test_t *test) {
 
     fprintf(output_log_file, "[%s][%s]: Test Started.\n\n", test->started,
             test->name);
     LOG("Wrote to output log file");
 }
 
-void taf_log_test_finished(taf_state_test_t *test) {
+void ltf_log_test_finished(ltf_state_test_t *test) {
 
     if (test->status == TEST_STATUS_PASSED) {
         fprintf(output_log_file, "[%s][%s]: Test Passed.\n\n", test->finished,
@@ -73,20 +73,20 @@ void taf_log_test_finished(taf_state_test_t *test) {
     }
 }
 
-void taf_log_defer_queue_started(taf_state_test_t *test) {
+void ltf_log_defer_queue_started(ltf_state_test_t *test) {
     fprintf(output_log_file, "[%s][%s]: Defer Queue Started.\n\n",
             test->teardown_start, test->name);
     LOG("Wrote to output log file");
 }
 
-void taf_log_defer_queue_finished(taf_state_test_t *test) {
+void ltf_log_defer_queue_finished(ltf_state_test_t *test) {
     fprintf(output_log_file, "[%s][%s]: Defer Queue Finished.\n\n",
             test->teardown_end, test->name);
     LOG("Wrote to output log file");
 }
 
-void taf_log_defer_failed(taf_state_test_t *test,
-                          taf_state_test_output_t *output) {
+void ltf_log_defer_failed(ltf_state_test_t *test,
+                          ltf_state_test_output_t *output) {
     fprintf(output_log_file,
             "[%s][%s]: Defer failed (%s at %d), traceback: \n%s\n\n",
             output->date_time, test->name, output->file, output->line,
@@ -94,19 +94,19 @@ void taf_log_defer_failed(taf_state_test_t *test,
     LOG("Wrote to output log file");
 }
 
-void taf_log_test_run_finished() {
+void ltf_log_test_run_finished() {
 
-    json_object *taf_state_root = taf_state_to_json(taf_state);
+    json_object *ltf_state_root = ltf_state_to_json(ltf_state);
 
     LOG("Saving raw log file...");
-    if (json_object_to_file_ext(raw_log_file_path, taf_state_root,
+    if (json_object_to_file_ext(raw_log_file_path, ltf_state_root,
                                 JSON_C_TO_STRING_SPACED |
                                     JSON_C_TO_STRING_PRETTY |
                                     JSON_C_TO_STRING_NOSLASHESCAPE) == -1) {
         LOG("Unable to save raw log file: %s", json_util_get_last_err());
     }
     LOG("Freeing JSON object...");
-    json_object_put(taf_state_root);
+    json_object_put(ltf_state_root);
 
     char *latest_log = NULL;
     char *latest_raw = NULL;
@@ -144,19 +144,19 @@ void taf_log_test_run_finished() {
     free(logs_dir);
     free(latest_raw);
 
-    LOG("Successfully finalized TAF logging.");
+    LOG("Successfully finalized LTF logging.");
 }
 
-void taf_log_init(taf_state_t *state) {
+void ltf_log_init(ltf_state_t *state) {
 
-    LOG("Starting TAF test logging...");
+    LOG("Starting LTF test logging...");
 
-    taf_state = state;
+    ltf_state = state;
 
     cmd_test_options *opts = cmd_parser_get_test_options();
 
     log_level = opts->log_level;
-    LOG("Log level: %s", taf_log_level_to_str(log_level));
+    LOG("Log level: %s", ltf_log_level_to_str(log_level));
 
     project_parsed_t *proj = get_parsed_project();
 
@@ -192,15 +192,15 @@ void taf_log_init(taf_state_t *state) {
     }
     LOG("Created output log file.");
 
-    taf_state_register_test_started_cb(state, taf_log_test_started);
-    taf_state_register_test_finished_cb(state, taf_log_test_finished);
-    taf_state_register_test_log_cb(state, taf_log_test);
-    taf_state_register_test_teardown_started_cb(state,
-                                                taf_log_defer_queue_started);
-    taf_state_register_test_teardown_finished_cb(state,
-                                                 taf_log_defer_queue_finished);
-    taf_state_register_test_defer_failed_cb(state, taf_log_defer_failed);
-    taf_state_register_test_run_finished_cb(state, taf_log_test_run_finished);
+    ltf_state_register_test_started_cb(state, ltf_log_test_started);
+    ltf_state_register_test_finished_cb(state, ltf_log_test_finished);
+    ltf_state_register_test_log_cb(state, ltf_log_test);
+    ltf_state_register_test_teardown_started_cb(state,
+                                                ltf_log_defer_queue_started);
+    ltf_state_register_test_teardown_finished_cb(state,
+                                                 ltf_log_defer_queue_finished);
+    ltf_state_register_test_defer_failed_cb(state, ltf_log_defer_failed);
+    ltf_state_register_test_run_finished_cb(state, ltf_log_test_run_finished);
 
-    LOG("Successfully started TAF test logging.");
+    LOG("Successfully started LTF test logging.");
 }
