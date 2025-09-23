@@ -1,7 +1,7 @@
 #ifndef CMD_PARSER_H
 #define CMD_PARSER_H
 
-#include "taf_log_level.h"
+#include "ltf_log_level.h"
 
 #include "util/da.h"
 
@@ -37,13 +37,13 @@ typedef struct {
     da_t *vars;
 
     bool no_logs;
-    taf_log_level log_level;
+    ltf_log_level log_level;
 
     char *target;
 
     bool internal_logging;
 
-    char *custom_taf_lib_path;
+    char *custom_ltf_lib_path;
 
     bool headless;
 } cmd_test_options;

@@ -74,7 +74,7 @@ notcurses still not present -> build from source.
 
 ## Building & Installing
 
-TAF has to install it's Lua libraries to `~/.taf` folder, that's why `meson install` is required:
+LTF has to install it's Lua libraries to `~/.ltf` folder, that's why `meson install` is required:
 
 ```
 meson setup build

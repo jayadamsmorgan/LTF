@@ -1,9 +1,9 @@
-local taf = require("taf")
+local ltf = require("ltf")
 
 local check = require("test_checkup")
 local util = require("util")
 
-taf.test({
+ltf.test({
 	name = "Test module-proc",
 	tags = { "module-proc" },
 	body = function()
@@ -22,7 +22,7 @@ taf.test({
 		util.error_if(#test.output ~= 3, test, "Outputs not match")
 		check.check_output(test, test.output[1], "0", "INFO")
 		check.check_output(test, test.output[2], "", "INFO")
-		check.check_output(test, test.output[3], ".taf.json", "INFO", true)
+		check.check_output(test, test.output[3], ".ltf.json", "INFO", true)
 
 		test = log_obj.tests[2]
 		check.check_test(test, "Test proc.run() non-existent binary", "FAILED")

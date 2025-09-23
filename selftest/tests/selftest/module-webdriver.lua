@@ -1,9 +1,9 @@
-local taf = require("taf")
+local ltf = require("ltf")
 
 local check = require("test_checkup")
 local util = require("util")
 
-taf.test({
+ltf.test({
 	name = "Test module-webdriver",
 	tags = { "module-webdriver" },
 	body = function()

@@ -17,7 +17,7 @@ Steps to reproduce the behavior.
 A clear and concise description of what you expected to happen.
 
 **Please include**:
- - **TAF internal log file** (Can be dumped with `-i` or `--internal-log` option, e.g. `taf test target1 -i`)
+ - **LTF internal log file** (Can be dumped with `-i` or `--internal-log` option, e.g. `ltf test target1 -i`)
  - Your OS version
- - TAF version (or commit)
- - TAF raw JSON log file (if applicable)
+ - LTF version (or commit)
+ - LTF raw JSON log file (if applicable)

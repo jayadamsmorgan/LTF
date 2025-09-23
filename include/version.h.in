@@ -6,20 +6,20 @@
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
-#define TAF_VERSION_MAJOR @TAF_VERSION_MAJOR@
-#define TAF_VERSION_MINOR @TAF_VERSION_MINOR@
-#define TAF_VERSION_PATCH @TAF_VERSION_PATCH@
+#define LTF_VERSION_MAJOR @LTF_VERSION_MAJOR@
+#define LTF_VERSION_MINOR @LTF_VERSION_MINOR@
+#define LTF_VERSION_PATCH @LTF_VERSION_PATCH@
 
-#if TAF_IS_RELEASE == 1
-#define TAF_VERSION @TAF_VERSION@
+#if LTF_IS_RELEASE == 1
+#define LTF_VERSION @LTF_VERSION@
 #else
-#define TAF_VERSION @TAF_VERSION@ "-" TAF_GIT_BRANCH "@" TAF_GIT_VERSION
-#endif // TAF_IS_RELEASE
+#define LTF_VERSION @LTF_VERSION@ "-" LTF_GIT_BRANCH "@" LTF_GIT_VERSION
+#endif // LTF_IS_RELEASE
 
-#define TAF_VERSION_NUM(MAJOR, MINOR, PATCH)                                   \
+#define LTF_VERSION_NUM(MAJOR, MINOR, PATCH)                                   \
     ((MAJOR) * 1000 + (MINOR) * 100 + (PATCH))
 
-#define TAF_VERSION_NUM_CURRENT                                                \
-    TAF_VERSION_NUM(TAF_VERSION_MAJOR, TAF_VERSION_MINOR, TAF_VERSION_PATCH)
+#define LTF_VERSION_NUM_CURRENT                                                \
+    LTF_VERSION_NUM(LTF_VERSION_MAJOR, LTF_VERSION_MINOR, LTF_VERSION_PATCH)
 
 #endif // VERSION_H

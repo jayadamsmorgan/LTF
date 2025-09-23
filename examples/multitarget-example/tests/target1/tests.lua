@@ -1,6 +1,6 @@
-local taf = require("taf")
+local ltf = require("ltf")
 
-taf.test({
+ltf.test({
 	name = "Test for target1",
 	body = function()
 		print("Testing target1...")

@@ -1,7 +1,7 @@
-local taf = require("taf")
-local json = taf.json
+local ltf = require("ltf")
+local json = ltf.json
 
-taf.test({
+ltf.test({
 	name = "Test JSON serialization",
 	tags = { "module-json" },
 	body = function()
@@ -23,11 +23,11 @@ taf.test({
 
 		local str = json.serialize(test_object)
 		assert(str)
-		taf.log_info(str)
+		ltf.log_info(str)
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test JSON deserialization with good string",
 	tags = { "module-json" },
 	body = function()
@@ -44,23 +44,23 @@ taf.test({
     ]]
 
 		local test_object = json.deserialize(str)
-		taf.log_info(test_object.integer)
-		taf.log_info(test_object.double)
-		taf.log_info(test_object.another_object.string)
+		ltf.log_info(test_object.integer)
+		ltf.log_info(test_object.double)
+		ltf.log_info(test_object.another_object.string)
 		local total = 0
 		for _, value in ipairs(test_object.int_array) do
 			total = total + value
 		end
-		taf.log_info(total)
+		ltf.log_info(total)
 		local value_str = ""
 		for _, value in ipairs(test_object.str_array) do
 			value_str = value_str .. value
 		end
-		taf.log_info(value_str)
+		ltf.log_info(value_str)
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test JSON deserialization with bad string",
 	tags = { "module-json" },
 	body = function()
@@ -68,6 +68,6 @@ taf.test({
 
 		-- Should throw
 		local test_object = json.deserialize(str)
-		taf.log_info(test_object)
+		ltf.log_info(test_object)
 	end,
 })

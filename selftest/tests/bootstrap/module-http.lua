@@ -1,12 +1,12 @@
-local taf = require("taf")
-local http = taf.http
+local ltf = require("ltf")
+local http = ltf.http
 
-taf.test({
+ltf.test({
 	name = "Test HTTP POST request",
 	tags = { "module-http" },
 	body = function()
 		local handle = http.new()
-		taf.defer(function()
+		ltf.defer(function()
 			handle:cleanup()
 		end)
 
@@ -30,16 +30,16 @@ taf.test({
 			end)
 			:perform()
 
-		taf.log_info(buffer)
+		ltf.log_info(buffer)
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test HTTP GET request",
 	tags = { "module-http" },
 	body = function()
 		local handle = http.new()
-		taf.defer(function()
+		ltf.defer(function()
 			handle:cleanup()
 		end)
 
@@ -53,16 +53,16 @@ taf.test({
 			end)
 			:perform()
 
-		taf.log_info(buffer)
+		ltf.log_info(buffer)
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test HTTP DELETE request",
 	tags = { "module-http" },
 	body = function()
 		local handle = http.new()
-		taf.defer(function()
+		ltf.defer(function()
 			handle:cleanup()
 		end)
 
@@ -76,16 +76,16 @@ taf.test({
 			end)
 			:perform()
 
-		taf.log_info(result)
+		ltf.log_info(result)
 	end,
 })
 
-taf.test({
+ltf.test({
 	name = "Test HTTP PUT request",
 	tags = { "module-http" },
 	body = function()
 		local handle = http.new()
-		taf.defer(function()
+		ltf.defer(function()
 			handle:cleanup()
 		end)
 
@@ -99,6 +99,6 @@ taf.test({
 			end)
 			:perform()
 
-		taf.log_info(result)
+		ltf.log_info(result)
 	end,
 })
