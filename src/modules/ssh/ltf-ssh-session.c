@@ -58,7 +58,6 @@ int l_module_ssh_session_disconnect(lua_State *L) {}
 int l_module_ssh_session_free(lua_State *L) {}
 
 static const luaL_Reg session_fns[] = {
-    {"init", l_module_ssh_session_init},
     {"handshake", l_module_ssh_session_handshake},
     {"disconnect", l_module_ssh_session_disconnect},
     {"free", l_module_ssh_session_free},
@@ -67,6 +66,7 @@ static const luaL_Reg session_fns[] = {
 
 int l_module_register_ssh_session(lua_State *L) {
     LOG("Registering ltf-ssh-session");
+    luaL_newmetatable(L, "ltf-session");
     lua_newtable(L);
     luaL_setfuncs(L, session_fns, 0);
     lua_setfield(L, -2, "__index");

@@ -19,3 +19,5 @@ int l_module_ssh_channel_read(lua_State *L) {}
 int l_module_ssh_channel_close(lua_State *L) {}
 
 int l_module_ssh_channel_free(lua_State *L) {}
+
+int l_module_ssh_channel_init(lua_State *L) {}

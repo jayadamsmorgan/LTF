@@ -61,4 +61,5 @@ int l_module_ssh_channel_write_stderr(lua_State *L);
 int l_module_ssh_channel_x11_req(lua_State *L);
 int l_module_ssh_channel_x11_req_ex(lua_State *L);
 
+int l_module_ssh_channel_init(lua_State *L);
 #endif // MODULE_SSH2_CHANNEL_H
