@@ -7,7 +7,10 @@
 #include <libssh2.h>
 
 
+
+// ts:init() -> bool or err msg
 int l_module_ssh_lib_init(lua_State *L);
+// ts:exit() -> bool 
 int l_module_ssh_lib_exit(lua_State *L);
 
 int l_module_ssh_lib_free(lua_State *L); // Do not use
@@ -21,5 +24,12 @@ int l_module_ssh_poll_chanell_read(lua_State *L); // Do not use
 
 int l_module_ssh_trace(lua_State *L); // Do not use
 int l_module_ssh_trace_sethandler(lua_State *L); // Do not use
+
+
+
+int l_module_ssh_socket_connect(lua_State *L);
+
+int l_module_ssh_register_module(lua_State *L);
+
 
 #endif // MODULE_SSH2_LIB_H

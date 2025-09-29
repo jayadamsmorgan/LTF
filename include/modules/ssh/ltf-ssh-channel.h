@@ -7,6 +7,13 @@
 #include <lualib.h>
 #include <libssh2.h>
 
+#include "ltf-ssh-session.h"
+
+typedef struct {
+    LIBSSH2_CHANNEL *channel;
+    l_ssh_session_t *session;
+} l_ssh_channel_t;
+
 int l_module_ssh_channel_close(lua_State *L);
 int l_module_ssh_channel_direct_tcpip(lua_State *L);
 int l_module_ssh_channel_direct_tcpip_ex(lua_State *L);

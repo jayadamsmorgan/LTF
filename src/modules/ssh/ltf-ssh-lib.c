@@ -1,8 +1,12 @@
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
+#include <sys/socket.h>
+
+#include "internal_logging.h"
 
 #include "modules/ssh/ltf-ssh-lib.h"
+#include "modules/ssh/ltf-ssh-session.h"
 
 int l_module_ssh_lib_init(lua_State *L) {
     int rc = libssh2_init(0); // 0 = default flags
@@ -29,11 +33,33 @@ static const luaL_Reg module_fns[] = {
     {NULL, NULL},
 };
 
-int l_module_serial_register_module(lua_State *L) {
-    LOG("Registering taf-ssh module...");
-    LOG("Registering taf-ssh-lib")
-    LOG("Registering taf-ssh-session")
+static const luaL_Reg socket_fns[] = {
+    {"connect", l_module_ssh_socket_connect},
+    {NULL, NULL},
 
+};
+
+int l_module_register_ssh_socket(lua_State *L) {
+    LOG("Registering ltf-ssh-session");
+    lua_newtable(L);
+    luaL_setfuncs(L, socket_fns, 0);
+    lua_setfield(L, -2, "__index");
+    lua_pop(L, 1);
+    LOG("Successfully registered ltf-ssh-session");
+    return 1;
+}
+
+int l_module_ssh_register_module(lua_State *L) {
+    LOG("Registering taf-ssh module...");
+    luaL_newmetatable(L, "ltf-ssh");
+
+    l_module_register_ssh_session(L);
+    l_module_register_ssh_channel(L);
+    l_module_register_ssh_channel(L);
+    l_module_register_ssh_socket(L);
+
+    lua_newtable(L);
+    luaL_setfuncs(L, module_fns, 0);
     LOG("Successfully registered taf-ssh module.");
     return 1;
 }
