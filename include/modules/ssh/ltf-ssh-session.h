@@ -11,19 +11,27 @@ typedef struct {
     int sock_fd;
 } l_ssh_session_t;
 
+#define SSH_SESSION_MT "ltf-ssh-session"
+
 int l_module_ssh_session_abstract(lua_State *L); // Do not use
 int l_module_ssh_session_banner_get(lua_State *L); // Do not use
 int l_module_ssh_session_banner_set(lua_State *L); // Do not use
 int l_module_ssh_session_block_directions(lua_State *L); // Do not use
 int l_module_ssh_session_callback_set(lua_State *L); // Do not use
+
+// session:disonnect(session, string) -> 0/err
 int l_module_ssh_session_disconnect(lua_State *L);
 int l_module_ssh_session_disconnect_ex(lua_State *L); // Do not use
+
 int l_module_ssh_session_flag(lua_State *L); // Do not use
+
+// session:free(session) -> 0/err
 int l_module_ssh_session_free(lua_State *L);
+
 int l_module_ssh_session_get_blocking(lua_State *L); // Do not use
 int l_module_ssh_session_get_timeout(lua_State *L); // Do not use
 
-// session:handshake(session,sock) -> bool
+// session:handshake(session,sock) -> 0/err
 int l_module_ssh_session_handshake(lua_State *L); 
 int l_module_ssh_session_hostkey(lua_State *L); // Do not use
 

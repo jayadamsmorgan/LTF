@@ -6,7 +6,8 @@
 #include <lauxlib.h>
 #include <libssh2.h>
 
-
+#define SSH_LIBMOD_MT "ltf-libmod"
+#define SSH_SOCKET_MT "ltf-socket"
 
 // ts:init() -> bool or err msg
 int l_module_ssh_lib_init(lua_State *L);
