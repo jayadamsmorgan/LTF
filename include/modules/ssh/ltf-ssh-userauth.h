@@ -12,8 +12,11 @@ int l_module_ssh_userauth_hostbased_fromfile_ex(lua_State *l);
 int l_module_ssh_userauth_keyboard_interactive(lua_State *l);
 int l_module_ssh_userauth_keyboard_interactive_ex(lua_State *l);
 int l_module_ssh_userauth_list(lua_State *l);
+
+// module:userauth_password(session, string, string) -> 0/err
 int l_module_ssh_userauth_password(lua_State *l);
 int l_module_ssh_userauth_password_ex(lua_State *l);
+
 int l_module_ssh_userauth_publickey(lua_State *l);
 int l_module_ssh_userauth_publickey_fromfile(lua_State *l);
 int l_module_ssh_userauth_publickey_fromfile_ex(lua_State *l);

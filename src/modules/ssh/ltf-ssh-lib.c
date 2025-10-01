@@ -1,4 +1,3 @@
-// file: ltf-ssh-lib.c  (твой основной файл, исправлённый)
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
@@ -9,6 +8,7 @@
 #include "modules/ssh/ltf-ssh-channel.h"
 #include "modules/ssh/ltf-ssh-lib.h"
 #include "modules/ssh/ltf-ssh-session.h"
+#include "modules/ssh/ltf-ssh-userauth.h"
 
 /******************* API ***********************/
 
@@ -42,6 +42,9 @@ static int l_module_ssh_gc(lua_State *L) {
 static int l_socket_ssh_gc(lua_State *L) {
     LOG("Invoked ltf-ssh-socket GC (socket finalizer)");
     // !!!!!
+
+    // shutdown();
+    // LIBSSH2_SOCKET_CLOSE();
     return 0;
 }
 
@@ -50,8 +53,8 @@ static int l_socket_ssh_gc(lua_State *L) {
 static const luaL_Reg module_fns[] = {
     {"lib_init", l_module_ssh_lib_init},
     {"session_init", l_module_ssh_session_init},
-    {"channel_init", l_module_ssh_channel_init},
     {"socket_init", l_module_ssh_socket_init},
+    {"channel_init", l_module_ssh_channel_open_session},
     {NULL, NULL},
 };
 
@@ -105,11 +108,14 @@ int l_module_register_ssh_socket(lua_State *L) {
 }
 
 int l_module_ssh_register_module(lua_State *L) {
-    LOG("Registering taf-ssh module...");
+    LOG("Registering ltf-ssh module...");
 
     l_module_register_ssh_libmod(L);
     l_module_register_ssh_socket(L);
     l_module_register_ssh_session(L);
+    // l_module_register_ssh_channel(L);
+    // l_module_register_ssh_scp(L);
+    // l_module_register_ssh_sftp(L);
 
     lua_newtable(L);
     luaL_setfuncs(L, module_fns, 0);
@@ -120,6 +126,6 @@ int l_module_ssh_register_module(lua_State *L) {
     lua_setmetatable(L, -2);
     lua_setfield(L, -2, "_finalizer");
 
-    LOG("Successfully registered taf-ssh module.");
+    LOG("Successfully registered ltf-ssh module.");
     return 1;
 }

@@ -4,6 +4,7 @@
 
 #include "internal_logging.h"
 #include "modules/ssh/ltf-ssh-session.h"
+#include "modules/ssh/ltf-ssh-userauth.h"
 
 /* ---------- CONSTRUCTOR / METHODS ---------- */
 
@@ -110,6 +111,8 @@ int l_session_ssh_gc(lua_State *L) {
 static const luaL_Reg session_methods[] = {
     {"handshake", l_module_ssh_session_handshake},
     {"disconnect", l_module_ssh_session_disconnect},
+    {"free", l_module_ssh_session_free},
+    {"userauth_password", l_module_ssh_userauth_password},
     {"free", l_module_ssh_session_free},
     {NULL, NULL}};
 

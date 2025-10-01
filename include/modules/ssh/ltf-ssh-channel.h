@@ -11,8 +11,10 @@
 
 typedef struct {
     LIBSSH2_CHANNEL *channel;
-    l_ssh_session_t *session;
+    LIBSSH2_SESSION *session;
 } l_ssh_channel_t;
+
+#define SSH_CHANNEL_MT "ltf-ssh-channel"
 
 int l_module_ssh_channel_close(lua_State *L);
 int l_module_ssh_channel_direct_tcpip(lua_State *L);
@@ -31,16 +33,23 @@ int l_module_ssh_channel_get_exit_signal(lua_State *L);
 int l_module_ssh_channel_get_exit_status(lua_State *L);
 int l_module_ssh_channel_handle_extended_data(lua_State *L);  // _handle_extended_data2 used
 int l_module_ssh_channel_ignore_extended_data(lua_State *L);
+
+// module:open_channel(session) -> channel
 int l_module_ssh_channel_open_ex(lua_State *L);
 int l_module_ssh_channel_open_session(lua_State *L);
+
 int l_module_ssh_channel_process_startup(lua_State *L);
 int l_module_ssh_channel_read(lua_State *L);
 int l_module_ssh_channel_read_ex(lua_State *L);
 int l_module_ssh_channel_read_stderr(lua_State *L);
 int l_module_ssh_channel_receive_window_adjust(lua_State *L);
 int l_module_ssh_channel_request_auth_agent(lua_State *L);
+
+
+// channel:request_pty(session, terminal) -> 0/err
 int l_module_ssh_channel_request_pty(lua_State *L);
 int l_module_ssh_channel_request_pty_ex(lua_State *L);
+
 int l_module_ssh_channel_request_pty_size(lua_State *L);
 int l_module_ssh_channel_request_pty_size_ex(lua_State *L);
 int l_module_ssh_channel_send_eof(lua_State *L);
