@@ -97,8 +97,7 @@ int l_module_ssh_session_free(lua_State *L) {
 /* ---------- DESTRUCTOR (GC) ---------- */
 
 int l_session_ssh_gc(lua_State *L) {
-    l_ssh_session_t *u =
-        (l_ssh_session_t *)luaL_checkudata(L, 1, SSH_SESSION_MT);
+    l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
     if (u && u->session) {
         libssh2_session_free(u->session);
         u->session = NULL;

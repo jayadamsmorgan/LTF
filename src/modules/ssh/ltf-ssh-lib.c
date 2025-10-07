@@ -31,20 +31,13 @@ int l_module_ssh_lib_exit(lua_State *L) {
 
 int l_module_ssh_socket_init(lua_State *L) { return 1; }
 
-/******************* DESTRUCTORS (финализаторы) ***********************/
+int l_module_ssh_socket_close(lua_State *L) { return 1; }
+
+/******************* DESTRUCTORS ***********************/
 
 static int l_module_ssh_gc(lua_State *L) {
     LOG("Invoked ltf-ssh-lib GC (module finalizer)");
     libssh2_exit();
-    return 0;
-}
-
-static int l_socket_ssh_gc(lua_State *L) {
-    LOG("Invoked ltf-ssh-socket GC (socket finalizer)");
-    // !!!!!
-
-    // shutdown();
-    // LIBSSH2_SOCKET_CLOSE();
     return 0;
 }
 
@@ -53,18 +46,13 @@ static int l_socket_ssh_gc(lua_State *L) {
 static const luaL_Reg module_fns[] = {
     {"lib_init", l_module_ssh_lib_init},
     {"session_init", l_module_ssh_session_init},
-    {"socket_init", l_module_ssh_socket_init},
+    // {"socket_init", l_module_ssh_socket_init},
     {"channel_init", l_module_ssh_channel_open_session},
     {NULL, NULL},
 };
 
 static const luaL_Reg libmod_fns[] = {
     {"lib_exit", l_module_ssh_lib_exit},
-    {NULL, NULL},
-};
-
-static const luaL_Reg socket_fns[] = {
-    {"connect", l_module_ssh_socket_connect},
     {NULL, NULL},
 };
 
@@ -87,33 +75,12 @@ int l_module_register_ssh_libmod(lua_State *L) {
     return 0;
 }
 
-int l_module_register_ssh_socket(lua_State *L) {
-    LOG("Registering ltf-ssh-socket");
-
-    if (luaL_newmetatable(L, SSH_SOCKET_MT)) {
-        lua_newtable(L);
-        luaL_setfuncs(L, socket_fns, 0);
-        lua_setfield(L, -2, "__index");
-
-        lua_pushcfunction(L, l_socket_ssh_gc);
-        lua_setfield(L, -2, "__gc");
-
-        lua_pushstring(L, "locked");
-        lua_setfield(L, -2, "__metatable");
-    }
-    lua_pop(L, 1);
-
-    LOG("Successfully registered ltf-ssh-socket");
-    return 0;
-}
-
 int l_module_ssh_register_module(lua_State *L) {
     LOG("Registering ltf-ssh module...");
 
     l_module_register_ssh_libmod(L);
-    l_module_register_ssh_socket(L);
     l_module_register_ssh_session(L);
-    // l_module_register_ssh_channel(L);
+    l_module_register_ssh_channel(L);
     // l_module_register_ssh_scp(L);
     // l_module_register_ssh_sftp(L);
 
