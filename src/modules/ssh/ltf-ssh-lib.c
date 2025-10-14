@@ -42,9 +42,10 @@ static int l_module_ssh_gc(lua_State *L) {
 static const luaL_Reg module_fns[] = {
     {"lib_init", l_module_ssh_lib_init},
     {"session_init", l_module_ssh_session_init},
+    {"channel_init", l_module_ssh_channel_open_session},
     {"socket_init", l_module_ssh_socket_init},
     {"socket_free", l_module_ssh_socket_free},
-    {"channel_init", l_module_ssh_channel_open_session},
+    {"userauth_password", l_module_ssh_userauth_password},
     {NULL, NULL},
 };
 

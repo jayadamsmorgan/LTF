@@ -144,6 +144,11 @@ sources = [
   'src/modules/proc/ltf-proc.c',
   'src/modules/serial/ltf-serial.c',
   'src/modules/ltf/ltf.c',
+  'src/modules/ssh/ltf-ssh-lib.c',
+  'src/modules/ssh/ltf-ssh-channel.c',
+  'src/modules/ssh/ltf-ssh-session.c',
+  'src/modules/ssh/ltf-ssh-userauth.c',
+
 ]
 
 include_dir = include_directories('include')
