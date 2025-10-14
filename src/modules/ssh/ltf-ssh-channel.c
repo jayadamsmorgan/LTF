@@ -28,13 +28,13 @@ int l_module_ssh_channel_request_pty(lua_State *L) {
     if (!u->channel) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_request_pty() failed because "
-                          "channel is not exist");
+                          "channel does not exist");
         return 2;
     }
     if (!u->session) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_request_pty() failed because "
-                          "session is not exist");
+                          "session does not exist");
         return 2;
     }
     const char *s = luaL_checkstring(L, 2);
@@ -56,13 +56,13 @@ int l_module_ssh_channel_exec(lua_State *L) {
     if (!u->channel) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_exec() failed because "
-                          "channel is not exist");
+                          "channel does not exist");
         return 2;
     }
     if (!u->session) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_exec() failed because "
-                          "session associated with channel is not exist");
+                          "session associated with channel does not exist");
         return 2;
     }
 
@@ -84,13 +84,13 @@ int l_module_ssh_channel_shell(lua_State *L) {
     if (!u->channel) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_shell() failed because "
-                          "channel is not exist");
+                          "channel does not exist");
         return 2;
     }
     if (!u->session) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_shell() failed because "
-                          "session associated with channel is not exist");
+                          "session associated with channel does not exist");
         return 2;
     }
 
@@ -110,13 +110,13 @@ int l_module_ssh_channel_write(lua_State *L) {
     if (!u->channel) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_shell() failed because "
-                          "channel is not exist");
+                          "channel does not exist");
         return 2;
     }
     if (!u->session) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_shell() failed because "
-                          "session associated with channel is not exist");
+                          "session associated with channel does not exist");
         return 2;
     }
     const char *s = luaL_checkstring(L, 2);
@@ -154,13 +154,13 @@ int l_module_ssh_channel_read(lua_State *L) {
     if (!u->channel) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_read() failed because "
-                          "channel is not exist");
+                          "channel does not exist");
         return 2;
     }
     if (!u->session) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_read() failed because "
-                          "session associated with channel is not exist");
+                          "session associated with channel does not exist");
         return 2;
     }
     const char *s = luaL_checkstring(L, 2);
@@ -195,14 +195,14 @@ int l_module_ssh_channel_close(lua_State *L) {
     if (!u->channel) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_close() failed because "
-                          "channel is not exist");
+                          "channel does not exist");
         return 2;
     }
 
     if (!u->session) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_close() failed because "
-                          "session associated with channel is not exist");
+                          "session associated with channel does not exist");
         return 2;
     }
 
@@ -212,6 +212,8 @@ int l_module_ssh_channel_close(lua_State *L) {
         lua_pushfstring(L, "libssh2_channel_close() failed with code: %d", rc);
         return 2;
     }
+    lua_pushboolean(L, 1);
+    return 1;
 }
 
 int l_module_ssh_channel_free(lua_State *L) {
@@ -219,14 +221,14 @@ int l_module_ssh_channel_free(lua_State *L) {
     if (!u->channel) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_free() failed because "
-                          "channel is not exist");
+                          "channel does not exist");
         return 2;
     }
 
     if (!u->session) {
         lua_pushnil(L);
         lua_pushstring(L, "l_module_ssh_channel_free() failed because "
-                          "session associated with channel is not exist");
+                          "session associated with channel does not exist");
         return 2;
     }
 
@@ -256,22 +258,24 @@ int l_channel_ssh_gc(lua_State *L) {
 /* ---------- REGISTRATION ---------- */
 
 static const luaL_Reg channel_methods[] = {
-    {"request_pty", l_module_ssh_session_handshake},
-    {"disconnect", l_module_ssh_session_disconnect},
-    {"free", l_module_ssh_session_free},
-    {"userauth_password", l_module_ssh_userauth_password},
+    {"request_pty", l_module_ssh_channel_request_pty},
+    {"exec", l_module_ssh_channel_exec},
+    {"shell", l_module_ssh_channel_shell},
+    {"write", l_module_ssh_channel_write},
+    {"read", l_module_ssh_channel_read},
+    {"close", l_module_ssh_channel_close},
     {"free", l_module_ssh_session_free},
     {NULL, NULL}};
 
-int l_module_register_ssh_session(lua_State *L) {
-    LOG("Registering ltf-ssh-session");
+int l_module_register_ssh_channel(lua_State *L) {
+    LOG("Registering ltf-ssh-channel");
 
     if (luaL_newmetatable(L, SSH_SESSION_MT)) {
         lua_newtable(L);
-        luaL_setfuncs(L, session_methods, 0);
+        luaL_setfuncs(L, channel_methods, 0);
         lua_setfield(L, -2, "__index");
 
-        lua_pushcfunction(L, l_session_ssh_gc);
+        lua_pushcfunction(L, l_channel_ssh_gc);
         lua_setfield(L, -2, "__gc");
 
         lua_pushstring(L, "locked");
@@ -279,6 +283,6 @@ int l_module_register_ssh_session(lua_State *L) {
     }
     lua_pop(L, 1);
 
-    LOG("Successfully registered ltf-ssh-session");
+    LOG("Successfully registered ltf-ssh-channel");
     return 0;
 }

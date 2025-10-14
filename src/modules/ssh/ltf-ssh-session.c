@@ -1,18 +1,89 @@
+#include "modules/ssh/ltf-ssh-session.h"
+#include "internal_logging.h"
+#include "modules/ssh/ltf-ssh-userauth.h"
+#include <arpa/inet.h>
+#include <errno.h>
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
-
-#include "internal_logging.h"
-#include "modules/ssh/ltf-ssh-session.h"
-#include "modules/ssh/ltf-ssh-userauth.h"
-
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 /* ---------- CONSTRUCTOR / METHODS ---------- */
 
+static int ssh_socket_connect_ipv4(const char *ip_str, int port) {
+    libssh2_socket_t sock = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (sock == LIBSSH2_INVALID_SOCKET) {
+        fprintf(stderr, "failed to create socket.\n");
+        return -1;
+    }
+    struct sockaddr_in sin;
+
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons((uint16_t)port);
+
+    if (inet_pton(AF_INET, ip_str, &sin.sin_addr) != 1) {
+        close(sock);
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (connect(sock, (struct sockaddr *)&sin, sizeof(sin)) != 0) {
+        int saved_errno = errno;
+        close(sock);
+        errno = saved_errno;
+        return -1;
+    }
+
+    return sock;
+}
+
+int l_module_ssh_socket_init(lua_State *L) {
+    const char *ip = luaL_checkstring(L, 1);
+    int port = (int)luaL_checkinteger(L, 2);
+
+    int fd = ssh_socket_connect_ipv4(ip, port);
+    if (fd < 0) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "ssh_socket_connect_ipv4 failed with fd: %d", fd);
+        return 2;
+    }
+
+    lua_pushinteger(L, fd);
+    return 1;
+}
+
+int l_module_ssh_socket_free(lua_State *L) {
+    int fd = (int)luaL_checkinteger(L, 1);
+
+    if (fd < 0) {
+        lua_pushnil(L);
+        lua_pushstring(L, "invalid socket fd");
+        return 2;
+    }
+    shutdown(fd, SHUT_RDWR);
+
+    if (close(fd) != 0) {
+        int e = errno;
+        lua_pushnil(L);
+        lua_pushfstring(L, "close failed: %s", strerror(e));
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
 int l_module_ssh_session_init(lua_State *L) {
+
     l_ssh_session_t *u = lua_newuserdata(L, sizeof *u);
-    u->session = libssh2_session_init();
+
+    u->session = NULL;
     u->sock_fd = -1;
 
+    u->session = libssh2_session_init();
     if (!u->session) {
         lua_pop(L, 1);
         lua_pushnil(L);
@@ -102,9 +173,15 @@ int l_session_ssh_gc(lua_State *L) {
         libssh2_session_free(u->session);
         u->session = NULL;
     }
+
+    if (u->sock_fd != -1) {
+        shutdown(u->sock_fd, SHUT_RDWR);
+        close(u->sock_fd);
+        u->sock_fd = -1;
+    }
+
     return 0;
 }
-
 /* ---------- REGISTRATION ---------- */
 
 static const luaL_Reg session_methods[] = {

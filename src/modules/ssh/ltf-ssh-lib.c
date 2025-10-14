@@ -29,10 +29,6 @@ int l_module_ssh_lib_exit(lua_State *L) {
     return 1;
 }
 
-int l_module_ssh_socket_init(lua_State *L) { return 1; }
-
-int l_module_ssh_socket_close(lua_State *L) { return 1; }
-
 /******************* DESTRUCTORS ***********************/
 
 static int l_module_ssh_gc(lua_State *L) {
@@ -46,7 +42,8 @@ static int l_module_ssh_gc(lua_State *L) {
 static const luaL_Reg module_fns[] = {
     {"lib_init", l_module_ssh_lib_init},
     {"session_init", l_module_ssh_session_init},
-    // {"socket_init", l_module_ssh_socket_init},
+    {"socket_init", l_module_ssh_socket_init},
+    {"socket_free", l_module_ssh_socket_free},
     {"channel_init", l_module_ssh_channel_open_session},
     {NULL, NULL},
 };

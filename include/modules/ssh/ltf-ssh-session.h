@@ -8,10 +8,13 @@
 
 typedef struct {
     LIBSSH2_SESSION *session;
-    int sock_fd;
+    libssh2_socket_t sock_fd;
 } l_ssh_session_t;
 
 #define SSH_SESSION_MT "ltf-ssh-session"
+
+int l_module_ssh_socket_init(lua_State *L);
+int l_module_ssh_socket_free(lua_State *L);
 
 int l_module_ssh_session_abstract(lua_State *L); // Do not use
 int l_module_ssh_session_banner_get(lua_State *L); // Do not use
