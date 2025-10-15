@@ -87,7 +87,7 @@ int l_module_ssh_register_module(lua_State *L) {
 
     void **ud = (void **)lua_newuserdata(L, sizeof(void *));
     *ud = NULL;
-    luaL_getmetatable(L, SSH_LIBMOD_MT);
+    luaL_getmetatable(L, SSH_LIB_MT);
     lua_setmetatable(L, -2);
     lua_setfield(L, -2, "_finalizer");
 

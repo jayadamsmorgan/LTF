@@ -35,6 +35,7 @@ M.proc = require("ltf.proc")
 M.json = require("ltf.json")
 M.http = require("ltf.http")
 M.hooks = require("ltf.hooks")
+M.ssh = require("ltf.ssh")
 
 --- Get amount of milliseconds since test started
 ---
