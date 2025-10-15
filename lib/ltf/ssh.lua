@@ -1,9 +1,11 @@
 local ltf = require("ltf-main")
-local ts = require("ltf-libmod")
+local ts = require("ltf-ssh")
 
 local M = {}
 
--- M.session_connect = function()
--- local ts.lib_init()
+-- For low level function usage in tests
+M.low = ts
 
--- end
+M.easy_connect = function() end
+
+return M

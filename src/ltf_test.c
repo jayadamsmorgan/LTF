@@ -4,11 +4,11 @@
 #include "headless.h"
 #include "internal_logging.h"
 #include "keyword_status.h"
-#include "project_parser.h"
 #include "ltf_hooks.h"
 #include "ltf_secrets.h"
 #include "ltf_tui.h"
 #include "ltf_vars.h"
+#include "project_parser.h"
 #include "test_case.h"
 #include "test_logs.h"
 #include "version.h"
@@ -16,9 +16,10 @@
 #include "modules/hooks/ltf-hooks.h"
 #include "modules/http/ltf-http.h"
 #include "modules/json/ltf-json.h"
+#include "modules/ltf/ltf.h"
 #include "modules/proc/ltf-proc.h"
 #include "modules/serial/ltf-serial.h"
-#include "modules/ltf/ltf.h"
+#include "modules/ssh/ltf-ssh-lib.h"
 
 #include "util/files.h"
 #include "util/line_cache.h"
@@ -340,6 +341,7 @@ static void register_test_api(lua_State *L) {
     register_clua_module(L, "ltf-proc", l_module_proc_register_module);
     register_clua_module(L, "ltf-serial", l_module_serial_register_module);
     register_clua_module(L, "ltf-hooks", l_module_hooks_register_module);
+    register_clua_module(L, "ltf-ssh", l_module_ssh_register_module);
 
     inject_modules_dir(L);
 

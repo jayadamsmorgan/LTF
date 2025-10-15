@@ -4,6 +4,7 @@
 
 #include "internal_logging.h"
 #include "modules/ssh/ltf-ssh-channel.h"
+#include "modules/ssh/ltf-ssh-session.h"
 
 int l_module_ssh_channel_open_session(lua_State *L) {
     l_ssh_session_t *s = luaL_checkudata(L, 1, SSH_SESSION_MT);
@@ -264,7 +265,7 @@ static const luaL_Reg channel_methods[] = {
     {"write", l_module_ssh_channel_write},
     {"read", l_module_ssh_channel_read},
     {"close", l_module_ssh_channel_close},
-    {"free", l_module_ssh_session_free},
+    {"free", l_module_ssh_channel_free},
     {NULL, NULL}};
 
 int l_module_register_ssh_channel(lua_State *L) {

@@ -182,6 +182,7 @@ ltf_lib = static_library(
     lua_dep,
     libsp_dep,
     picotui_dep,
+    libssh_dep,
   ],
   install: false,
 )
@@ -197,6 +198,7 @@ ltf_dep = declare_dependency(
     lua_dep,
     libsp_dep,
     picotui_dep,
+    libssh_dep,
   ],
 )
 
@@ -213,6 +215,7 @@ executable(
     lua_dep,
     libsp_dep,
     picotui_dep,
+    libssh_dep,
   ],
   install: true,
   install_mode: ltf_install_mode,

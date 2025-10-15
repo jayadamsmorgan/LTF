@@ -189,7 +189,6 @@ static const luaL_Reg session_methods[] = {
     {"disconnect", l_module_ssh_session_disconnect},
     {"free", l_module_ssh_session_free},
     {"userauth_password", l_module_ssh_userauth_password},
-    {"free", l_module_ssh_session_free},
     {NULL, NULL}};
 
 int l_module_register_ssh_session(lua_State *L) {

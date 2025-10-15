@@ -1,4 +1,3 @@
-
 #ifndef MODULE_SSH2_CHANNEL_H
 #define MODULE_SSH2_CHANNEL_H
 
@@ -7,17 +6,12 @@
 #include <lualib.h>
 #include <libssh2.h>
 
-#include "ltf-ssh-session.h"
-
 typedef struct {
     LIBSSH2_CHANNEL *channel;
     LIBSSH2_SESSION *session;
 } l_ssh_channel_t;
 
 #define SSH_CHANNEL_MT "ltf-ssh-channel"
-
-
-
 
 // channel:close(channel) -> 0/err
 int l_module_ssh_channel_close(lua_State *L);
