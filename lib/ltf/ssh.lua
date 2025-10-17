@@ -64,11 +64,117 @@ M.close_connection = function(connection)
 	if res == nil then
 		ltf.log_error(err)
 	end
+	ts.lib_exit()
 end
 
--- Arguments: connection with stdout and stderr output
-M.execute_cmd = function(connection, cmd, stdout_b, stderr_b) end
+local CHUNK_DEFAULT = 4096
 
+local function waitsocket_for(connection)
+	return ts.low.waitsocket(connection.socket, connection.session)
+end
+
+local function read_full_stdout(channel, connection, chunk_size)
+	chunk_size = CHUNK_DEFAULT
+	local parts = {}
+	local idx = 1
+
+	while true do
+		local chunk, err = channel:read(chunk_size)
+		if chunk then
+			if #chunk > 0 then
+				parts[idx] = chunk
+				idx = idx + 1
+			else
+				break
+			end
+		else
+			if err and err:find("EAGAIN") then
+				local ok, werr = waitsocket_for(connection)
+				if not ok then
+					return nil, "waitsocket failed: " .. tostring(werr)
+				end
+			else
+				return nil, tostring(err or "unknown read error")
+			end
+		end
+	end
+
+	return table.concat(parts)
+end
+
+-- read_full_stderr(channel, connection, chunk_size)
+-- аналогично для stderr
+local function read_full_stderr(channel, connection, chunk_size)
+	chunk_size = chunk_size or CHUNK_DEFAULT
+	local parts = {}
+	local idx = 1
+
+	while true do
+		local chunk, err = channel:read_stderr(chunk_size)
+		if chunk then
+			if #chunk > 0 then
+				parts[idx] = chunk
+				idx = idx + 1
+			else
+				-- EOF stderr
+				break
+			end
+		else
+			if err and err:find("EAGAIN") then
+				local ok, werr = waitsocket_for(connection)
+				if not ok then
+					return nil, "waitsocket failed: " .. tostring(werr)
+				end
+			else
+				return nil, tostring(err or "unknown read_stderr error")
+			end
+		end
+	end
+
+	return table.concat(parts)
+end
+-- Execute command via  previously opened ssh connection with <create_conenction>
+-- Pass true to stdout_b and/or stderr_b to recive stdout and/or stderr output
+M.execute_cmd = function(connection, cmd, stdout_b, stderr_b)
+	-- Initiate  channel within existing connection
+	local channel, err = ts.channel_init(connection.session)
+	if not channel then
+		error("open_channel failed: " .. tostring(err))
+	end
+
+	-- Initiate  channel within existing connection
+	local ok, e = channel:exec(cmd)
+	if not ok then
+		if e and e:find("EAGAIN") then
+			ts.waitsocket(connection.socket, connection.session)
+			ok, e = channel:exec(cmd)
+		end
+		if not ok then
+			error("exec failed: " .. tostring(e))
+		end
+	end
+
+	local stdout_text, serr = read_full_stdout(channel, connection)
+	if not stdout_text then
+		error("stdout read error: " .. tostring(serr))
+	end
+
+	local stderr_text, serr2 = read_full_stderr(channel, connection)
+	if not stderr_text then
+		error("stderr read error: " .. tostring(serr2))
+	end
+
+	local okc, cerr = channel:close()
+	if okc == nil and cerr:find("EAGAIN") then
+		ts.waitsocket(connection.socket, connection.session)
+		okc, cerr = channel:close()
+	end
+	-- local exitcode = channel:get_exit_status() or -1
+	channel:free()
+	-- print("exit:", exitcode)
+	print("STDOUT:\n", stdout_text)
+	print("STDERR:\n", stderr_text)
+end
 -- Arguments:
 M.open_shell = function(connection, cmd) end
 

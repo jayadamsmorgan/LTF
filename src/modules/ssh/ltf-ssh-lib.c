@@ -10,13 +10,23 @@
 #include "modules/ssh/ltf-ssh-session.h"
 #include "modules/ssh/ltf-ssh-userauth.h"
 
+const char *ssh_err_to_str(int code) {
+    for (int i = 0; ssh_error_map[i].name != NULL; ++i) {
+        if (ssh_error_map[i].code == code)
+            return ssh_error_map[i].name;
+    }
+    return unknown_err_output;
+}
+
 /******************* API ***********************/
 
 int l_module_ssh_lib_init(lua_State *L) {
     int rc = libssh2_init(0); // 0 = default flags
     if (rc) {
+
         lua_pushnil(L);
-        lua_pushfstring(L, "libssh2_init failed with code: %d", rc);
+        lua_pushfstring(L, "libssh2_init failed with code: %s",
+                        ssh_err_to_str(rc));
         return 2;
     }
     lua_pushboolean(L, 1);
@@ -45,7 +55,9 @@ static const luaL_Reg module_fns[] = {
     {"channel_init", l_module_ssh_channel_open_session},
     {"socket_init", l_module_ssh_socket_init},
     {"socket_free", l_module_ssh_socket_free},
+    {"waitsocket", l_module_ssh_waitsocket},
     {"userauth_password", l_module_ssh_userauth_password},
+    {"lib_exit", l_module_ssh_lib_exit},
     {NULL, NULL},
 };
 

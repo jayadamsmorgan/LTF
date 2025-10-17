@@ -29,7 +29,7 @@ ltf.test({
 	name = "SSH connect and disconnect with high level API",
 	tags = { "tag2" },
 	body = function()
-		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "yproshin", "CPE%FUZD")
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "root", "albacore")
 
 		ltf.log_info("ip: ", conn1.ip)
 		ltf.log_info("port: ", conn1.port)
@@ -38,7 +38,7 @@ ltf.test({
 		ltf.log_info("session: ", conn1.session)
 		ltf.log_info("socket: ", conn1.socket)
 
-		-- ssh.execute_cmd(conn1,"cmd", true, true)
+		ssh.execute_cmd(conn1, "/sbin/rebootasdasda", true, true)
 
 		ssh.close_connection(conn1)
 	end,

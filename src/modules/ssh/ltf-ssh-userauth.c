@@ -2,6 +2,7 @@
 #include <lua.h>
 #include <lualib.h>
 
+#include "modules/ssh/ltf-ssh-lib.h"
 #include "modules/ssh/ltf-ssh-session.h"
 #include "modules/ssh/ltf-ssh-userauth.h"
 
@@ -21,8 +22,8 @@ int l_module_ssh_userauth_password(lua_State *L) {
 
     if (rc) {
         lua_pushnil(L);
-        lua_pushfstring(L, "libssh2_userauth_password failed with code: %d",
-                        rc);
+        lua_pushfstring(L, "libssh2_userauth_password failed with code: %s",
+                        ssh_err_to_str(rc));
         return 2;
     }
     lua_pushboolean(L, 1);

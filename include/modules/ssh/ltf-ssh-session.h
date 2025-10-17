@@ -15,6 +15,7 @@ typedef struct {
 
 int l_module_ssh_socket_init(lua_State *L);
 int l_module_ssh_socket_free(lua_State *L);
+int l_module_ssh_waitsocket(lua_State *L);
 
 int l_module_ssh_session_abstract(lua_State *L); // Do not use
 int l_module_ssh_session_banner_get(lua_State *L); // Do not use

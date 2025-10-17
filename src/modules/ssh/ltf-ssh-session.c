@@ -9,7 +9,71 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+#include <modules/ssh/ltf-ssh-lib.h>
 /* ---------- CONSTRUCTOR / METHODS ---------- */
+
+static int waitsocket(libssh2_socket_t socket_fd, LIBSSH2_SESSION *session) {
+    struct timeval timeout;
+    int rc;
+    fd_set fd;
+    fd_set *writefd = NULL;
+    fd_set *readfd = NULL;
+    int dir;
+
+    timeout.tv_sec = 10;
+    timeout.tv_usec = 0;
+
+    FD_ZERO(&fd);
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+    FD_SET(socket_fd, &fd);
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+    dir = libssh2_session_block_directions(session);
+
+    if (dir & LIBSSH2_SESSION_BLOCK_INBOUND)
+        readfd = &fd;
+
+    if (dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
+        writefd = &fd;
+
+    rc = select((int)(socket_fd + 1), readfd, writefd, NULL, &timeout);
+
+    return rc;
+}
+
+int l_module_ssh_waitsocket(lua_State *L) {
+
+    int fd = (int)luaL_checkinteger(L, 1); // libssh2_socket_t is 'int' here
+    l_ssh_session_t *u = luaL_checkudata(L, 2, SSH_SESSION_MT);
+
+    if (!u->session) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Session was not initialized");
+        return 2;
+    }
+    if (fd == -1) {
+        lua_pushnil(L);
+        lua_pushstring(L, "No valid socket descriptor was provided");
+        return 2;
+    }
+
+    int rc = waitsocket(fd, u->session);
+    if (rc) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "waitsocket() failed with code: %s",
+                        ssh_err_to_str(rc));
+        return 2;
+    }
+    lua_pushboolean(L, 1);
+    return 1;
+}
 
 static int ssh_socket_connect_ipv4(const char *ip_str, int port) {
     libssh2_socket_t sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -71,7 +135,6 @@ int l_module_ssh_socket_free(lua_State *L) {
         lua_pushfstring(L, "close failed: %s", strerror(e));
         return 2;
     }
-
     lua_pushboolean(L, 1);
     return 1;
 }
@@ -110,8 +173,8 @@ int l_module_ssh_session_handshake(lua_State *L) {
     int rc = libssh2_session_handshake(u->session, fd);
     if (rc) {
         lua_pushnil(L);
-        lua_pushfstring(L, "libssh2_session_handshake failed with code: %d",
-                        rc);
+        lua_pushfstring(L, "libssh2_session_handshake failed with code: %s",
+                        ssh_err_to_str(rc));
         return 2;
     }
 
@@ -134,8 +197,8 @@ int l_module_ssh_session_disconnect(lua_State *L) {
     int rc = libssh2_session_disconnect(u->session, st);
     if (rc) {
         lua_pushnil(L);
-        lua_pushfstring(L, "libssh2_session_disconnect failed with code: %d",
-                        rc);
+        lua_pushfstring(L, "libssh2_session_disconnect failed with code: %s",
+                        ssh_err_to_str(rc));
         return 2;
     }
 
@@ -156,7 +219,8 @@ int l_module_ssh_session_free(lua_State *L) {
     int rc = libssh2_session_free(u->session);
     if (rc) {
         lua_pushnil(L);
-        lua_pushfstring(L, "libssh2_session_free failed with code: %d", rc);
+        lua_pushfstring(L, "libssh2_session_free failed with code: %s",
+                        ssh_err_to_str(rc));
         return 2;
     }
 
