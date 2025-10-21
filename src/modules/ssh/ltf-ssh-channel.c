@@ -360,6 +360,7 @@ int l_module_ssh_channel_free(lua_State *L) {
                         ssh_err_to_str(rc));
         return 2;
     }
+    u->channel = NULL;
     lua_pushboolean(L, 1);
     return 1;
 }
@@ -372,6 +373,7 @@ int l_channel_ssh_gc(lua_State *L) {
         libssh2_channel_close(u->channel);
         libssh2_channel_free(u->channel);
         u->channel = NULL;
+        u->session = NULL;
     }
     return 0;
 }

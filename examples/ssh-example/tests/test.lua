@@ -38,8 +38,10 @@ ltf.test({
 		ltf.log_info("session: ", conn1.session)
 		ltf.log_info("socket: ", conn1.socket)
 
-		ssh.execute_cmd(conn1, "/sbin/rebootasdasda", true, true)
+		local stdout, stderr = ssh.execute_cmd(conn1, "lss", true, true)
 
+		ltf.log_info("STDOUT:\n", stdout)
+		ltf.log_info("STDERR:\n", stderr)
 		ssh.close_connection(conn1)
 	end,
 })

@@ -133,7 +133,7 @@ local function read_full_stderr(channel, connection, chunk_size)
 
 	return table.concat(parts)
 end
--- Execute command via  previously opened ssh connection with <create_conenction>
+-- Execute command via  previously opened ssh connection with <create_connection>
 -- Pass true to stdout_b and/or stderr_b to recive stdout and/or stderr output
 M.execute_cmd = function(connection, cmd, stdout_b, stderr_b)
 	-- Initiate  channel within existing connection
@@ -142,7 +142,7 @@ M.execute_cmd = function(connection, cmd, stdout_b, stderr_b)
 		error("open_channel failed: " .. tostring(err))
 	end
 
-	-- Initiate  channel within existing connection
+	-- Execute command
 	local ok, e = channel:exec(cmd)
 	if not ok then
 		if e and e:find("EAGAIN") then
@@ -154,26 +154,38 @@ M.execute_cmd = function(connection, cmd, stdout_b, stderr_b)
 		end
 	end
 
+	-- Recive command's stdout
 	local stdout_text, serr = read_full_stdout(channel, connection)
 	if not stdout_text then
 		error("stdout read error: " .. tostring(serr))
 	end
 
+	-- Recive command's stderr
 	local stderr_text, serr2 = read_full_stderr(channel, connection)
 	if not stderr_text then
 		error("stderr read error: " .. tostring(serr2))
 	end
 
+	-- Close channel and free chanel's resources
 	local okc, cerr = channel:close()
 	if okc == nil and cerr:find("EAGAIN") then
 		ts.waitsocket(connection.socket, connection.session)
 		okc, cerr = channel:close()
 	end
-	-- local exitcode = channel:get_exit_status() or -1
+
 	channel:free()
-	-- print("exit:", exitcode)
-	print("STDOUT:\n", stdout_text)
-	print("STDERR:\n", stderr_text)
+
+	-- Return stdout and/or stderr if stdout_b and/or stderr_b is true
+
+	if stdout_b and stderr_b then
+		return stdout_text, stderr_text
+	elseif stdout_b then
+		return stdout_text
+	elseif stderr_b then
+		return stderr_text
+	else
+		return true
+	end
 end
 -- Arguments:
 M.open_shell = function(connection, cmd) end

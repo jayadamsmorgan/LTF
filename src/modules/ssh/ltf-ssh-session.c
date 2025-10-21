@@ -229,11 +229,48 @@ int l_module_ssh_session_free(lua_State *L) {
     return 1;
 }
 
+int l_module_ssh_session_set_timeout(lua_State *L) {
+    l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
+
+    if (!u->session) {
+        lua_pushnil(L);
+        lua_pushstring(
+            L, "Timeout setup failed because no actual session was provided");
+        return 2;
+    }
+
+    // Timeout in milliseconds:
+    long t = luaL_checkinteger(L, 2);
+
+    libssh2_session_set_timeout(u->session, t);
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int l_module_ssh_session_set_read_timeout(lua_State *L) {
+    l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
+
+    if (!u->session) {
+        lua_pushnil(L);
+        lua_pushstring(
+            L, "Timeout setup failed because no actual session was provided");
+        return 2;
+    }
+
+    // Timeout in milliseconds:
+    long t = luaL_checkinteger(L, 2);
+
+    libssh2_session_set_read_timeout(u->session, t);
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
 /* ---------- DESTRUCTOR (GC) ---------- */
 
 int l_session_ssh_gc(lua_State *L) {
     l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
     if (u && u->session) {
+        libssh2_session_disconnect(u->session, "Normal Shutdown");
         libssh2_session_free(u->session);
         u->session = NULL;
     }
@@ -253,6 +290,8 @@ static const luaL_Reg session_methods[] = {
     {"disconnect", l_module_ssh_session_disconnect},
     {"free", l_module_ssh_session_free},
     {"userauth_password", l_module_ssh_userauth_password},
+    {"set_timeout", l_module_ssh_session_set_timeout},
+    {"set_read_timeout", l_module_ssh_session_set_read_timeout},
     {NULL, NULL}};
 
 int l_module_register_ssh_session(lua_State *L) {
