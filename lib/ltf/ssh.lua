@@ -9,7 +9,7 @@ local M = {}
 M.low = ts
 
 -- Arguments: ip, port, usr, pswd,
-M.create_connection = function(ip, port, usr, pswd)
+M.create_connection = function(ip, port, usr, pswd, timeout)
 	local res, err = ts.lib_init()
 	if res == nil then
 		error(err)
@@ -35,6 +35,13 @@ M.create_connection = function(ip, port, usr, pswd)
 	if res == nil then
 		error(err)
 	end
+
+	-- Set timeout for all operation within function
+	if timeout ~= nil then
+		session:set_timeout(timeout)
+		session:set_read_timeout(timeout)
+	end
+
 	-- create connection struct
 	local connection = {
 		ip = ip,
@@ -135,7 +142,12 @@ local function read_full_stderr(channel, connection, chunk_size)
 end
 -- Execute command via  previously opened ssh connection with <create_connection>
 -- Pass true to stdout_b and/or stderr_b to recive stdout and/or stderr output
-M.execute_cmd = function(connection, cmd, stdout_b, stderr_b)
+M.execute_cmd = function(connection, cmd, stdout_b, stderr_b, timeout)
+	-- Set timeout for all operation within function
+	if timeout ~= nil then
+		connection.session:set_timeout(timeout)
+		connection.session:set_read_timeout(timeout)
+	end
 	-- Initiate  channel within existing connection
 	local channel, err = ts.channel_init(connection.session)
 	if not channel then
