@@ -55,6 +55,16 @@ M.create_connection = function(ip, port, usr, pswd, timeout)
 	return connection
 end
 
+-- Helper to pass env variables for channel
+local function set_env(channel, env)
+	for _, pair in ipairs(env) do
+		local ok, err = channel:set_env(pair.var, pair.val)
+		if not ok then
+			error(("setenv failed for %s=%s: %s"):format(pair.var, pair.val, tostring(err)))
+		end
+	end
+end
+
 -- Arguments: ip, port, usr, pswd,
 M.close_connection = function(connection)
 	local res, err = connection.session:disconnect("User disconnect")
@@ -142,17 +152,21 @@ local function read_full_stderr(channel, connection, chunk_size)
 end
 -- Execute command via  previously opened ssh connection with <create_connection>
 -- Pass true to stdout_b and/or stderr_b to recive stdout and/or stderr output
-M.execute_cmd = function(connection, cmd, stdout_b, stderr_b, timeout)
+M.execute_cmd = function(connection, cmd, stdout_b, stderr_b, timeout, env)
 	-- Set timeout for all operation within function
 	if timeout ~= nil then
 		connection.session:set_timeout(timeout)
 		connection.session:set_read_timeout(timeout)
 	end
+
 	-- Initiate  channel within existing connection
 	local channel, err = ts.channel_init(connection.session)
 	if not channel then
 		error("open_channel failed: " .. tostring(err))
 	end
+
+	-- Pass env
+	-- set_env(channel, env)
 
 	-- Execute command
 	local ok, e = channel:exec(cmd)

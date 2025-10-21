@@ -20,7 +20,15 @@ int l_module_ssh_channel_open_session(lua_State *L) {
     l_ssh_channel_t *u = lua_newuserdata(L, sizeof *u);
     u->channel = libssh2_channel_open_session(s->session);
     u->session = s->session;
+    if (u->channel == NULL) {
+        int rc = libssh2_session_last_error(u->session, NULL, NULL, 0);
+        u->session = NULL;
+        lua_pushnil(L);
+        lua_pushfstring(L, "libssh2_session_last_error failedwith code: %s",
+                        ssh_err_to_str(rc));
 
+        return 2;
+    }
     luaL_getmetatable(L, SSH_CHANNEL_MT);
     lua_setmetatable(L, -2);
     return 1;
@@ -365,6 +373,36 @@ int l_module_ssh_channel_free(lua_State *L) {
     return 1;
 }
 
+int l_module_ssh_channel_setenv(lua_State *L) {
+    l_ssh_channel_t *u = luaL_checkudata(L, 1, SSH_CHANNEL_MT);
+    if (!u->channel) {
+        lua_pushnil(L);
+        lua_pushstring(L, "l_module_ssh_channel_setenv() failed because "
+                          "channel does not exist");
+        return 2;
+    }
+
+    if (!u->session) {
+        lua_pushnil(L);
+        lua_pushstring(L, "l_module_ssh_channel_setenv() failed because "
+                          "session associated with channel does not exist");
+        return 2;
+    }
+
+    const char *varname = luaL_checkstring(L, 2);
+    const char *value = luaL_checkstring(L, 3);
+
+    int rc = libssh2_channel_setenv(u->channel, varname, value);
+    if (rc) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "libssh2_channel_setenv failed with code: %s",
+                        ssh_err_to_str(rc));
+        return 2;
+    }
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
 /* ---------- DESTRUCTOR (GC) ---------- */
 
 int l_channel_ssh_gc(lua_State *L) {
@@ -387,6 +425,7 @@ static const luaL_Reg channel_methods[] = {
     {"write", l_module_ssh_channel_write},
     {"read", l_module_ssh_channel_read},
     {"read_stderr", l_module_ssh_channel_read_stderr},
+    {"set_env", l_module_ssh_channel_setenv},
     {"close", l_module_ssh_channel_close},
     {"free", l_module_ssh_channel_free},
     {NULL, NULL}};
