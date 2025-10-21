@@ -253,7 +253,8 @@ int l_module_ssh_session_set_read_timeout(lua_State *L) {
     if (!u->session) {
         lua_pushnil(L);
         lua_pushstring(
-            L, "Timeout setup failed because no actual session was provided");
+            L,
+            "Read timeout setup failed because no actual session was provided");
         return 2;
     }
 
@@ -263,6 +264,22 @@ int l_module_ssh_session_set_read_timeout(lua_State *L) {
     libssh2_session_set_read_timeout(u->session, t);
     lua_pushboolean(L, 1);
     return 1;
+}
+
+int l_module_ssh_session_last_error(lua_State *L) {
+    l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
+
+    if (!u->session) {
+        lua_pushnil(L);
+        lua_pushstring(
+            L,
+            "Session last error failed because no actual session was provided");
+        return 2;
+    }
+
+    int ret = libssh2_session_last_error(u->session, NULL, NULL, 0);
+    lua_pushfstring(L, "%s", ssh_err_to_str(ret));
+    return 2;
 }
 
 /* ---------- DESTRUCTOR (GC) ---------- */
@@ -292,6 +309,7 @@ static const luaL_Reg session_methods[] = {
     {"userauth_password", l_module_ssh_userauth_password},
     {"set_timeout", l_module_ssh_session_set_timeout},
     {"set_read_timeout", l_module_ssh_session_set_read_timeout},
+    {"get_last_error", l_module_ssh_session_last_error},
     {NULL, NULL}};
 
 int l_module_register_ssh_session(lua_State *L) {
