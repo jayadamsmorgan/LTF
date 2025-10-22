@@ -122,13 +122,13 @@ int l_module_ssh_channel_write(lua_State *L) {
     l_ssh_channel_t *u = luaL_checkudata(L, 1, SSH_CHANNEL_MT);
     if (!u->channel) {
         lua_pushnil(L);
-        lua_pushstring(L, "l_module_ssh_channel_shell() failed because "
+        lua_pushstring(L, "l_module_ssh_channel_write() failed because "
                           "channel does not exist");
         return 2;
     }
     if (!u->session) {
         lua_pushnil(L);
-        lua_pushstring(L, "l_module_ssh_channel_shell() failed because "
+        lua_pushstring(L, "l_module_ssh_channel_write() failed because "
                           "session associated with channel does not exist");
         return 2;
     }
@@ -137,28 +137,34 @@ int l_module_ssh_channel_write(lua_State *L) {
     int v = luaL_checkinteger(L, 3);
     if (v < 0) {
         lua_pushnil(L);
-        lua_pushstring(L, "l_module_ssh_channel_shell() failed because "
+        lua_pushstring(L, "l_module_ssh_channel_write() failed because "
                           "argument 3 is negative");
         return 2;
     }
-
     size_t len = (size_t)v;
+    if (sizeof(s) < len) {
+        lua_pushnil(L);
+        lua_pushstring(L, "l_module_ssh_channel_write() failed because size of "
+                          "string is biger then 3d argument");
 
+        return 2;
+    }
     int rc = libssh2_channel_write(u->channel, s, len);
 
     // No error and full buf was written
     if (rc < 0) {
         lua_pushnil(L);
-        lua_pushfstring(L, "libssh2_channel_write() failed with code: %d", rc);
+        lua_pushfstring(L, "libssh2_channel_write() failed with code: %s",
+                        ssh_err_to_str(rc));
         return 2;
     } else if (rc != v) {
         lua_pushnil(L);
         lua_pushfstring(
-            L, "Failed to write complete command: %s, wrote only %d bytes", s,
-            rc);
+            L, "Failed to write complete command: %s, wrote only %s bytes", s,
+            ssh_err_to_str(rc));
         return 2;
     }
-    lua_pushboolean(L, 1);
+    lua_pushinteger(L, rc);
     return 1;
 }
 
@@ -402,7 +408,63 @@ int l_module_ssh_channel_setenv(lua_State *L) {
     lua_pushboolean(L, 1);
     return 1;
 }
+int l_module_ssh_channel_send_eof(lua_State *L) {
+    l_ssh_channel_t *u = luaL_checkudata(L, 1, SSH_CHANNEL_MT);
+    if (!u->channel) {
+        lua_pushnil(L);
+        lua_pushstring(L, "l_module_ssh_channel_send_eof() failed because "
+                          "channel does not exist");
+        return 2;
+    }
 
+    if (!u->session) {
+        lua_pushnil(L);
+        lua_pushstring(L, "l_module_ssh_channel_send_eof() failed because "
+                          "session associated with channel does not exist");
+        return 2;
+    }
+
+    int rc = libssh2_channel_send_eof(u->channel);
+    if (rc) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "libssh2_channel_send_eof failed with code: %s",
+                        ssh_err_to_str(rc));
+        return 2;
+    }
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int l_module_ssh_channel_eof(lua_State *L) {
+    l_ssh_channel_t *u = luaL_checkudata(L, 1, SSH_CHANNEL_MT);
+    if (!u->channel) {
+        lua_pushnil(L);
+        lua_pushstring(L, "l_module_ssh_channel_eof() failed because "
+                          "channel does not exist");
+        return 2;
+    }
+
+    if (!u->session) {
+        lua_pushnil(L);
+        lua_pushstring(L, "l_module_ssh_channel_eof() failed because "
+                          "session associated with channel does not exist");
+        return 2;
+    }
+
+    int rc = libssh2_channel_eof(u->channel);
+    if (rc < 0) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "libssh2_channel_eof failed with code: %s",
+                        ssh_err_to_str(rc));
+        return 2;
+    } else if (rc == 1) {
+        lua_pushboolean(L, 1);
+        return 1;
+    } else {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+}
 /* ---------- DESTRUCTOR (GC) ---------- */
 
 int l_channel_ssh_gc(lua_State *L) {
@@ -415,7 +477,6 @@ int l_channel_ssh_gc(lua_State *L) {
     }
     return 0;
 }
-
 /* ---------- REGISTRATION ---------- */
 
 static const luaL_Reg channel_methods[] = {
@@ -426,6 +487,8 @@ static const luaL_Reg channel_methods[] = {
     {"read", l_module_ssh_channel_read},
     {"read_stderr", l_module_ssh_channel_read_stderr},
     {"set_env", l_module_ssh_channel_setenv},
+    {"send_eof", l_module_ssh_channel_send_eof},
+    {"eof", l_module_ssh_channel_eof},
     {"close", l_module_ssh_channel_close},
     {"free", l_module_ssh_channel_free},
     {NULL, NULL}};

@@ -8,6 +8,10 @@ local M = {}
 -- For low level function usage in tests
 M.low = ts
 
+local DEFAULT_CHUNK = 4096
+
+local DEFAULT_TIMEOUT = 10000
+
 -- Arguments: ip, port, usr, pswd,
 M.create_connection = function(ip, port, usr, pswd, timeout)
 	local res, err = ts.lib_init()
@@ -84,45 +88,74 @@ M.close_connection = function(connection)
 	ts.lib_exit()
 end
 
-local CHUNK_DEFAULT = 4096
-
 local function waitsocket_for(connection)
 	return ts.low.waitsocket(connection.socket, connection.session)
 end
 
-local function read_full_stdout(channel, connection, chunk_size)
-	chunk_size = CHUNK_DEFAULT
+local function read_full_stdout(channel, connection, chunk_size, timeout, until_str)
+	-- Timeout for whole operation
+	if timeout == nil then
+		print("Set default timeout")
+		timeout = DEFAULT_TIMEOUT
+	end
+
+	--  Timeout for atomic ssh read operation
+	connection.session:set_timeout(100)
+	connection.session:set_read_timeout(100)
+
+	local now_ms = function()
+		return ltf:millis()
+	end
+
+	local last_time = now_ms()
+	local remaining = timeout
+	local full_buff
 	local parts = {}
 	local idx = 1
-
 	while true do
 		local chunk, err = channel:read(chunk_size)
-		if chunk then
-			if #chunk > 0 then
-				parts[idx] = chunk
-				idx = idx + 1
-			else
-				break
-			end
-		else
+		local now = now_ms()
+		local elapsed = now - last_time
+		last_time = now
+		remaining = remaining - elapsed
+
+		if chunk and #chunk > 0 then
+			-- parts[idx] = chunk
+			idx = idx + 1
+			table.insert(parts, chunk)
+			full_buff = table.concat(parts)
+		end
+
+		-- In case of exec_cmd
+		if channel:eof() then
+			break
+		-- In case of read_until
+		elseif until_str and full_buff:find(until_str, 1, true) then
+			break
+		-- in case of read and read_until
+		elseif remaining > 0 then
 			if err and err:find("EAGAIN") then
 				local ok, werr = waitsocket_for(connection)
 				if not ok then
 					return nil, "waitsocket failed: " .. tostring(werr)
 				end
-			else
+			elseif err and not err:find("TIMEOUT") then
 				return nil, tostring(err or "unknown read error")
 			end
+		else
+			break
 		end
 	end
 
-	return table.concat(parts)
+	connection.session:set_timeout(DEFAULT_TIMEOUT)
+	connection.session:set_read_timeout(DEFAULT_TIMEOUT)
+
+	return full_buff
 end
 
 -- read_full_stderr(channel, connection, chunk_size)
--- аналогично для stderr
 local function read_full_stderr(channel, connection, chunk_size)
-	chunk_size = chunk_size or CHUNK_DEFAULT
+	chunk_size = chunk_size or DEFAULT_CHUNK
 	local parts = {}
 	local idx = 1
 
@@ -133,7 +166,6 @@ local function read_full_stderr(channel, connection, chunk_size)
 				parts[idx] = chunk
 				idx = idx + 1
 			else
-				-- EOF stderr
 				break
 			end
 		else
@@ -142,6 +174,8 @@ local function read_full_stderr(channel, connection, chunk_size)
 				if not ok then
 					return nil, "waitsocket failed: " .. tostring(werr)
 				end
+			elseif err:find("TIMEOUT") then
+				break
 			else
 				return nil, tostring(err or "unknown read_stderr error")
 			end
@@ -165,7 +199,8 @@ M.execute_cmd = function(connection, cmd, stdout_b, stderr_b, timeout, env)
 		error("open_channel failed: " .. tostring(err))
 	end
 
-	-- Pass env
+	-- Some environment variables may be set,
+	-- It's up to the server which ones it'll allow though
 	-- set_env(channel, env)
 
 	-- Execute command
@@ -213,17 +248,80 @@ M.execute_cmd = function(connection, cmd, stdout_b, stderr_b, timeout, env)
 		return true
 	end
 end
--- Arguments:
-M.open_shell = function(connection, cmd) end
 
 -- Arguments:
-M.shell_write = function(connection, cmd) end
+M.open_shell = function(connection, env, timeout, terminal)
+	-- Set timeout for all operation within function
+	if timeout ~= nil then
+		connection.session:set_timeout(timeout)
+		connection.session:set_read_timeout(timeout)
+	end
+
+	-- Initiate  channel within existing connection
+	local channel, err = ts.channel_init(connection.session)
+	if not channel then
+		error("open_channel failed: " .. tostring(err))
+	end
+
+	-- Some environment variables may be set,
+	-- It's up to the server which ones it'll allow though
+	-- set_env(channel, env)
+
+	-- Request PTY
+	local ok, rerr = channel:request_pty(terminal)
+	if rerr then
+		error("stdout read error: " .. tostring(err))
+	end
+	-- Open SHELL
+	local ok1, err2 = channel:shell()
+	if err2 then
+		error("stdout read error: " .. tostring(err))
+	end
+	return channel
+end
+
+-- Write message in shell context, shell must be opened before
+M.shell_write = function(connection, channel, cmd)
+	local ok, err = channel:write(cmd, #cmd)
+	if ok == nil and err:find("EAGAIN") then
+		ts.waitsocket(connection.socket, connection.session)
+		ok, err = channel:write(cmd, #cmd)
+	end
+	-- channel:send_eof(channel)
+	return ok, err
+end
+
+-- Read in shell context, shell must be opened before
+M.shell_read = function(connection, channel, timeout, chunk_size)
+	chunk_size = chunk_size or DEFAULT_CHUNK
+	local stdout_text, err = read_full_stdout(channel, connection, chunk_size, timeout)
+	if err then
+		error("stdout read error: " .. tostring(err))
+	end
+	return stdout_text, err
+end
+
+-- Read Until some string will appear in std_out in shell context, shell must be opened before
+M.shell_read_until = function(connection, channel, timeout, prompt, chunk_size)
+	chunk_size = chunk_size or DEFAULT_CHUNK
+	local stdout_text, err = read_full_stdout(channel, connection, chunk_size, timeout, prompt)
+	if err then
+		error("stdout read error: " .. tostring(err))
+	end
+	return stdout_text, err
+end
 
 -- Arguments:
-M.shell_read_until = function(connection, cmd) end
+M.close_shell = function(connection, channel)
+	-- Close channel and free chanel's resources
+	local okc, cerr = channel:close()
+	if okc == nil and cerr:find("EAGAIN") then
+		ts.waitsocket(connection.socket, connection.session)
+		okc, cerr = channel:close()
+	end
 
--- Arguments:
-M.close_shell = function(connection, cmd) end
+	channel:free()
+end
 
 -- Arguments:
 M.send_file_scp = function(connection, cmd) end
