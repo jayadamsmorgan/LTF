@@ -101,7 +101,7 @@ ltf.test({
 	end,
 })
 
--- Connect -> Open Shell-> write command -> read and read_error
+-- Connect -> Open Shell-> write command -> read_until
 ltf.test({
 	name = "SSH connect and disconnect with high level API",
 	tags = { "tag4" },
@@ -115,15 +115,7 @@ ltf.test({
 		ltf.log_info("session: ", conn1.session)
 		ltf.log_info("socket: ", conn1.socket)
 
-		-- local env = {
-		-- 	{ var = "PATH", val = "/sbin" },
-		-- }
-		--
-		-- for i, pair in ipairs(env or {}) do
-		-- 	ltf.log_info(string.format("[%d] %s=%s", i, pair.var, pair.val))
-		-- end
-
-		local channel1 = ssh.open_shell(conn1, env, 10000, "xterm")
+		local channel1 = ssh.open_shell(conn1, "xterm", 10000)
 
 		local ok, err = ssh.shell_write(conn1, channel1, "\n")
 
@@ -135,15 +127,33 @@ ltf.test({
 
 		ltf.sleep(200)
 
-		local oks, errs = ssh.shell_write(conn1, channel1, "env\n")
+		local oks, errs = ssh.shell_write(conn1, channel1, "env")
 		ltf.log_info("Result write", oks, errs)
 
 		local ok2, err2 = ssh.shell_read_until(conn1, channel1, 5000, "SHELL", 1)
 
 		ltf.log_info("Result read: ", ok2, err2)
 		ssh.close_shell(conn1, channel1)
-		-- ltf.log_info("STDOUT:\n", stdout)
-		-- ltf.log_info("STDERR:\n", stderr)
+		ssh.close_connection(conn1)
+	end,
+})
+
+-- Connect -> send_file_scp -> check terget directory -> close conenction
+ltf.test({
+	name = "SSH connect and disconnect with high level API",
+	tags = { "tag5" },
+	body = function()
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "yproshin", "CPE%FUZD", 10000)
+
+		ltf.log_info("ip: ", conn1.ip)
+		ltf.log_info("port: ", conn1.port)
+		ltf.log_info("usr: ", conn1.usr)
+		ltf.log_info("pswd: ", conn1.pswd)
+		ltf.log_info("session: ", conn1.session)
+		ltf.log_info("socket: ", conn1.socket)
+
+		ssh.send_file_scp(conn1, "/tmp/TEST", "/tmp/test.c", 644)
+
 		ssh.close_connection(conn1)
 	end,
 })

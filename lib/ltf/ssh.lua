@@ -201,7 +201,9 @@ M.execute_cmd = function(connection, cmd, stdout_b, stderr_b, timeout, env)
 
 	-- Some environment variables may be set,
 	-- It's up to the server which ones it'll allow though
-	-- set_env(channel, env)
+	if env ~= nil then
+		set_env(channel, env)
+	end
 
 	-- Execute command
 	local ok, e = channel:exec(cmd)
@@ -250,7 +252,7 @@ M.execute_cmd = function(connection, cmd, stdout_b, stderr_b, timeout, env)
 end
 
 -- Arguments:
-M.open_shell = function(connection, env, timeout, terminal)
+M.open_shell = function(connection, terminal, timeout, env)
 	-- Set timeout for all operation within function
 	if timeout ~= nil then
 		connection.session:set_timeout(timeout)
@@ -265,7 +267,9 @@ M.open_shell = function(connection, env, timeout, terminal)
 
 	-- Some environment variables may be set,
 	-- It's up to the server which ones it'll allow though
-	-- set_env(channel, env)
+	if env ~= nil then
+		set_env(channel, env)
+	end
 
 	-- Request PTY
 	local ok, rerr = channel:request_pty(terminal)
@@ -323,10 +327,201 @@ M.close_shell = function(connection, channel)
 	channel:free()
 end
 
--- Arguments:
-M.send_file_scp = function(connection, cmd) end
+-- Send file to remote host
+M.send_file_scp = function(connection, path_to_remotefile, path_to_localfile, mode, chunk_size)
+	-- Some settings
+	chunk_size = chunk_size or DEFAULT_CHUNK
 
--- Arguments:
-M.recv_file_scp = function(connection, cmd) end
+	-- Parse localfile info get path string return
+	local f, ferr = io.open(path_to_localfile, "rb")
+	if not f then
+		error("fopen: " .. path_to_localfile .. "failed with code: " .. tostring(ferr))
+	end
+	-- determine file size
+	local ok, size_or_err = pcall(function()
+		return f:seek("end")
+	end)
+	if not ok or not size_or_err then
+		f:close()
+		error("fseek: " .. path_to_localfile .. "failed with code: " .. tostring(size_or_err))
+	end
+	local filesize = size_or_err
+	print(filesize)
+	f:seek("set", 0)
+
+	-- try to open scp send channel (handle EAGAIN)
+	local ch, serr = ts.scp_send64(connection.session, path_to_remotefile, mode, filesize, 0, 0)
+	if not ch and serr and serr:find("EAGAIN") then
+		local okw, werr = ts.waitsocket(connection.socket, connection.session)
+		if not okw then
+			f:close()
+			error("scp_send64 failed with code: " .. tostring(serr))
+		end
+		ch, serr = ts.scp_send64(connection.session, path_to_remotefile, mode, filesize, 0, 0)
+	end
+	if not ch then
+		f:close()
+		error("scp_send64 failed with code: " .. tostring(serr))
+	end
+
+	local total_sent = 0
+	local buf
+	while true do
+		buf = f:read(chunk_size)
+		if not buf then
+			if f:seek() then
+				-- nil from read but not EOF? treat as error
+				-- (in Lua read returns nil on EOF or error; can't easily separate, so check EOF)
+			end
+		end
+		if not buf or #buf == 0 then
+			break
+		end
+
+		local offset = 1
+		local remaining = #buf
+		while remaining > 0 do
+			local piece = buf:sub(offset, offset + remaining - 1)
+			local written, werr = ch:write(piece, #piece)
+			if written == nil then
+				if werr and werr:find("EAGAIN") then
+					local okw, werr2 = ts.waitsocket(connection.socket, connection.session)
+					if not okw then
+						-- cleanup
+						pcall(function()
+							ch:send_eof()
+						end)
+						pcall(function()
+							ch:wait_eof()
+						end)
+						pcall(function()
+							ch:wait_closed()
+						end)
+						pcall(function()
+							ch:free()
+						end)
+						f:close()
+						error("scp_send64 failed with code: " .. tostring(werr2))
+					end
+					-- retry write
+				else
+					-- unrecoverable write error
+					pcall(function()
+						ch:send_eof()
+					end)
+					pcall(function()
+						ch:wait_eof()
+					end)
+					pcall(function()
+						ch:wait_closed()
+					end)
+					pcall(function()
+						ch:free()
+					end)
+					f:close()
+					error("scp_send64 failed with code: " .. tostring(werr2))
+				end
+			else
+				-- written is number of bytes written
+				offset = offset + written
+				remaining = remaining - written
+				total_sent = total_sent + written
+			end
+		end
+	end
+	-- channel cleannng procedure
+	pcall(function()
+		ch:send_eof()
+	end)
+	pcall(function()
+		ch:wait_eof()
+	end)
+	pcall(function()
+		ch:wait_closed()
+	end)
+	-- fallback: try close() (some bindings implement close())
+	pcall(function()
+		ch:close()
+	end)
+	pcall(function()
+		ch:free()
+	end)
+
+	f:close()
+
+	return total_sent, nil
+end
+
+-- Recive file to remote host
+M.recv_file_scp = function(connection, cmd)
+	-- local local_path, remote_path, opts_or_err = _parse_cmd(cmd, false)
+	--     if not local_path then
+	--         return nil, opts_or_err
+	--     end
+	--     local opts = opts_or_err or {}
+	--     local chunk_size = opts.chunk_size or DEFAULT_CHUNK
+	--     local timeout_ms = opts.timeout_ms or DEFAULT_TIMEOUT
+	--
+	--     -- open scp channel (handle EAGAIN)
+	--     local ch, fileinfo, serr = ts.scp_recv2(connection.session, remote_path)
+	--     if not ch and serr and serr:find("EAGAIN") then
+	--         local okw, werr = ts.waitsocket(connection.socket, connection.session)
+	--         if not okw then
+	--             return nil, ("waitsocket failed: %s"):format(tostring(werr))
+	--         end
+	--         ch, fileinfo, serr = ts.scp_recv2(connection.session, remote_path)
+	--     end
+	--     if not ch then
+	--         return nil, ("scp_recv2 failed: %s"):format(tostring(serr))
+	--     end
+	--
+	--     -- open local file for write
+	--     local out, oerr = io.open(local_path, "wb")
+	--     if not out then
+	--         pcall(function() ch:free() end)
+	--         return nil, ("fopen(%s) failed: %s"):format(tostring(local_path), tostring(oerr))
+	--     end
+	--
+	--     local total = 0
+	--     local filesize = tonumber(fileinfo.size) or 0
+	--
+	--     while total < filesize do
+	--         local chunk, rerr = ch:read(chunk_size)
+	--         if chunk and #chunk > 0 then
+	--             local wrote, werr = out:write(chunk)
+	--             if not wrote and werr then
+	--                 out:close()
+	--                 pcall(function() ch:free() end)
+	--                 return nil, ("local write failed: %s"):format(tostring(werr))
+	--             end
+	--             total = total + #chunk
+	--         else
+	--             if rerr and rerr:find("EAGAIN") then
+	--                 local okw, werr = ts.waitsocket(connection.socket, connection.session)
+	--                 if not okw then
+	--                     out:close()
+	--                     pcall(function() ch:free() end)
+	--                     return nil, ("waitsocket failed: %s"):format(tostring(werr))
+	--                 end
+	--                 -- retry read
+	--             elseif rerr and rerr:find("TIMEOUT") then
+	--                 -- treat timeout as failure for recv_file_scp
+	--                 out:close()
+	--                 pcall(function() ch:free() end)
+	--                 return nil, ("read timeout")
+	--             else
+	--                 -- EOF or other error -> break/exit
+	--                 break
+	--             end
+	--         end
+	--     end
+	--
+	--     -- cleanup channel
+	--     if ch.wait_closed then pcall(function() ch:wait_closed() end) end
+	--     pcall(function() ch:free() end)
+	--     out:close()
+	--
+	--     return total, nil
+end
 
 return M

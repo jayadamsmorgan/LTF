@@ -148,6 +148,7 @@ sources = [
   'src/modules/ssh/ltf-ssh-channel.c',
   'src/modules/ssh/ltf-ssh-session.c',
   'src/modules/ssh/ltf-ssh-userauth.c',
+  'src/modules/ssh/ltf-ssh-scp.c',
 
 ]
 

@@ -7,6 +7,7 @@
 
 #include "modules/ssh/ltf-ssh-channel.h"
 #include "modules/ssh/ltf-ssh-lib.h"
+#include "modules/ssh/ltf-ssh-scp.h"
 #include "modules/ssh/ltf-ssh-session.h"
 #include "modules/ssh/ltf-ssh-userauth.h"
 
@@ -58,6 +59,9 @@ static const luaL_Reg module_fns[] = {
     {"waitsocket", l_module_ssh_waitsocket},
     {"userauth_password", l_module_ssh_userauth_password},
     {"lib_exit", l_module_ssh_lib_exit},
+    {"scp_recv", l_module_ssh_scp_recv2},
+    {"scp_send", l_module_ssh_scp_send},
+    {"scp_send64", l_module_ssh_scp_send64},
     {NULL, NULL},
 };
 

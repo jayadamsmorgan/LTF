@@ -465,6 +465,33 @@ int l_module_ssh_channel_eof(lua_State *L) {
         return 1;
     }
 }
+
+int l_module_ssh_channel_wait_eof(lua_State *L) {
+    l_ssh_channel_t *u = luaL_checkudata(L, 1, SSH_CHANNEL_MT);
+    if (!u->channel) {
+        lua_pushnil(L);
+        lua_pushstring(L, "l_module_ssh_channel_wait_eof() failed because "
+                          "channel does not exist");
+        return 2;
+    }
+
+    if (!u->session) {
+        lua_pushnil(L);
+        lua_pushstring(L, "l_module_ssh_channel_wait_eof() failed because "
+                          "session associated with channel does not exist");
+        return 2;
+    }
+    int rc = libssh2_channel_wait_eof(u->channel);
+    if (rc) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "libssh2_channel_send_eof failed with code: %s",
+                        ssh_err_to_str(rc));
+        return 2;
+    }
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
 /* ---------- DESTRUCTOR (GC) ---------- */
 
 int l_channel_ssh_gc(lua_State *L) {
@@ -489,6 +516,7 @@ static const luaL_Reg channel_methods[] = {
     {"set_env", l_module_ssh_channel_setenv},
     {"send_eof", l_module_ssh_channel_send_eof},
     {"eof", l_module_ssh_channel_eof},
+    {"wait_eof", l_module_ssh_channel_wait_eof},
     {"close", l_module_ssh_channel_close},
     {"free", l_module_ssh_channel_free},
     {NULL, NULL}};
