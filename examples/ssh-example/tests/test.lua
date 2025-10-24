@@ -157,3 +157,63 @@ ltf.test({
 		ssh.close_connection(conn1)
 	end,
 })
+
+-- Connect -> send_file_sftp -> check file existence -> close connection
+ltf.test({
+	name = "SSH connect and disconnect with high level API",
+	tags = { "tag6" },
+	body = function()
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "yproshin", "CPE%FUZD", 10000)
+
+		ltf.log_info("ip: ", conn1.ip)
+		ltf.log_info("port: ", conn1.port)
+		ltf.log_info("usr: ", conn1.usr)
+		ltf.log_info("pswd: ", conn1.pswd)
+		ltf.log_info("session: ", conn1.session)
+		ltf.log_info("socket: ", conn1.socket)
+
+		ssh.send_file_sftp(conn1, "/tmp/TEST", "/tmp/test.c", 420)
+
+		ssh.close_connection(conn1)
+	end,
+})
+
+-- Connect -> recv_file_sftp -> check file existence -> close connection
+ltf.test({
+	name = "SSH connect and disconnect with high level API",
+	tags = { "tag7" },
+	body = function()
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "yproshin", "CPE%FUZD", 10000)
+
+		ltf.log_info("ip: ", conn1.ip)
+		ltf.log_info("port: ", conn1.port)
+		ltf.log_info("usr: ", conn1.usr)
+		ltf.log_info("pswd: ", conn1.pswd)
+		ltf.log_info("session: ", conn1.session)
+		ltf.log_info("socket: ", conn1.socket)
+
+		ssh.recv_file_sftp(conn1, "/tmp/TEST", "/home/yproshin/RECV_TEST")
+
+		ssh.close_connection(conn1)
+	end,
+})
+
+-- Connect -> recv_file_sftp -> check file existence -> close connection
+ltf.test({
+	name = "SSH connect and disconnect with high level API",
+	tags = { "tag8" },
+	body = function()
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "yproshin", "CPE%FUZD", 10000)
+
+		ltf.log_info("ip: ", conn1.ip)
+		ltf.log_info("port: ", conn1.port)
+		ltf.log_info("usr: ", conn1.usr)
+		ltf.log_info("pswd: ", conn1.pswd)
+		ltf.log_info("session: ", conn1.session)
+		ltf.log_info("socket: ", conn1.socket)
+
+		-- ssh.recv_file_sftp(conn1, "/tmp/TEST", "/home/yproshin/RECV_TEST")
+		ssh.file_should_exist(conn1, "/home/yproshin1")
+		ssh.close_connection(conn1)
+	end,
+})

@@ -6,7 +6,15 @@
 #include <lua.h>
 #include <lualib.h>
 #include <libssh2.h>
+#include <libssh2_sftp.h>
+ 
+typedef struct {
+    LIBSSH2_SFTP *sftp_session;
+    LIBSSH2_SFTP_HANDLE *sftp_handle;
+    LIBSSH2_SESSION *session;
+} l_sftp_session_t;
 
+#define SFTP_SESSION_MT "ltf-sftp-session"
 
 int l_module_ssh_sftp_close(lua_State *L);
 int l_module_ssh_sftp_close_handle(lua_State *L);
@@ -49,5 +57,5 @@ int l_module_ssh_sftp_tell64(lua_State *L);
 int l_module_ssh_sftp_unlink(lua_State *L);
 int l_module_ssh_sftp_unlink_ex(lua_State *L);
 int l_module_ssh_sftp_write(lua_State *L);
-
+int l_module_register_ssh_sftp(lua_State *L);
 #endif // MODULE_SSH2_SFTP_H

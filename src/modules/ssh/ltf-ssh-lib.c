@@ -9,6 +9,7 @@
 #include "modules/ssh/ltf-ssh-lib.h"
 #include "modules/ssh/ltf-ssh-scp.h"
 #include "modules/ssh/ltf-ssh-session.h"
+#include "modules/ssh/ltf-ssh-sftp.h"
 #include "modules/ssh/ltf-ssh-userauth.h"
 
 const char *ssh_err_to_str(int code) {
@@ -54,6 +55,7 @@ static const luaL_Reg module_fns[] = {
     {"lib_init", l_module_ssh_lib_init},
     {"session_init", l_module_ssh_session_init},
     {"channel_init", l_module_ssh_channel_open_session},
+    {"sftp_init", l_module_ssh_sftp_init},
     {"socket_init", l_module_ssh_socket_init},
     {"socket_free", l_module_ssh_socket_free},
     {"waitsocket", l_module_ssh_waitsocket},
@@ -95,8 +97,7 @@ int l_module_ssh_register_module(lua_State *L) {
     l_module_register_ssh_libmod(L);
     l_module_register_ssh_session(L);
     l_module_register_ssh_channel(L);
-    // l_module_register_ssh_scp(L);
-    // l_module_register_ssh_sftp(L);
+    l_module_register_ssh_sftp(L);
 
     lua_newtable(L);
     luaL_setfuncs(L, module_fns, 0);
