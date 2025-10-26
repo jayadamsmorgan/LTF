@@ -1,0 +1,21 @@
+{
+    "include": "test_order",
+
+    "cmd": {
+        "tags:remove": ["sometag1"],
+        "vars:append": {
+            "var3": "somevar3"
+        },
+        "vars:remove": ["var2"],
+        "log_level": "debug"
+    },
+
+    "order:append": [
+        "some_test_4"
+    ],
+
+    "order:remove": [
+        "some_test_1"
+    ]
+
+}

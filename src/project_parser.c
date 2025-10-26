@@ -126,6 +126,8 @@ static int project_parse_json(json_object *project_obj) {
                 strdup(json_object_get_string(target_obj));
             LOG("Project.targets[%zu]: %s", i, proj_parsed->targets[i]);
         }
+    } else {
+        proj_parsed->targets_amount = 0;
     }
 
     return 0;
@@ -229,9 +231,11 @@ void project_parser_free() {
     free(proj_parsed->project_path);
     free(proj_parsed->min_ltf_ver_str);
     free(proj_parsed->project_name);
-    for (size_t i = 0; i < proj_parsed->targets_amount; i++)
-        free(proj_parsed->targets[i]);
-    free(proj_parsed->targets);
+    if (proj_parsed->targets_amount) {
+        for (size_t i = 0; i < proj_parsed->targets_amount; i++)
+            free(proj_parsed->targets[i]);
+        free(proj_parsed->targets);
+    }
     free(proj_parsed);
     LOG("Parsed project freed.");
 }

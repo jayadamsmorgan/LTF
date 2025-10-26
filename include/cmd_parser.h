@@ -2,6 +2,7 @@
 #define CMD_PARSER_H
 
 #include "ltf_log_level.h"
+#include "ltf_test_scenarios.h"
 
 #include "util/da.h"
 
@@ -46,6 +47,9 @@ typedef struct {
     char *custom_ltf_lib_path;
 
     bool headless;
+
+    ltf_test_scenario_parsed_t scenario;
+    bool scenario_parsed;
 } cmd_test_options;
 
 typedef struct {

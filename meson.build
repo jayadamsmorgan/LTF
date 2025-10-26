@@ -109,6 +109,7 @@ sources = [
   'src/ltf_log_level.c',
   'src/ltf_target.c',
   'src/ltf_test.c',
+  'src/ltf_test_scenarios.c',
   'src/ltf_tui.c',
   'src/ltf_vars.c',
   'src/ltf_secrets.c',

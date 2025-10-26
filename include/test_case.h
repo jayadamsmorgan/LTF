@@ -17,6 +17,8 @@ typedef struct {
 
 int test_case_enqueue(lua_State *L, test_case_t *tc);
 
+void test_case_order_tests();
+
 da_t *test_case_get_all();
 
 void test_case_free_all(lua_State *L);

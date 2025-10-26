@@ -46,6 +46,10 @@ static void print_test_help(FILE *file) {
             "  -t, --tags <tag1,tag2>                                      "
             "Perform tests "
             "with specified tags\n"
+            "  -v, --vars <var1:value1,var2:value2>                        "
+            "Specify custom variables\n"
+            "  -s, --scenario <file.json>                                  "
+            "Specify test scenario file\n"
             "  -i, --internal-log                                          "
             "Dump internal logging file\n"
             "  -e, --headless                                              "
@@ -285,11 +289,15 @@ static cmd_category parse_init_options(int argc, char **argv) {
 }
 
 static void set_test_tags(const char *arg) {
-    test_opts.tags = string_split_by_delim(arg, ",");
-    if (!test_opts.tags) {
+    da_t *tags = string_split_by_delim(arg, ",");
+    if (!tags) {
         fprintf(stderr, "Unknown error: Unable to set test tags.");
         exit(EXIT_FAILURE);
     }
+    for (size_t i = 0; i < da_size(tags); ++i) {
+        da_append(test_opts.tags, da_get(tags, i));
+    }
+    da_free(tags);
 }
 
 static void set_test_vars(const char *arg) {
@@ -355,12 +363,39 @@ static void set_test_headless(const char *) {
     test_opts.headless = true;
 }
 
+static void set_test_scenario(const char *arg) {
+    int res = ltf_test_scenario_parse(arg, &test_opts.scenario);
+    if (res) {
+        exit(EXIT_FAILURE);
+    }
+    test_opts.scenario_parsed = true;
+    ltf_test_scenario_parsed_t *sc = &test_opts.scenario;
+    for (size_t i = 0; i < da_size(sc->vars); ++i) {
+        da_append(test_opts.vars, da_get(sc->vars, i));
+    }
+    for (size_t i = 0; i < da_size(sc->tags); ++i) {
+        da_append(test_opts.tags, da_get(sc->tags, i));
+    }
+    if (sc->target) {
+        free(test_opts.target);
+        test_opts.target = strdup(sc->target);
+    }
+    test_opts.log_level = sc->log_level;
+    if (sc->ltf_lib_path) {
+        free(test_opts.custom_ltf_lib_path);
+        test_opts.custom_ltf_lib_path = strdup(sc->ltf_lib_path);
+    }
+    test_opts.headless = sc->headless;
+    test_opts.no_logs = sc->no_logs;
+}
+
 static cmd_option all_test_options[] = {
     {"--log-level", "-l", true, set_log_level},
     {"--no-logs", "-n", false, set_test_no_logs},
     {"--ltf-lib-path", "-p", true, set_test_ltf_lib_path},
     {"--tags", "-t", true, set_test_tags},
     {"--vars", "-v", true, set_test_vars},
+    {"--scenario", "-s", true, set_test_scenario},
     {"--internal-log", "-i", false, set_internal_logging},
     {"--headless", "-e", false, set_test_headless},
     {"--help", "-h", false, get_test_help},
@@ -377,6 +412,8 @@ static cmd_category parse_test_options(int argc, char **argv) {
     test_opts.custom_ltf_lib_path = NULL;
     test_opts.headless = NULL;
     test_opts.vars = da_init(1, sizeof(kv_pair_t));
+    memset(&test_opts.scenario, 0, sizeof(test_opts.scenario));
+    test_opts.scenario_parsed = false;
 
     if (argc <= 2) {
         return CMD_TEST;
@@ -543,20 +580,34 @@ void cmd_parser_free_init_options() {
     free(init_opts.project_name);
 }
 
-void cmd_parser_free_test_options() {
-    size_t tag_count = da_size(test_opts.tags);
-    for (size_t i = 0; i < tag_count; ++i) {
-        char **tag = da_get(test_opts.tags, i);
-        free(*tag);
+static void free_str_da(da_t *da) {
+    size_t sz = da_size(da);
+    for (size_t i = 0; i < sz; ++i) {
+        char **str = da_get(da, i);
+        free(*str);
     }
-    da_free(test_opts.tags);
+    da_free(da);
+}
+
+static void free_kv_pair_da(da_t *da) {
+    size_t sz = da_size(da);
+    for (size_t i = 0; i < sz; ++i) {
+        kv_pair_t *pair = da_get(da, i);
+        free(pair->key);
+        free(pair->value);
+    }
+    da_free(da);
+}
+
+void cmd_parser_free_test_options() {
+    free_str_da(test_opts.tags);
     free(test_opts.custom_ltf_lib_path);
     free(test_opts.target);
-    size_t vars_count = da_size(test_opts.vars);
-    for (size_t i = 0; i < vars_count; ++i) {
-        kv_pair_t *pair = da_get(test_opts.vars, i);
-        free(pair->value);
-        free(pair->key);
-    }
-    da_free(test_opts.vars);
+    free_kv_pair_da(test_opts.vars);
+
+    free(test_opts.scenario.target);
+    free(test_opts.scenario.ltf_lib_path);
+    free_kv_pair_da(test_opts.scenario.vars);
+    free_str_da(test_opts.scenario.tags);
+    free_str_da(test_opts.scenario.order);
 }

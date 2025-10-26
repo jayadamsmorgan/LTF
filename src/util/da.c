@@ -120,6 +120,34 @@ bool da_resize(da_t *da, size_t new_size) {
     return true;
 }
 
+bool da_pop(da_t *da, size_t index, void *out) {
+    if (!da || index >= da->size || !out)
+        return false;
+    memcpy(out, (char *)da->data + index * da->elem_size,
+           da->elem_size); // copy out
+    size_t sz = da->size;
+    if (index < sz - 1) {
+        memmove((char *)da->data + index * da->elem_size,
+                (char *)da->data + (index + 1) * da->elem_size,
+                (sz - index - 1) * da->elem_size);
+    }
+    da->size--;
+    return true;
+}
+
+bool da_remove(da_t *da, size_t index) {
+    if (!da || index >= da->size)
+        return false;
+    size_t sz = da->size;
+    if (index < sz - 1) {
+        memmove((char *)da->data + index * da->elem_size,
+                (char *)da->data + (index + 1) * da->elem_size,
+                (sz - index - 1) * da->elem_size);
+    }
+    da->size--;
+    return true;
+}
+
 size_t da_capacity(const da_t *da) {
     //
     return da ? da->capacity : 0;

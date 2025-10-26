@@ -18,6 +18,8 @@ bool da_append(da_t *da, const void *elem);        // returns false on OOM
 void *da_get(da_t *da, size_t index);              // NULL if OOB
 const void *da_cget(const da_t *da, size_t index); // const view, NULL if OOB
 bool da_set(da_t *da, size_t index, const void *elem);
+bool da_remove(da_t *da, size_t index);
+bool da_pop(da_t *da, size_t index, void *out);
 
 size_t da_size(const da_t *da);
 size_t da_capacity(const da_t *da);

@@ -1,0 +1,13 @@
+{
+    "cmd": {
+        "vars": {
+            "var1": "somevar1",
+            "var2": "somevar2"
+        },
+        "log_level": "critical"
+    },
+
+    "order": [
+        "test ltf.http"
+    ]
+}

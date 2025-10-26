@@ -4,11 +4,11 @@
 #include "headless.h"
 #include "internal_logging.h"
 #include "keyword_status.h"
-#include "project_parser.h"
 #include "ltf_hooks.h"
 #include "ltf_secrets.h"
 #include "ltf_tui.h"
 #include "ltf_vars.h"
+#include "project_parser.h"
 #include "test_case.h"
 #include "test_logs.h"
 #include "version.h"
@@ -16,9 +16,9 @@
 #include "modules/hooks/ltf-hooks.h"
 #include "modules/http/ltf-http.h"
 #include "modules/json/ltf-json.h"
+#include "modules/ltf/ltf.h"
 #include "modules/proc/ltf-proc.h"
 #include "modules/serial/ltf-serial.h"
-#include "modules/ltf/ltf.h"
 
 #include "util/files.h"
 #include "util/line_cache.h"
@@ -491,13 +491,6 @@ int ltf_test() {
         goto deinit;
     }
 
-    size_t amount = da_size(test_case_get_all());
-
-    if (amount == 0) {
-        LOG("No tests found.");
-        fprintf(stderr, "No tests to execute.\n");
-        goto deinit;
-    }
     state = ltf_state_new();
 
     l_module_ltf_init(state);
@@ -509,6 +502,16 @@ int ltf_test() {
     ltf_hooks_init(state);
     asprintf(&project_hooks_dir_path, "%s/hooks", proj->project_path);
     if (load_lua_dir(project_hooks_dir_path, L) == -2) {
+        goto deinit;
+    }
+
+    test_case_order_tests();
+
+    size_t amount = da_size(test_case_get_all());
+
+    if (amount == 0) {
+        LOG("No tests found.");
+        fprintf(stderr, "No tests to execute.\n");
         goto deinit;
     }
 

@@ -50,7 +50,7 @@ int test_case_enqueue(lua_State *L, test_case_t *tc) {
         }
     }
     if (!tests) {
-        tests = da_init(1, sizeof(test_case_t));
+        tests = da_init(3, sizeof(test_case_t));
     }
     size_t tests_count = da_size(tests);
     for (size_t i = 0; i < tests_count; i++) {
@@ -71,6 +71,32 @@ int test_case_enqueue(lua_State *L, test_case_t *tc) {
     free(tc);
 
     return 0;
+}
+
+void test_case_order_tests() {
+    cmd_test_options *opts = cmd_parser_get_test_options();
+    if (!opts->scenario_parsed)
+        return;
+
+    size_t order_sz = da_size(opts->scenario.order);
+    if (order_sz == 0)
+        return;
+
+    size_t registered_sz = da_size(tests);
+
+    da_t *ordered = da_init(order_sz, sizeof(test_case_t));
+    for (size_t i = 0; i < order_sz; ++i) {
+        char **name = da_get(opts->scenario.order, i);
+        for (size_t j = 0; j < registered_sz; ++j) {
+            test_case_t *reg = da_get(tests, j);
+            if (strcmp(reg->name, *name) == 0) {
+                da_append(ordered, reg);
+            }
+        }
+    }
+
+    da_free(tests);
+    tests = ordered;
 }
 
 da_t *test_case_get_all() { return tests; }
