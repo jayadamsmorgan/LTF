@@ -762,7 +762,10 @@ M.file_should_exist = function(connection, path)
 		end
 	end
 end
-M.directory_should_exist = function() end
+M.directory_should_exist = function(connection, path)
+	local ret = M.file_should_exist(connection, path)
+	return ret
+end
 M.put_directory = function() end
 M.get_directory = function() end
 

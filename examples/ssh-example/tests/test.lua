@@ -2,7 +2,6 @@ local ltf = require("ltf")
 local ssh = ltf.ssh
 local vars = require("variables")
 
--- Just connect and disconnect from local host with low level API
 ltf.test({
 	name = "SSH low level connect",
 	tags = { "tag1" },
@@ -24,12 +23,11 @@ ltf.test({
 	end,
 })
 
--- Connect and execute command via ssh on local host with ssh.lua API
 ltf.test({
-	name = "SSH connect and disconnect with high level API",
+	name = "SSH connect and execute command with high level API",
 	tags = { "tag2" },
 	body = function()
-		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "root", "akytec", 10000)
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, vars.user, vars.password, 10000)
 
 		ltf.log_info("ip: ", conn1.ip)
 		ltf.log_info("port: ", conn1.port)
@@ -37,14 +35,6 @@ ltf.test({
 		ltf.log_info("pswd: ", conn1.pswd)
 		ltf.log_info("session: ", conn1.session)
 		ltf.log_info("socket: ", conn1.socket)
-
-		-- local env = {
-		-- 	{ var = "PATH", val = "/sbin" },
-		-- }
-		--
-		-- for i, pair in ipairs(env or {}) do
-		-- 	ltf.log_info(string.format("[%d] %s=%s", i, pair.var, pair.val))
-		-- end
 
 		local stdout, stderr = ssh.execute_cmd(conn1, "env", true, true, 10000)
 
@@ -54,12 +44,11 @@ ltf.test({
 	end,
 })
 
--- Connect -> Open Shell-> write command -> read and read_error
 ltf.test({
-	name = "SSH connect and disconnect with high level API",
+	name = "Connect to SSH server and do write/read  operations in shell mode",
 	tags = { "tag3" },
 	body = function()
-		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "root", "akytec", 10000)
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, vars.user, vars.password, 10000)
 
 		ltf.log_info("ip: ", conn1.ip)
 		ltf.log_info("port: ", conn1.port)
@@ -67,14 +56,6 @@ ltf.test({
 		ltf.log_info("pswd: ", conn1.pswd)
 		ltf.log_info("session: ", conn1.session)
 		ltf.log_info("socket: ", conn1.socket)
-
-		-- local env = {
-		-- 	{ var = "PATH", val = "/sbin" },
-		-- }
-		--
-		-- for i, pair in ipairs(env or {}) do
-		-- 	ltf.log_info(string.format("[%d] %s=%s", i, pair.var, pair.val))
-		-- end
 
 		local channel1 = ssh.open_shell(conn1, env, 10000, "xterm")
 
@@ -95,18 +76,15 @@ ltf.test({
 
 		ltf.log_info("Result read: ", ok2, err2)
 		ssh.close_shell(conn1, channel1)
-		-- ltf.log_info("STDOUT:\n", stdout)
-		-- ltf.log_info("STDERR:\n", stderr)
 		ssh.close_connection(conn1)
 	end,
 })
 
--- Connect -> Open Shell-> write command -> read_until
 ltf.test({
-	name = "SSH connect and disconnect with high level API",
+	name = "Connect to SSH server and do write/read_until  operations in shell mode",
 	tags = { "tag4" },
 	body = function()
-		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "root", "akytec", 10000)
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, vars.user, vars.password, 10000)
 
 		ltf.log_info("ip: ", conn1.ip)
 		ltf.log_info("port: ", conn1.port)
@@ -138,32 +116,11 @@ ltf.test({
 	end,
 })
 
--- Connect -> send_file_scp -> check terget directory -> close conenction
 ltf.test({
-	name = "SSH connect and disconnect with high level API",
+	name = "Connect to SSH server and send file over sftp",
 	tags = { "tag5" },
 	body = function()
-		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "yproshin", "CPE%FUZD", 10000)
-
-		ltf.log_info("ip: ", conn1.ip)
-		ltf.log_info("port: ", conn1.port)
-		ltf.log_info("usr: ", conn1.usr)
-		ltf.log_info("pswd: ", conn1.pswd)
-		ltf.log_info("session: ", conn1.session)
-		ltf.log_info("socket: ", conn1.socket)
-
-		ssh.send_file_scp(conn1, "/tmp/TEST", "/tmp/test.c", 644)
-
-		ssh.close_connection(conn1)
-	end,
-})
-
--- Connect -> send_file_sftp -> check file existence -> close connection
-ltf.test({
-	name = "SSH connect and disconnect with high level API",
-	tags = { "tag6" },
-	body = function()
-		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "yproshin", "CPE%FUZD", 10000)
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, vars.user, vars.password, 10000)
 
 		ltf.log_info("ip: ", conn1.ip)
 		ltf.log_info("port: ", conn1.port)
@@ -178,12 +135,11 @@ ltf.test({
 	end,
 })
 
--- Connect -> recv_file_sftp -> check file existence -> close connection
 ltf.test({
-	name = "SSH connect and disconnect with high level API",
-	tags = { "tag7" },
+	name = "Connect to SSH server and recv file over sftp",
+	tags = { "tag6" },
 	body = function()
-		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "yproshin", "CPE%FUZD", 10000)
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, vars.user, vars.password, 10000)
 
 		ltf.log_info("ip: ", conn1.ip)
 		ltf.log_info("port: ", conn1.port)
@@ -198,12 +154,11 @@ ltf.test({
 	end,
 })
 
--- Connect -> recv_file_sftp -> check file existence -> close connection
 ltf.test({
-	name = "SSH connect and disconnect with high level API",
-	tags = { "tag8" },
+	name = "Connect to SSH server and recv file over sftp with his existence check",
+	tags = { "tag7" },
 	body = function()
-		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, "yproshin", "CPE%FUZD", 10000)
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, vars.user, vars.password, 10000)
 
 		ltf.log_info("ip: ", conn1.ip)
 		ltf.log_info("port: ", conn1.port)
@@ -212,8 +167,29 @@ ltf.test({
 		ltf.log_info("session: ", conn1.session)
 		ltf.log_info("socket: ", conn1.socket)
 
-		-- ssh.recv_file_sftp(conn1, "/tmp/TEST", "/home/yproshin/RECV_TEST")
-		ssh.file_should_exist(conn1, "/home/yproshin1")
+		ssh.recv_file_sftp(conn1, "/tmp/TEST", "/tmp/RECV_TEST")
+
+		ltf.log_info("file existence: " .. tostring(ssh.file_should_exist(conn1, "/home/yproshin/RECV_TEST")))
+
+		ssh.close_connection(conn1)
+	end,
+})
+
+ltf.test({
+	name = "Connect to SSH server and check remote file existence",
+	tags = { "tag8" },
+	body = function()
+		local conn1 = ssh.create_connection(vars.host_ip, vars.ssh_port, vars.user, vars.password, 10000)
+
+		ltf.log_info("ip: ", conn1.ip)
+		ltf.log_info("port: ", conn1.port)
+		ltf.log_info("usr: ", conn1.usr)
+		ltf.log_info("pswd: ", conn1.pswd)
+		ltf.log_info("session: ", conn1.session)
+		ltf.log_info("socket: ", conn1.socket)
+
+		ltf.log_info("directory existence: " .. tostring(ssh.directory_should_exist(conn1, "/tmp")))
+
 		ssh.close_connection(conn1)
 	end,
 })
