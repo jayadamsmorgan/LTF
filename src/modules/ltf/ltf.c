@@ -317,9 +317,8 @@ int l_module_ltf_get_vars(lua_State *L) {
 
         ltf_var_entry_t *e = da_get(vars, i);
 
-        push_var(L, e);
-
-        lua_pop(L, 1);
+        lua_pushstring(L, e->final_value ? e->final_value : "");
+        lua_setfield(L, -2, e->name);
     }
 
     return 1;
