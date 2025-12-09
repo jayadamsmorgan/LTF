@@ -1,0 +1,8 @@
+{
+  "project_name": "scenarios-example",
+  "min_ltf_version": "2.0.0-ssh_lib@ab75baa8+",
+  "min_ltf_version_major": 2,
+  "min_ltf_version_minor": 0,
+  "min_ltf_version_patch": 0,
+  "multitarget": false
+}

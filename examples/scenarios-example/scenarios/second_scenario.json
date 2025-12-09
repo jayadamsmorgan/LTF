@@ -1,0 +1,15 @@
+{
+    "cmd": {
+        "vars": {
+            "var3": "somevar3",
+            "var4": "somevar4"
+        },
+        "tags": ["tag3","tag4"],
+        "log_level": "info"
+    },
+
+    "order": [
+        "Third test",
+        "Fourth test"
+    ]
+}

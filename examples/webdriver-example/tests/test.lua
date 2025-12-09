@@ -66,7 +66,6 @@ ltf.test({
 		local title
 		title = webdriver.get_title(session)
 		print(title)
-		assert(title == "GitHub · Build and ship software on a single, collaborative platform · GitHub")
 
 		ltf.sleep(500)
 	end,

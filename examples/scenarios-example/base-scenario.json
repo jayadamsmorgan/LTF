@@ -4,10 +4,12 @@
             "var1": "somevar1",
             "var2": "somevar2"
         },
-        "log_level": "critical"
+        "tags": ["tag1", "tag2", "tag3"],
+        "log_level": "info"
     },
 
     "order": [
-        "test ltf.http"
+        "First test",
+        "Second test"
     ]
 }
