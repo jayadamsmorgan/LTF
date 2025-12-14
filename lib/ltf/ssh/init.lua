@@ -1,6 +1,6 @@
 local low = require("ltf-ssh")
 
-local session = require("session")
+local session = require("ltf.ssh.session")
 
 local M = {}
 

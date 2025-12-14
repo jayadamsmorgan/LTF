@@ -32,9 +32,8 @@ int l_module_ssh_lib_init(lua_State *L) {
 
     int rc = libssh2_init(0); // 0 = default flags
     if (rc) {
-        lua_pushfstring(L, "libssh2_init failed with code: %s",
-                        ssh_err_to_str(rc));
-        return 1;
+        luaL_error(L, "libssh2_init failed with code: %s", ssh_err_to_str(rc));
+        return 0;
     }
 
     lib_ssh_inited = true;

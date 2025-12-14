@@ -25,34 +25,25 @@ local M = {}
 ---
 --- @return ssh_session
 M.new_session = function(params)
-	--- @type string?
-	local err
+	low.lib_init()
 
-	err = low.lib_init()
-	if err then
-		error(err)
-	end
-
-	--- @type ssh_session
-	local session
-
-	local function prepare_session()
+	local function prepare_session(session)
 		local mt = getmetatable(session)
 		function mt.__index:new_exec_channel()
-			return require("exec_channel").new_exec_channel(self)
+			return require("ltf.ssh.exec_channel").new_exec_channel(self)
 		end
 		function mt.__index:new_shell_channel(opts)
-			return require("shell_channel").new_shell_channel(self, opts)
+			return require("ltf.ssh.shell_channel").new_shell_channel(self, opts)
 		end
 		function mt.__index:new_sftp_session()
-			return require("sftp").new_sftp_session(self)
+			return require("ltf.ssh.sftp").new_sftp_session(self)
 		end
 	end
 
 	if params.userpass then
-		session =
+		local session =
 			low.session_init_userpass(params.ip, params.port or 22, params.userpass.user, params.userpass.password)
-		prepare_session()
+		prepare_session(session)
 		return session
 	end
 

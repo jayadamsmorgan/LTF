@@ -85,5 +85,5 @@ int l_module_util_register_module(lua_State *L) {
     luaL_setfuncs(L, module_fns, 0);
 
     LOG("Successfully registered ltf-helper module.");
-    return 0;
+    return 1;
 }

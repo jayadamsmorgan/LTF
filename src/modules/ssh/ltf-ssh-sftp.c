@@ -358,9 +358,6 @@ int l_module_register_ssh_sftp(lua_State *L) {
 
         lua_pushcfunction(L, l_sftp_session_gc);
         lua_setfield(L, -2, "__gc");
-
-        lua_pushstring(L, "locked");
-        lua_setfield(L, -2, "__metatable");
     }
     lua_pop(L, 1);
 

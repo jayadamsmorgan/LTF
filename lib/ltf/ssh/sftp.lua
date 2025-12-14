@@ -1,5 +1,5 @@
 local low = require("ltf-ssh")
-local util = require("util")
+local util = require("ltf.util")
 
 local M = {}
 

@@ -120,10 +120,6 @@ int l_module_ssh_channel_get_exit_status(lua_State *L) {
         return 0;
     }
     int rc = libssh2_channel_get_exit_status(u->channel);
-    if (rc == 0) {
-        luaL_error(L, "libssh2_channel_get_exit_status() failed with code: %s",
-                   ssh_err_to_str(rc));
-    }
     lua_pushinteger(L, rc);
     return 1;
 }
@@ -270,17 +266,15 @@ int l_module_ssh_channel_close(lua_State *L) {
     if (rc) {
         luaL_error(L, "libssh2_channel_close() failed with code: %s",
                    ssh_err_to_str(rc));
-        return 1;
+        return 0;
     }
 
-    rc = libssh2_channel_free(u->channel);
-
+    rc = libssh2_channel_wait_closed(u->channel);
     if (rc) {
-        luaL_error(L, "libssh2_channel_free() failed with code: %s",
+        luaL_error(L, "libssh2_channel_wait_closed() failed with code: %s",
                    ssh_err_to_str(rc));
         return 0;
     }
-    u->channel = NULL;
 
     return 0;
 }
@@ -350,8 +344,23 @@ int l_module_ssh_channel_wait_eof(lua_State *L) {
 /* ---------- DESTRUCTOR (GC) ---------- */
 
 int l_channel_ssh_gc(lua_State *L) {
-    //
-    return l_module_ssh_channel_close(L);
+
+    l_ssh_channel_t *u = check_channel_udata(L);
+    if (!u) {
+        return 0;
+    }
+
+    l_module_ssh_channel_close(L);
+
+    int rc = libssh2_channel_free(u->channel);
+    if (rc) {
+        luaL_error(L, "libssh2_channel_free() failed with code: %s",
+                   ssh_err_to_str(rc));
+        return 0;
+    }
+    u->channel = NULL;
+
+    return 0;
 }
 /* ---------- REGISTRATION ---------- */
 

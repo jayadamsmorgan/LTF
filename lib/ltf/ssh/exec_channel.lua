@@ -44,7 +44,7 @@ end
 ---
 --- @return ssh_exec_channel
 M.new_exec_channel = function(session)
-	local chan = require("channel").open_channel(session)
+	local chan = require("ltf.ssh.channel").open_channel(session)
 
 	local exec_channel = {
 		low = chan,

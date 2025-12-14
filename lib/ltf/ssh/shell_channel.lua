@@ -7,7 +7,7 @@
 --- @field read_until fun(self: ssh_shell_channel, opts: ssh_read_until_opts): boolean, string
 --- @field close fun(self: ssh_shell_channel)
 
-local channel = require("channel")
+local channel = require("ltf.ssh.channel")
 local ltf = require("ltf-main")
 
 local M = {}

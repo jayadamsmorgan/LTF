@@ -55,9 +55,8 @@ int l_module_ssh_session_init_userpass(lua_State *L) {
 
     session = libssh2_session_init();
     if (!session) {
-        lua_pushnil(L);
-        lua_pushstring(L, "libssh2_session_init() failed");
-        return 2;
+        luaL_error(L, "libssh2_session_init() failed");
+        return 0;
     }
 
     libssh2_session_set_timeout(session, 60000);
@@ -110,8 +109,8 @@ int l_module_ssh_session_connect(lua_State *L) {
 
     switch (u->method) {
     case SSH_AUTH_USERPASS:
-        rc = libssh2_userauth_password(u->session, u->userpass.password,
-                                       u->userpass.user);
+        rc = libssh2_userauth_password(u->session, u->userpass.user,
+                                       u->userpass.password);
         break;
     default:
         luaL_error(L, "Unknown SSH auth method %d", u->method);
@@ -231,8 +230,6 @@ int l_module_register_ssh_session(lua_State *L) {
     lua_pushcfunction(L, l_session_ssh_gc);
     lua_setfield(L, -2, "__gc");
 
-    lua_pushstring(L, "locked");
-    lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);
 
     LOG("Successfully registered ltf-ssh-session");

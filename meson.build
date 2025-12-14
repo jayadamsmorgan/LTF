@@ -164,12 +164,11 @@ else
 endif
 
 ltf_dir_path = get_option('ltf_dir_path')
-add_project_arguments('-DLTF_DIR_PATH="@0@"'.format(ltf_dir_path), language: 'c')
-
 if ltf_dir_path == ''
   # default: ~/.ltf
   ltf_dir_path = fs.expanduser('~/.ltf')
 endif
+add_project_arguments('-DLTF_DIR_PATH="@0@"'.format(ltf_dir_path), language: 'c')
 
 ltf_lib = static_library(
   'ltf_core',
