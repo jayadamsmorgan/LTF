@@ -39,7 +39,7 @@ M.ssh = require("ltf.ssh")
 
 --- Get amount of milliseconds since test started
 ---
---- @return number ms
+--- @return integer ms
 M.millis = function()
 	return tm:millis()
 end

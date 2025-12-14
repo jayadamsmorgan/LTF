@@ -1,79 +1,19 @@
 #include "modules/ssh/ltf-ssh-session.h"
+
+#include "modules/ssh/ltf-ssh-lib.h"
+
 #include "internal_logging.h"
-#include "modules/ssh/ltf-ssh-userauth.h"
-#include <arpa/inet.h>
-#include <errno.h>
+
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
+
+#include <arpa/inet.h>
+#include <errno.h>
 #include <netinet/in.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
-#include <modules/ssh/ltf-ssh-lib.h>
-/* ---------- CONSTRUCTOR / METHODS ---------- */
-
-static int waitsocket(libssh2_socket_t socket_fd, LIBSSH2_SESSION *session) {
-    struct timeval timeout;
-    int rc;
-    fd_set fd;
-    fd_set *writefd = NULL;
-    fd_set *readfd = NULL;
-    int dir;
-
-    timeout.tv_sec = 10;
-    timeout.tv_usec = 0;
-
-    FD_ZERO(&fd);
-
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#endif
-    FD_SET(socket_fd, &fd);
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
-    dir = libssh2_session_block_directions(session);
-
-    if (dir & LIBSSH2_SESSION_BLOCK_INBOUND)
-        readfd = &fd;
-
-    if (dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
-        writefd = &fd;
-
-    rc = select((int)(socket_fd + 1), readfd, writefd, NULL, &timeout);
-
-    return rc;
-}
-
-int l_module_ssh_waitsocket(lua_State *L) {
-
-    int fd = (int)luaL_checkinteger(L, 1); // libssh2_socket_t is 'int' here
-    l_ssh_session_t *u = luaL_checkudata(L, 2, SSH_SESSION_MT);
-
-    if (!u->session) {
-        lua_pushnil(L);
-        lua_pushstring(L, "Session was not initialized");
-        return 2;
-    }
-    if (fd == -1) {
-        lua_pushnil(L);
-        lua_pushstring(L, "No valid socket descriptor was provided");
-        return 2;
-    }
-
-    int rc = waitsocket(fd, u->session);
-    if (rc) {
-        lua_pushnil(L);
-        lua_pushfstring(L, "waitsocket() failed with code: %s",
-                        ssh_err_to_str(rc));
-        return 2;
-    }
-    lua_pushboolean(L, 1);
-    return 1;
-}
 
 static int ssh_socket_connect_ipv4(const char *ip_str, int port) {
     libssh2_socket_t sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -104,228 +44,195 @@ static int ssh_socket_connect_ipv4(const char *ip_str, int port) {
     return sock;
 }
 
-int l_module_ssh_socket_init(lua_State *L) {
+int l_module_ssh_session_init_userpass(lua_State *L) {
+
     const char *ip = luaL_checkstring(L, 1);
     int port = (int)luaL_checkinteger(L, 2);
+    const char *user = luaL_checkstring(L, 3);
+    const char *password = luaL_checkstring(L, 4);
 
-    int fd = ssh_socket_connect_ipv4(ip, port);
-    if (fd < 0) {
-        lua_pushnil(L);
-        lua_pushfstring(L, "ssh_socket_connect_ipv4 failed with fd: %d", fd);
-        return 2;
-    }
+    LIBSSH2_SESSION *session = NULL;
 
-    lua_pushinteger(L, fd);
-    return 1;
-}
-
-int l_module_ssh_socket_free(lua_State *L) {
-    int fd = (int)luaL_checkinteger(L, 1);
-
-    if (fd < 0) {
-        lua_pushnil(L);
-        lua_pushstring(L, "invalid socket fd");
-        return 2;
-    }
-    shutdown(fd, SHUT_RDWR);
-
-    if (close(fd) != 0) {
-        int e = errno;
-        lua_pushnil(L);
-        lua_pushfstring(L, "close failed: %s", strerror(e));
-        return 2;
-    }
-    lua_pushboolean(L, 1);
-    return 1;
-}
-
-int l_module_ssh_session_init(lua_State *L) {
-
-    l_ssh_session_t *u = lua_newuserdata(L, sizeof *u);
-
-    u->session = NULL;
-    u->sock_fd = -1;
-
-    u->session = libssh2_session_init();
-    if (!u->session) {
-        lua_pop(L, 1);
+    session = libssh2_session_init();
+    if (!session) {
         lua_pushnil(L);
         lua_pushstring(L, "libssh2_session_init() failed");
         return 2;
     }
 
+    libssh2_session_set_timeout(session, 60000);
+
+    l_ssh_session_t *u = lua_newuserdata(L, sizeof *u);
+    u->session = session;
+    u->sock_fd = -1;
+    u->ip = strdup(ip);
+    u->port = port;
+    u->method = SSH_AUTH_USERPASS;
+    u->userpass.user = strdup(user);
+    u->userpass.password = strdup(password);
+
     luaL_getmetatable(L, SSH_SESSION_MT);
     lua_setmetatable(L, -2);
+
     return 1;
 }
 
-int l_module_ssh_session_handshake(lua_State *L) {
+int l_module_ssh_session_connect(lua_State *L) {
+
     l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
-    int fd = (int)luaL_checkinteger(L, 2); // libssh2_socket_t is 'int' here
 
     if (!u->session) {
-        lua_pushnil(L);
-        lua_pushstring(L,
-                       "Handshake failed because session was not initialized");
-        return 2;
+        luaL_error(
+            L, "Session connect failed because session was already closed.");
+        return 0;
     }
 
-    int rc = libssh2_session_handshake(u->session, fd);
+    if (u->sock_fd != -1) {
+        luaL_error(
+            L,
+            "Session connect failed because connection already established.");
+        return 0;
+    }
+
+    int sock_fd = ssh_socket_connect_ipv4(u->ip, u->port);
+    if (sock_fd < 0) {
+        luaL_error(L, "ssh_socket_connect_ipv4 failed: %d", sock_fd);
+        return 0;
+    }
+    u->sock_fd = sock_fd;
+
+    int rc = libssh2_session_handshake(u->session, u->sock_fd);
     if (rc) {
-        lua_pushnil(L);
-        lua_pushfstring(L, "libssh2_session_handshake failed with code: %s",
-                        ssh_err_to_str(rc));
-        return 2;
+        luaL_error(L, "libssh2_session_handshake failed with code: %s",
+                   ssh_err_to_str(rc));
+        return 0;
     }
 
-    u->sock_fd = fd;
-    lua_pushboolean(L, 1);
-    return 1;
+    switch (u->method) {
+    case SSH_AUTH_USERPASS:
+        rc = libssh2_userauth_password(u->session, u->userpass.password,
+                                       u->userpass.user);
+        break;
+    default:
+        luaL_error(L, "Unknown SSH auth method %d", u->method);
+        return 0;
+    }
+
+    if (rc) {
+        luaL_error(L, "libssh2_userauth failed with code: %s",
+                   ssh_err_to_str(rc));
+        return 0;
+    }
+
+    return 0;
 }
 
 int l_module_ssh_session_disconnect(lua_State *L) {
     l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
-    const char *st = luaL_checkstring(L, 2);
+    const char *desc = luaL_optstring(L, 2, "User terminated connection.");
 
     if (!u->session) {
-        lua_pushnil(L);
-        lua_pushstring(L, "Session disconnection failed because no actual "
-                          "session was provided");
-        return 2;
+        lua_pushstring(
+            L, "Session disconnect failed because session have been closed.");
+        return 1;
     }
 
-    int rc = libssh2_session_disconnect(u->session, st);
+    if (u->sock_fd == -1) {
+        lua_pushstring(L, "Session disconnect failed because session is "
+                          "already disconnected.");
+        return 1;
+    }
+
+    int rc = libssh2_session_disconnect(u->session, desc);
     if (rc) {
-        lua_pushnil(L);
         lua_pushfstring(L, "libssh2_session_disconnect failed with code: %s",
                         ssh_err_to_str(rc));
-        return 2;
+        return 1;
     }
 
-    lua_pushboolean(L, 1);
-    return 1;
+    shutdown(u->sock_fd, SHUT_RDWR);
+
+    if (close(u->sock_fd) != 0) {
+        int e = errno;
+        lua_pushfstring(L, "Unable to close socket: %s", strerror(e));
+        return 1;
+    }
+
+    u->sock_fd = -1;
+
+    return 0;
 }
 
-int l_module_ssh_session_free(lua_State *L) {
+int l_module_ssh_session_close(lua_State *L) {
     l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
 
     if (!u->session) {
-        lua_pushnil(L);
         lua_pushstring(
-            L, "Session release failed because no actual session was provided");
-        return 2;
+            L, "Session close failed because no actual session was provided");
+        return 1;
+    }
+
+    if (u->sock_fd != -1) {
+        int res = l_module_ssh_session_disconnect(L);
+        if (res) {
+            return res;
+        }
     }
 
     int rc = libssh2_session_free(u->session);
     if (rc) {
-        lua_pushnil(L);
         lua_pushfstring(L, "libssh2_session_free failed with code: %s",
                         ssh_err_to_str(rc));
-        return 2;
+        return 1;
     }
 
-    u->session = NULL; // to exclude double session_free procedure
-    lua_pushboolean(L, 1);
-    return 1;
-}
+    u->session = NULL;
+    u->sock_fd = -1;
+    u->port = -1;
+    free(u->ip);
 
-int l_module_ssh_session_set_timeout(lua_State *L) {
-    l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
-
-    if (!u->session) {
-        lua_pushnil(L);
-        lua_pushstring(
-            L, "Timeout setup failed because no actual session was provided");
-        return 2;
+    switch (u->method) {
+    case SSH_AUTH_USERPASS:
+        free(u->userpass.user);
+        u->userpass.user = NULL;
+        free(u->userpass.password);
+        u->userpass.password = NULL;
+        break;
+    default:
+        break;
     }
 
-    // Timeout in milliseconds:
-    long t = luaL_checkinteger(L, 2);
-
-    libssh2_session_set_timeout(u->session, t);
-    lua_pushboolean(L, 1);
-    return 1;
-}
-
-int l_module_ssh_session_set_read_timeout(lua_State *L) {
-    l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
-
-    if (!u->session) {
-        lua_pushnil(L);
-        lua_pushstring(
-            L,
-            "Read timeout setup failed because no actual session was provided");
-        return 2;
-    }
-
-    // Timeout in milliseconds:
-    long t = luaL_checkinteger(L, 2);
-
-    libssh2_session_set_read_timeout(u->session, t);
-    lua_pushboolean(L, 1);
-    return 1;
-}
-
-int l_module_ssh_session_last_error(lua_State *L) {
-    l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
-
-    if (!u->session) {
-        lua_pushnil(L);
-        lua_pushstring(
-            L,
-            "Session last error failed because no actual session was provided");
-        return 2;
-    }
-
-    int ret = libssh2_session_last_error(u->session, NULL, NULL, 0);
-    lua_pushfstring(L, "%s", ssh_err_to_str(ret));
-    return 2;
+    return 0;
 }
 
 /* ---------- DESTRUCTOR (GC) ---------- */
 
 int l_session_ssh_gc(lua_State *L) {
-    l_ssh_session_t *u = luaL_checkudata(L, 1, SSH_SESSION_MT);
-    if (u && u->session) {
-        libssh2_session_disconnect(u->session, "Normal Shutdown");
-        libssh2_session_free(u->session);
-        u->session = NULL;
-    }
-
-    if (u->sock_fd != -1) {
-        shutdown(u->sock_fd, SHUT_RDWR);
-        close(u->sock_fd);
-        u->sock_fd = -1;
-    }
-
-    return 0;
+    //
+    return l_module_ssh_session_close(L);
 }
 /* ---------- REGISTRATION ---------- */
 
 static const luaL_Reg session_methods[] = {
-    {"handshake", l_module_ssh_session_handshake},
+    {"close", l_module_ssh_session_close},
+    {"connect", l_module_ssh_session_connect},
     {"disconnect", l_module_ssh_session_disconnect},
-    {"free", l_module_ssh_session_free},
-    {"userauth_password", l_module_ssh_userauth_password},
-    {"set_timeout", l_module_ssh_session_set_timeout},
-    {"set_read_timeout", l_module_ssh_session_set_read_timeout},
-    {"get_last_error", l_module_ssh_session_last_error},
-    {NULL, NULL}};
+    {NULL, NULL},
+};
 
 int l_module_register_ssh_session(lua_State *L) {
     LOG("Registering ltf-ssh-session");
 
-    if (luaL_newmetatable(L, SSH_SESSION_MT)) {
-        lua_newtable(L);
-        luaL_setfuncs(L, session_methods, 0);
-        lua_setfield(L, -2, "__index");
+    luaL_newmetatable(L, SSH_SESSION_MT);
+    lua_newtable(L);
+    luaL_setfuncs(L, session_methods, 0);
+    lua_setfield(L, -2, "__index");
 
-        lua_pushcfunction(L, l_session_ssh_gc);
-        lua_setfield(L, -2, "__gc");
+    lua_pushcfunction(L, l_session_ssh_gc);
+    lua_setfield(L, -2, "__gc");
 
-        lua_pushstring(L, "locked");
-        lua_setfield(L, -2, "__metatable");
-    }
+    lua_pushstring(L, "locked");
+    lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);
 
     LOG("Successfully registered ltf-ssh-session");

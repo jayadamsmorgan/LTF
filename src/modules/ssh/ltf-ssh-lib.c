@@ -1,16 +1,19 @@
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
+#include <stdatomic.h>
 #include <sys/socket.h>
 
 #include "internal_logging.h"
 
 #include "modules/ssh/ltf-ssh-channel.h"
 #include "modules/ssh/ltf-ssh-lib.h"
-#include "modules/ssh/ltf-ssh-scp.h"
 #include "modules/ssh/ltf-ssh-session.h"
 #include "modules/ssh/ltf-ssh-sftp.h"
-#include "modules/ssh/ltf-ssh-userauth.h"
+
+static atomic_bool lib_ssh_inited = false;
+
+static const char *unknown_err_output = "UNKNOWN";
 
 const char *ssh_err_to_str(int code) {
     for (int i = 0; ssh_error_map[i].name != NULL; ++i) {
@@ -23,47 +26,46 @@ const char *ssh_err_to_str(int code) {
 /******************* API ***********************/
 
 int l_module_ssh_lib_init(lua_State *L) {
+    if (lib_ssh_inited) {
+        return 0;
+    }
+
     int rc = libssh2_init(0); // 0 = default flags
     if (rc) {
-
-        lua_pushnil(L);
         lua_pushfstring(L, "libssh2_init failed with code: %s",
                         ssh_err_to_str(rc));
-        return 2;
+        return 1;
     }
-    lua_pushboolean(L, 1);
-    return 1;
+
+    lib_ssh_inited = true;
+    return 0;
 }
 
-int l_module_ssh_lib_exit(lua_State *L) {
+int l_module_ssh_lib_exit(lua_State *) {
+    if (!lib_ssh_inited) {
+        return 0;
+    }
+
     libssh2_exit();
-    lua_pushboolean(L, 1);
-    return 1;
+    lib_ssh_inited = false;
+    return 0;
 }
 
 /******************* DESTRUCTORS ***********************/
 
 static int l_module_ssh_gc(lua_State *L) {
     LOG("Invoked ltf-ssh-lib GC (module finalizer)");
-    libssh2_exit();
-    return 0;
+    return l_module_ssh_lib_exit(L);
 }
 
 /******************* REGISTRATION ***********************/
 
 static const luaL_Reg module_fns[] = {
     {"lib_init", l_module_ssh_lib_init},
-    {"session_init", l_module_ssh_session_init},
+    {"session_init_userpass", l_module_ssh_session_init_userpass},
     {"channel_init", l_module_ssh_channel_open_session},
     {"sftp_init", l_module_ssh_sftp_init},
-    {"socket_init", l_module_ssh_socket_init},
-    {"socket_free", l_module_ssh_socket_free},
-    {"waitsocket", l_module_ssh_waitsocket},
-    {"userauth_password", l_module_ssh_userauth_password},
     {"lib_exit", l_module_ssh_lib_exit},
-    {"scp_recv", l_module_ssh_scp_recv2},
-    {"scp_send", l_module_ssh_scp_send},
-    {"scp_send64", l_module_ssh_scp_send64},
     {NULL, NULL},
 };
 

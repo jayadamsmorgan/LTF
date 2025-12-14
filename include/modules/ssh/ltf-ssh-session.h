@@ -2,57 +2,57 @@
 #define MODULE_SSH2_SESSION_H
 
 #include <lauxlib.h>
+#include <libssh2.h>
 #include <lua.h>
 #include <lualib.h>
-#include <libssh2.h>
+
+typedef enum {
+    SSH_AUTH_USERPASS,
+} l_ssh_session_auth_method;
+
+typedef struct {
+    char *user;
+    char *password;
+} l_ssh_session_auth_userpass_t;
 
 typedef struct {
     LIBSSH2_SESSION *session;
     libssh2_socket_t sock_fd;
+
+    char *ip;
+    int port;
+
+    l_ssh_session_auth_method method;
+    union {
+        l_ssh_session_auth_userpass_t userpass;
+    };
+
 } l_ssh_session_t;
 
 #define SSH_SESSION_MT "ltf-ssh-session"
 
-int l_module_ssh_socket_init(lua_State *L);
-int l_module_ssh_socket_free(lua_State *L);
-int l_module_ssh_waitsocket(lua_State *L);
+/******************* API START ***********************/
 
-int l_module_ssh_session_abstract(lua_State *L); // Do not use
-int l_module_ssh_session_banner_get(lua_State *L); // Do not use
-int l_module_ssh_session_banner_set(lua_State *L); // Do not use
-int l_module_ssh_session_block_directions(lua_State *L); // Do not use
-int l_module_ssh_session_callback_set(lua_State *L); // Do not use
+// low.session_init_userpass(
+//      ip:string,
+//      port:integer,
+//      user:string,
+//      password:string
+// )
+int l_module_ssh_session_init_userpass(lua_State *L);
 
-// session:disonnect(session, string) -> 0/err
+// session:close(self:session)
+int l_module_ssh_session_close(lua_State *L);
+
+// session:connect(self: session)
+int l_module_ssh_session_connect(lua_State *L);
+
+// session:disconnect(self: session)
 int l_module_ssh_session_disconnect(lua_State *L);
-int l_module_ssh_session_disconnect_ex(lua_State *L); // Do not use
 
-int l_module_ssh_session_flag(lua_State *L); // Do not use
+/******************* API END *************************/
 
-// session:free(session) -> 0/err
-int l_module_ssh_session_free(lua_State *L);
-
-int l_module_ssh_session_get_blocking(lua_State *L); // Do not use
-int l_module_ssh_session_get_timeout(lua_State *L); // Do not use
-
-// session:handshake(session,sock) -> 0/err
-int l_module_ssh_session_handshake(lua_State *L); 
-int l_module_ssh_session_hostkey(lua_State *L); // Do not use
-
-// session:init() -> session
-int l_module_ssh_session_init(lua_State *L);
-int l_module_ssh_session_init_ex(lua_State *L); // Do not use
-
-int l_module_ssh_session_last_errno(lua_State *L); // Do not use
-int l_module_ssh_session_last_error(lua_State *L); // Do not use
-int l_module_ssh_session_method_pref(lua_State *L); // Do not use
-int l_module_ssh_session_methods(lua_State *L); // Do not use
-int l_module_ssh_session_set_blocking(lua_State *L); // Do not use
-int l_module_ssh_session_set_last_error(lua_State *L); // Do not use
-int l_module_ssh_session_set_timeout(lua_State *L); // Do not use
-int l_module_ssh_session_startup(lua_State *L); // Do not use
-int l_module_ssh_session_supported_algs(lua_State *L); // Do not use
-
+// Register session funcitons in "ltf-ssh" module
 int l_module_register_ssh_session(lua_State *L);
-#endif // MODULE_SSH2_SESSION_H
 
+#endif // MODULE_SSH2_SESSION_H

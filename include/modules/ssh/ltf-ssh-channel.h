@@ -2,9 +2,9 @@
 #define MODULE_SSH2_CHANNEL_H
 
 #include <lauxlib.h>
+#include <libssh2.h>
 #include <lua.h>
 #include <lualib.h>
-#include <libssh2.h>
 
 typedef struct {
     LIBSSH2_CHANNEL *channel;
@@ -13,30 +13,16 @@ typedef struct {
 
 #define SSH_CHANNEL_MT "ltf-ssh-channel"
 
-// channel:close(channel) -> 0/err
 int l_module_ssh_channel_close(lua_State *L);
 
-int l_module_ssh_channel_direct_tcpip(lua_State *L);
-int l_module_ssh_channel_direct_tcpip_ex(lua_State *L);
 int l_module_ssh_channel_eof(lua_State *L);
 
-// channel:exec(channel, command) ->0/err 
 int l_module_ssh_channel_exec(lua_State *L);
 
 int l_module_ssh_channel_flush(lua_State *L);
-int l_module_ssh_channel_flush_ex(lua_State *L);
 int l_module_ssh_channel_flush_stderr(lua_State *L);
-int l_module_ssh_channel_forward_accept(lua_State *L);
-int l_module_ssh_channel_forward_cancel(lua_State *L);
-int l_module_ssh_channel_forward_listen(lua_State *L);
-int l_module_ssh_channel_forward_listen_ex(lua_State *L);
 
-// channel:free(session, terminal) -> 0/err
-int l_module_ssh_channel_free(lua_State *L);
-int l_module_ssh_channel_get_exit_signal(lua_State *L);
 int l_module_ssh_channel_get_exit_status(lua_State *L);
-int l_module_ssh_channel_handle_extended_data(lua_State *L);  // _handle_extended_data2 used
-int l_module_ssh_channel_ignore_extended_data(lua_State *L);
 
 // module:open_channel(session) -> channel
 int l_module_ssh_channel_open_ex(lua_State *L);
@@ -48,7 +34,6 @@ int l_module_ssh_channel_read_ex(lua_State *L);
 int l_module_ssh_channel_read_stderr(lua_State *L);
 int l_module_ssh_channel_receive_window_adjust(lua_State *L);
 int l_module_ssh_channel_request_auth_agent(lua_State *L);
-
 
 // channel:request_pty(session, terminal) -> 0/err
 int l_module_ssh_channel_request_pty(lua_State *L);
