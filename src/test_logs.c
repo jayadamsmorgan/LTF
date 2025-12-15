@@ -2,8 +2,8 @@
 
 #include "cmd_parser.h"
 #include "internal_logging.h"
-#include "project_parser.h"
 #include "ltf_state.h"
+#include "project_parser.h"
 
 #include "util/files.h"
 #include "util/time.h"
@@ -179,11 +179,22 @@ void ltf_log_init(ltf_state_t *state) {
     get_date_time_now(time);
 
     asprintf(&raw_log_file_path, "%s/test_run_%s_raw.json", logs_dir, time);
-
+    for (size_t i = 2; file_exists(raw_log_file_path); i++) {
+        free(raw_log_file_path);
+        asprintf(&raw_log_file_path, "%s/test_run_%s_raw(%zu).json", logs_dir,
+                 time, i);
+    }
     LOG("Raw log path: %s", raw_log_file_path);
+
     asprintf(&output_log_file_path, "%s/test_run_%s_output.log", logs_dir,
              time);
+    for (size_t i = 0; file_exists(output_log_file_path); i++) {
+        free(output_log_file_path);
+        asprintf(&output_log_file_path, "%s/test_run_%s_output(%zu).log",
+                 logs_dir, time, i);
+    }
     LOG("Output log path: %s", output_log_file_path);
+
     output_log_file = fopen(output_log_file_path, "w");
     if (!output_log_file) {
         LOG("Unable to create output log file.");
