@@ -1,10 +1,18 @@
 --- @class ssh_shell_channel
 ---
+--- Low level handle
 --- @field low ssh_channel
 ---
+--- Write string to the remote shell
 --- @field write fun(self: ssh_shell_channel, str: string)
+---
+--- Read from the remote shell
 --- @field read fun(self: ssh_shell_channel, opts: ssh_channel_read_opts): string
+---
+--- Read from the remote shell until encounter some pattern
 --- @field read_until fun(self: ssh_shell_channel, opts: ssh_read_until_opts): boolean, string
+---
+--- Close SSH shell channel
 --- @field close fun(self: ssh_shell_channel)
 
 local channel = require("ltf.ssh.channel")
@@ -13,22 +21,15 @@ local ltf = require("ltf-main")
 local M = {}
 
 --- @type ssh_channel_read_opts
-M.default_ssh_read_opts = {
+local default_ssh_read_opts = {
 	stream = "stdout",
 	chunk_size = 64,
-}
-
---- @type ssh_read_until_opts
-M.default_ssh_read_until_opts = {
-	pattern = "\n",
-	timeout = 200, -- total timeout, read_opts.timeout = timeout for each individual reads
-	read_opts = M.default_ssh_read_opts,
 }
 
 --- @param chan ssh_channel
 --- @param opts ssh_channel_read_opts
 local function read(chan, opts)
-	local def = channel.default_ssh_read_opts
+	local def = default_ssh_read_opts
 	opts = opts or def
 	opts.stream = opts.stream or def.stream
 	opts.chunk_size = opts.chunk_size or def.chunk_size
@@ -41,9 +42,16 @@ local function read(chan, opts)
 end
 
 --- @class ssh_read_until_opts
---- @field pattern string
---- @field timeout integer?
---- @field read_opts ssh_channel_read_opts
+--- @field pattern string? pattern to look for using `string:find(pattern, 1, true)`. Default: "\n"
+--- @field timeout integer? timeout in milliseconds for how long we should wait for the pattern to appear. Default: 200
+--- @field read_opts ssh_channel_read_opts?
+
+--- @type ssh_read_until_opts
+local default_ssh_read_until_opts = {
+	pattern = "\n",
+	timeout = 200,
+	read_opts = default_ssh_read_opts,
+}
 
 --- @param chan ssh_channel
 --- @param opts ssh_read_until_opts
@@ -54,7 +62,7 @@ local function read_until(chan, opts)
 		return ltf:millis()
 	end
 
-	local def = channel.default_ssh_read_until_opts
+	local def = default_ssh_read_until_opts
 	opts = opts or def
 	opts.timeout = opts.timeout or def.timeout
 	opts.read_opts = opts.read_opts or def.read_opts

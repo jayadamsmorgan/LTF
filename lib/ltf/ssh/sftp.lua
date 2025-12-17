@@ -3,23 +3,23 @@ local util = require("ltf.util")
 
 local M = {}
 
---- @class sftp_session_low
---- @field open fun(self: sftp_session_low, remote_file: string, flags: integer, mode: integer, open_type: integer)
---- @field write fun(self: sftp_session_low, chunk: string, chunk_size: integer)
---- @field read fun(self: sftp_session_low, chunk_size: integer)
---- @field file_info fun(self: sftp_session_low, remote_file: string): file_info?
+--- @class sftp_channel_low
+--- @field open fun(self: sftp_channel_low, remote_file: string, flags: integer, mode: integer, open_type: integer)
+--- @field write fun(self: sftp_channel_low, chunk: string, chunk_size: integer)
+--- @field read fun(self: sftp_channel_low, chunk_size: integer)
+--- @field file_info fun(self: sftp_channel_low, remote_file: string): file_info?
 --- @field close fun()
 --- @field shutdown fun()
 
---- @alias sftp_session_send_flag
+--- @alias sftp_channel_send_flag
 --- | '"create"' fail if remote host has a file with the same name
 --- | '"overwrite"' overwrite the file on the remote host if it exists
 
 --- @class sftp_file_transfer_opts
 --- @field local_file string
 --- @field remote_file string
---- @field resolve_symlinks boolean
---- @field mode sftp_session_send_flag?
+--- @field resolve_symlinks boolean?
+--- @field mode sftp_channel_send_flag?
 --- @field file_permissions integer?
 --- @field chunk_size integer?
 
@@ -27,20 +27,23 @@ local M = {}
 --- @field exists boolean
 --- @field is_directory boolean
 
---- @class sftp_session
+--- @class sftp_channel
 ---
---- @field low sftp_session_low
+--- @field low sftp_channel_low
 --- @field ssh_session ssh_session
 ---
---- @field send fun(self: sftp_session, opts: sftp_file_transfer_opts)
---- @field receive fun(self: sftp_session, opts: sftp_file_transfer_opts)
---- @field file_info fun(self: sftp_session, path: string): file_info?
---- @field close fun(self: sftp_session)
+--- @field send fun(self: sftp_channel, opts: sftp_file_transfer_opts)
+--- @field receive fun(self: sftp_channel, opts: sftp_file_transfer_opts)
+--- @field file_info fun(self: sftp_channel, path: string): file_info?
+--- @field close fun(self: sftp_channel)
 
---- @param session sftp_session
+--- @param session sftp_channel
 --- @param opts sftp_file_transfer_opts
 local function send(session, opts)
 	opts.chunk_size = opts.chunk_size or 1024
+	opts.resolve_symlinks = opts.resolve_symlinks or true
+	opts.mode = opts.mode or "create"
+	opts.file_permissions = opts.file_permissions or 420 -- think of a better way
 
 	local file_info = util.file_info(opts.local_file)
 	if not file_info then
@@ -53,8 +56,8 @@ local function send(session, opts)
 	end
 
 	if file_info.type == "directory" then
-		-- Unsupported yet
-		error("TODO")
+		-- TODO
+		error("Transferring directories is unsupported at the moment")
 	end
 
 	local size = file_info.size
@@ -67,8 +70,6 @@ local function send(session, opts)
 		error("fopen: " .. path .. "failed with code: " .. tostring(ferr))
 	end
 
-	opts.mode = opts.mode or "create"
-
 	local flags = 0
 	if opts.mode == "create" then
 		flags = 40
@@ -78,7 +79,6 @@ local function send(session, opts)
 		error("Unknown mode " .. opts.mode)
 	end
 
-	opts.file_permissions = opts.file_permissions or 420 -- think of a better way
 	local open_type = 0 -- 0 for file, 1 - directory
 	session.low:open(opts.remote_file, flags, opts.file_permissions, open_type)
 
@@ -109,9 +109,10 @@ local function send(session, opts)
 	f:close()
 end
 
---- @param session sftp_session
+--- @param session sftp_channel
 --- @param opts sftp_file_transfer_opts
 local function receive(session, opts)
+	opts.chunk_size = opts.chunk_size or 1024
 	local out, oerr = io.open(opts.local_file, "wb")
 	if not out then
 		return nil, ("fopen failed: %s (%s)"):format(tostring(opts.local_file), tostring(oerr))
@@ -138,11 +139,11 @@ end
 
 --- @param ssh_session ssh_session
 ---
---- @return sftp_session
-M.new_sftp_session = function(ssh_session)
-	local low_session = low.sftp_init(ssh_session)
-	local session = {
-		low = low_session,
+--- @return sftp_channel
+M.new_sftp_channel = function(ssh_session)
+	local low_channel = low.sftp_init(ssh_session)
+	local channel = {
+		low = low_channel,
 		ssh_session = ssh_session,
 	}
 	local mt = {}
@@ -161,9 +162,9 @@ M.new_sftp_session = function(ssh_session)
 		return self.low:shutdown()
 	end
 
-	setmetatable(session, mt)
+	setmetatable(channel, mt)
 
-	return session
+	return channel
 end
 
 return M

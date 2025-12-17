@@ -2,20 +2,24 @@ local M = {}
 
 --- @class ssh_exec_channel
 ---
+--- Low level handle
 --- @field low ssh_channel
 ---
+--- Execute command on remote host
 --- @field exec fun(self: ssh_exec_channel, opts: ssh_channel_exec_opts): ssh_channel_exec_result
+---
+--- Close exec channel
 --- @field close fun(self: ssh_exec_channel)
 
 --- @class ssh_channel_exec_opts
---- @field cmd string
---- @field env table<string, string>?
---- @field read_chunk_size integer?
+--- @field cmd string command to execute on the remote host
+--- @field env table<string, string>? optional table containing environment variables
+--- @field read_chunk_size integer? chunk size for read operations. Default is 64
 
 --- @class ssh_channel_exec_result
 --- @field stdout string
 --- @field stderr string
---- @field exit_code integer
+--- @field exitcode integer
 
 --- @param chan ssh_channel
 --- @param stream ssh_channel_stream
@@ -68,7 +72,7 @@ M.new_exec_channel = function(session)
 		local result = {
 			stdout = read_helper(self.low, "stdout", exec_opts.read_chunk_size or 64),
 			stderr = read_helper(self.low, "stderr", exec_opts.read_chunk_size or 64),
-			exit_code = self.low:get_exit_status(),
+			exitcode = self.low:get_exit_status(),
 		}
 
 		return result

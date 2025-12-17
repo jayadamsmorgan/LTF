@@ -3,25 +3,37 @@ local low = require("ltf-ssh")
 local M = {}
 
 --- @class ssh_session
+---
+--- Connect to the remote SSH host
 --- @field connect fun(self: ssh_session)
+---
+--- Disconnect from remote host
 --- @field disconnect fun(self: ssh_session, description: string?)
+---
+--- Disconnect from the remote host and close the ongoing connection
 --- @field close fun(self: ssh_session)
+---
+--- Create new SSH channel with creating an SSH shell emulation
 --- @field new_shell_channel fun(self: ssh_session, opts: ssh_shell_channel_opts?): ssh_shell_channel
+---
+--- Create new SSH channel for command execution
 --- @field new_exec_channel fun(self: ssh_session):ssh_exec_channel
---- @field new_sftp_session fun(self: ssh_session)
+---
+--- Create new SSH SFTP channel for file transfer
+--- @field new_sftp_channel fun(self: ssh_session): sftp_channel
 
 --- @class ssh_auth_method_userpass
 --- @field user string
 --- @field password string
 
 --- @class ssh_create_session_params
---- @field ip string
---- @field port integer?
---- @field userpass ssh_auth_method_userpass?
+--- @field ip string IP of the remote host
+--- @field port integer? SSH port. Default: 22
+--- @field userpass ssh_auth_method_userpass? Authenticate with user and password
 
 --- Create new SSH connection
 ---
---- @param params ssh_create_session_params
+--- @param params ssh_create_session_params parameters to create SSH session with. One of the auth methods should be present: [userpass]
 ---
 --- @return ssh_session
 M.new_session = function(params)
@@ -35,8 +47,8 @@ M.new_session = function(params)
 		function mt.__index:new_shell_channel(opts)
 			return require("ltf.ssh.shell_channel").new_shell_channel(self, opts)
 		end
-		function mt.__index:new_sftp_session()
-			return require("ltf.ssh.sftp").new_sftp_session(self)
+		function mt.__index:new_sftp_channel()
+			return require("ltf.ssh.sftp").new_sftp_channel(self)
 		end
 	end
 
