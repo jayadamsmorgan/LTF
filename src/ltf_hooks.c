@@ -1,5 +1,6 @@
 #include "ltf_hooks.h"
 
+#include "keyword_status.h"
 #include "ltf_state.h"
 
 #include "internal_logging.h"
@@ -81,6 +82,27 @@ static inline void push_output(lua_State *L, const ltf_state_test_output_t *o) {
 
     lua_pushinteger(L, (lua_Integer)o->line);
     lua_setfield(L, -2, "line");
+}
+
+static inline void push_keyword(lua_State *L, const keyword_status_t *s) {
+    lua_newtable(L);
+
+    push_string(L, "name", s->name);
+    push_string(L, "started", s->started);
+    push_string(L, "finished", s->finished);
+    push_string(L, "file", s->file);
+
+    lua_pushinteger(L, (lua_Integer)s->line);
+    lua_setfield(L, -2, "line");
+
+    lua_newtable(L);
+    size_t children_count = da_size(s->children);
+    for (size_t i = 0; i < children_count; ++i) {
+        keyword_status_t *child = da_get(s->children, i);
+        push_keyword(L, child);
+        lua_seti(L, -2, (lua_Integer)(i + 1));
+    }
+    lua_setfield(L, -2, "children");
 }
 
 static int hooks_context_push(lua_State *L) {
@@ -175,6 +197,16 @@ static int hooks_context_push(lua_State *L) {
             lua_seti(L, -2, (lua_Integer)(i + 1));
         }
         lua_setfield(L, -2, "teardown_errors");
+
+        // test.keywords (array of objects)
+        lua_newtable(L);
+        size_t keywords_count = da_size(t->keyword_statuses);
+        for (size_t i = 0; i < keywords_count; i++) {
+            keyword_status_t *s = da_get(t->keyword_statuses, i);
+            push_keyword(L, s);
+            lua_seti(L, -2, (lua_Integer)(i + 1));
+        }
+        lua_setfield(L, -2, "keywords");
 
         lua_setfield(L, -2, "test"); // context.test = test
     }
