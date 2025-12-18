@@ -9,8 +9,10 @@
 --- Read from the remote shell
 --- @field read fun(self: ssh_shell_channel, opts: ssh_channel_read_opts): string
 ---
---- Read from the remote shell until encounter some pattern
---- @field read_until fun(self: ssh_shell_channel, opts: ssh_read_until_opts): boolean, string
+--- Read from the remote shell until encounter some pattern.
+--- `found` will be true if pattern appeared within timeout, false otherwise
+--- `read` will be always present and represents everything that was read
+--- @field read_until fun(self: ssh_shell_channel, opts: ssh_read_until_opts): found: boolean, read: string
 ---
 --- Close SSH shell channel
 --- @field close fun(self: ssh_shell_channel)
@@ -56,7 +58,7 @@ local default_ssh_read_until_opts = {
 --- @param chan ssh_channel
 --- @param opts ssh_read_until_opts
 ---
---- @return boolean, string
+--- @return boolean found, string read
 local function read_until(chan, opts)
 	local now_ms = function()
 		return ltf:millis()
@@ -75,7 +77,7 @@ local function read_until(chan, opts)
 	while true do
 		local remaining = math.max(0, math.ceil(deadline - now_ms()))
 		if remaining == 0 then
-			error("timeout")
+			return false, table.concat(buftable)
 		end
 
 		local chunk
