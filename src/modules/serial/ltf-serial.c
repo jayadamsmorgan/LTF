@@ -729,6 +729,7 @@ static const luaL_Reg port_mt[] = {
     {"open", l_module_serial_open},
     {"read_blocking", l_module_serial_read_blocking},
     {"read_nonblocking", l_module_serial_read_nonblocking},
+    {"read", l_module_serial_read_nonblocking},
     {"set_baudrate", l_module_serial_set_baudrate},
     {"set_bits", l_module_serial_set_bits},
     {"set_cts", l_module_serial_set_cts},
@@ -741,6 +742,7 @@ static const luaL_Reg port_mt[] = {
     {"set_xon_xoff", l_module_serial_set_xon_xoff},
     {"write_blocking", l_module_serial_write_blocking},
     {"write_nonblocking", l_module_serial_write_nonblocking},
+    {"write", l_module_serial_write_blocking},
     {"__gc", l_gc},
     {NULL, NULL}};
 

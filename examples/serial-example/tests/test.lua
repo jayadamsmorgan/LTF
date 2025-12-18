@@ -30,7 +30,6 @@ ltf.test({
 		local port = serial.get_port(vars.port_name)
 
 		port:open("rw")
-
 		ltf.defer(function()
 			port:close()
 		end)
@@ -40,7 +39,10 @@ ltf.test({
 		port:set_parity(vars.parity)
 		port:set_stopbits(vars.stopbits)
 
-		local result = port:read_until("Hello Rockchip", 15000)
+		local result = port:read_until({
+			pattern = "Hello Rockchip",
+			timeout = 15000,
+		})
 		print(result)
 	end,
 })
