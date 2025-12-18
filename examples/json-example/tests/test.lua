@@ -1,33 +1,9 @@
 local ltf = require("ltf")
 local json = ltf.json
 
-local keyword3 = function()
-end
-
-local keyword2 = function()
-    keyword3()
-    keyword3()
-end
-
-local keyword1 = function()
-    keyword2()
-    keyword2()
-    keyword3()
-    keyword3()
-end
-
-local keyword_fail = function()
-    ltf.log_critical("WOW")
-end
-
 ltf.test({
 	name = "json serialization",
 	body = function()
-
-        keyword1()
-        keyword1()
-        keyword_fail()
-
 		local test_obj = {
 			testint = 1,
 			teststr = "test",
