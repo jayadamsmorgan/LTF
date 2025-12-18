@@ -165,17 +165,20 @@ int l_module_ssh_sftp_write(lua_State *L) {
         return 0;
     }
     size_t len = (size_t)v;
-    if (sizeof(s) < len) {
+    if (strlen(s) < len) {
         luaL_error(L, "l_module_ssh_sftp_write() failed because size of "
-                      "string is biger then 3d argument");
+                      "string is biger then 3rd argument");
         return 0;
     }
 
     int rc = libssh2_sftp_write(u->sftp_handle, s, len);
 
     if (rc < 0) {
-        luaL_error(L, "l_module_ssh_sftp_write() failed with code: %s",
-                   ssh_err_to_str(rc));
+        int err = libssh2_sftp_last_error(u->sftp_session);
+        libssh2_sftp_close(u->sftp_handle);
+        u->sftp_handle = NULL;
+        luaL_error(L, "l_module_ssh_sftp_write() failed with code: %d %s", err,
+                   ssh_err_to_str(err));
         return 0;
     }
 
@@ -187,26 +190,16 @@ int l_module_ssh_sftp_write(lua_State *L) {
 int l_module_ssh_sftp_close(lua_State *L) {
     l_sftp_session_t *u = luaL_checkudata(L, 1, SFTP_SESSION_MT);
     if (!u->sftp_session) {
-        luaL_error(L, "l_module_ssh_sftp_close() failed because "
-                      "sftp_session was not initialized");
         return 0;
     }
     if (!u->sftp_handle) {
-        luaL_error(L, "l_module_ssh_sftp_close() failed because "
-                      "sftp_handle was not initialized");
         return 0;
     }
     if (!u->session) {
-        luaL_error(L, "l_module_ssh_sftp_close() failed because "
-                      "session was not initialized");
         return 0;
     }
-    int rc = libssh2_sftp_close(u->sftp_handle);
-    if (rc) {
-        luaL_error(L, "l_module_ssh_sftp_close() failed with code: %s",
-                   ssh_err_to_str(rc));
-        return 0;
-    }
+
+    libssh2_sftp_close(u->sftp_handle);
 
     u->sftp_handle = NULL;
 
@@ -216,26 +209,16 @@ int l_module_ssh_sftp_close(lua_State *L) {
 int l_module_ssh_sftp_shutdown(lua_State *L) {
     l_sftp_session_t *u = luaL_checkudata(L, 1, SFTP_SESSION_MT);
     if (!u->sftp_session) {
-        luaL_error(L, "l_module_ssh_sftp_shutdown() failed because "
-                      "sftp_session was not initialized");
         return 0;
     }
     if (u->sftp_handle) {
-        luaL_error(L, "l_module_ssh_sftp_shutdown() failed because "
-                      "sftp_handle still exist, call sftp_close before");
         return 0;
     }
     if (!u->session) {
-        luaL_error(L, "l_module_ssh_sftp_shutdown() failed because "
-                      "session was not initialized");
         return 0;
     }
-    int rc = libssh2_sftp_shutdown(u->sftp_session);
-    if (rc) {
-        luaL_error(L, "l_module_ssh_sftp_shutdown() failed with code: %s",
-                   ssh_err_to_str(rc));
-        return 0;
-    }
+    libssh2_sftp_shutdown(u->sftp_session);
+
     u->sftp_session = NULL;
     u->session = NULL;
 

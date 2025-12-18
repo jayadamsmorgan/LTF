@@ -269,13 +269,6 @@ int l_module_ssh_channel_close(lua_State *L) {
         return 0;
     }
 
-    rc = libssh2_channel_wait_closed(u->channel);
-    if (rc) {
-        luaL_error(L, "libssh2_channel_wait_closed() failed with code: %s",
-                   ssh_err_to_str(rc));
-        return 0;
-    }
-
     return 0;
 }
 

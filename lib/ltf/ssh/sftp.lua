@@ -37,9 +37,9 @@ local M = {}
 --- @field file_info fun(self: sftp_channel, path: string): file_info?
 --- @field close fun(self: sftp_channel)
 
---- @param session sftp_channel
+--- @param channel sftp_channel
 --- @param opts sftp_file_transfer_opts
-local function send(session, opts)
+local function send(channel, opts)
 	opts.chunk_size = opts.chunk_size or 1024
 	opts.resolve_symlinks = opts.resolve_symlinks or true
 	opts.mode = opts.mode or "create"
@@ -72,15 +72,23 @@ local function send(session, opts)
 
 	local flags = 0
 	if opts.mode == "create" then
-		flags = 40
+		flags = 10
+		local remote_file_info = channel:file_info(opts.remote_file)
+		if remote_file_info ~= nil then
+			error(
+				"File "
+					.. opts.remote_file
+					.. " already exists on the remote host. Use 'mode = \"overwrite\"' if you want to overwrite it."
+			)
+		end
 	elseif opts.mode == "overwrite" then
-		flags = 24
+		flags = 26
 	else
 		error("Unknown mode " .. opts.mode)
 	end
 
 	local open_type = 0 -- 0 for file, 1 - directory
-	session.low:open(opts.remote_file, flags, opts.file_permissions, open_type)
+	channel.low:open(opts.remote_file, flags, opts.file_permissions, open_type)
 
 	-- write loop
 	local total_sent = 0
@@ -96,7 +104,7 @@ local function send(session, opts)
 		local remaining = #chunk
 		while remaining > 0 do
 			local piece = chunk:sub(offset, offset + remaining - 1)
-			local written = session.low:write(piece, #piece)
+			local written = channel.low:write(piece, #piece)
 
 			-- advance by number of bytes written
 			offset = offset + written
@@ -105,7 +113,7 @@ local function send(session, opts)
 		end
 	end
 
-	session.low:close()
+	channel.low:close()
 	f:close()
 end
 
@@ -159,7 +167,7 @@ M.new_sftp_channel = function(ssh_session)
 		return self.low:file_info(path)
 	end
 	function mt:close()
-		return self.low:shutdown()
+		self.low:shutdown()
 	end
 
 	setmetatable(channel, mt)

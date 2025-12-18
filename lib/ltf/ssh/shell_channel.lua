@@ -73,11 +73,9 @@ local function read_until(chan, opts)
 	local deadline = now_ms() + opts.timeout
 
 	while true do
-		if deadline then
-			local remaining = math.max(0, math.ceil(deadline - now_ms()))
-			if remaining == 0 then
-				error("timeout")
-			end
+		local remaining = math.max(0, math.ceil(deadline - now_ms()))
+		if remaining == 0 then
+			error("timeout")
 		end
 
 		local chunk
@@ -95,13 +93,7 @@ local function read_until(chan, opts)
 				return true, full_buff
 			end
 		end
-
-		if not deadline and (not chunk or #chunk == 0) then
-			break
-		end
 	end
-
-	return false, ""
 end
 
 --- @class ssh_shell_channel_opts
