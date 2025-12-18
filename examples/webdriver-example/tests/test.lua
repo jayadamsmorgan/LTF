@@ -20,7 +20,7 @@ ltf.test({
 		ltf.sleep(1000)
 
 		-- Start webdriver session on port 9515
-		local session = webdriver.session_start({
+		local session = webdriver.new_session({
 			port = webdriver_port,
 			headless = true,
 		})
@@ -28,43 +28,43 @@ ltf.test({
 		print("Webdriver session id: " .. session.id)
 
 		ltf.defer(function()
-			webdriver.session_end(session)
+			session:close()
 		end)
 
 		ltf.sleep(1000)
 
 		-- Open google.com
-		webdriver.open_url(session, "https://google.com/")
+		session:open_url("https://google.com/")
 
 		ltf.sleep(1000)
 
 		-- Open yahoo.com
-		webdriver.open_url(session, "https://github.com/")
+		session:open_url("https://github.com/")
 
 		ltf.sleep(1000)
 
 		-- Go back to google.com
-		webdriver.go_back(session)
+		session:go_back()
 
 		ltf.sleep(1000)
 
 		-- Go forward to yahoo.com
-		webdriver.go_forward(session)
+		session:go_forward()
 
 		ltf.sleep(1000)
 
 		-- Refresh the site
-		webdriver.refresh(session)
+		session:refresh()
 
 		ltf.sleep(1000)
 
 		-- Get the site url
-		local url = webdriver.get_current_url(session)
+		local url = session:get_current_url()
 		assert(url == "https://github.com/")
 
 		-- Get the site title
 		local title
-		title = webdriver.get_title(session)
+		title = session:get_title()
 		print(title)
 		assert(title == "GitHub · Build and ship software on a single, collaborative platform · GitHub")
 
