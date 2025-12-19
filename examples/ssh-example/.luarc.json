@@ -1,0 +1,28 @@
+{
+  "runtime": {
+
+    "version": "Lua5.4",
+
+    "path": [
+      "?.lua",
+      "?/init.lua",
+      "lib/?.lua",
+      "lib/?/init.lua"
+    ]
+
+  },
+
+  "workspace": {
+
+    "checkThirdParty": false,
+
+    "library": [
+      "~/.ltf/lib",
+      "/home/linuxbrew/.linuxbrew/opt/ltf/share/ltf/lib",
+      "/opt/homebrew/opt/ltf/share/ltf/lib",
+      "/usr/local/opt/ltf/share/ltf/lib"
+    ]
+
+  }
+
+}

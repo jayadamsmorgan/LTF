@@ -99,6 +99,15 @@ if is_macos
 endif
 #----------------------------------------------------------------------
 
+#--- libssh2 ----------------------------------------------------
+libssh_dep = dependency(
+  'libssh2',
+  method : 'pkg-config',
+  required : true,
+  static : true
+)
+#----------------------------------------------------------------------
+
 main_source = 'src/main.c'
 sources = [
   version_h,
@@ -136,6 +145,11 @@ sources = [
   'src/modules/proc/ltf-proc.c',
   'src/modules/serial/ltf-serial.c',
   'src/modules/ltf/ltf.c',
+  'src/modules/ssh/ltf-ssh-lib.c',
+  'src/modules/ssh/ltf-ssh-channel.c',
+  'src/modules/ssh/ltf-ssh-session.c',
+  'src/modules/ssh/ltf-ssh-sftp.c',
+  'src/modules/util/util.c',
 ]
 
 include_dir = include_directories('include')
@@ -150,12 +164,11 @@ else
 endif
 
 ltf_dir_path = get_option('ltf_dir_path')
-add_project_arguments('-DLTF_DIR_PATH="@0@"'.format(ltf_dir_path), language: 'c')
-
 if ltf_dir_path == ''
   # default: ~/.ltf
   ltf_dir_path = fs.expanduser('~/.ltf')
 endif
+add_project_arguments('-DLTF_DIR_PATH="@0@"'.format(ltf_dir_path), language: 'c')
 
 ltf_lib = static_library(
   'ltf_core',
@@ -169,6 +182,7 @@ ltf_lib = static_library(
     lua_dep,
     libsp_dep,
     picotui_dep,
+    libssh_dep,
   ],
   install: false,
 )
@@ -184,6 +198,7 @@ ltf_dep = declare_dependency(
     lua_dep,
     libsp_dep,
     picotui_dep,
+    libssh_dep,
   ],
 )
 
@@ -200,6 +215,7 @@ executable(
     lua_dep,
     libsp_dep,
     picotui_dep,
+    libssh_dep,
   ],
   install: true,
   install_mode: ltf_install_mode,

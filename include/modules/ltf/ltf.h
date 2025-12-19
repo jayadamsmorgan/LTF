@@ -57,7 +57,7 @@ int l_module_ltf_register_test(lua_State *L);
 int l_module_ltf_register_vars(lua_State *L);
 
 // ltf:register_secrets(secrets: [string])
-int l_moduel_ltf_register_secrets(lua_State *L);
+int l_module_ltf_register_secrets(lua_State *L);
 
 // ltf:sleep(ms: number)
 int l_module_ltf_sleep(lua_State *L);

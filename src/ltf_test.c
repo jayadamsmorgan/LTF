@@ -19,6 +19,8 @@
 #include "modules/ltf/ltf.h"
 #include "modules/proc/ltf-proc.h"
 #include "modules/serial/ltf-serial.h"
+#include "modules/ssh/ltf-ssh-lib.h"
+#include "modules/util/util.h"
 
 #include "util/files.h"
 #include "util/line_cache.h"
@@ -325,6 +327,10 @@ static void register_clua_module(lua_State *L, const char *name,
     lua_pop(L, 1);
 }
 
+// Workaround since for some reason it is not getting included from
+// "modules/util/util.h", have no idea how to fix it
+extern int l_module_util_register_module(lua_State *L);
+
 static void register_test_api(lua_State *L) {
 
     LOG("Registering test API...");
@@ -340,6 +346,8 @@ static void register_test_api(lua_State *L) {
     register_clua_module(L, "ltf-proc", l_module_proc_register_module);
     register_clua_module(L, "ltf-serial", l_module_serial_register_module);
     register_clua_module(L, "ltf-hooks", l_module_hooks_register_module);
+    register_clua_module(L, "ltf-ssh", l_module_ssh_register_module);
+    register_clua_module(L, "ltf-util", l_module_util_register_module);
 
     inject_modules_dir(L);
 
@@ -512,6 +520,19 @@ int ltf_test() {
     if (amount == 0) {
         LOG("No tests found.");
         fprintf(stderr, "No tests to execute.\n");
+        goto deinit;
+    }
+    state = ltf_state_new();
+
+    l_module_ltf_init(state);
+
+    if (!opts->no_logs) {
+        ltf_log_init(state);
+    }
+
+    ltf_hooks_init(state);
+    asprintf(&project_hooks_dir_path, "%s/hooks", proj->project_path);
+    if (load_lua_dir(project_hooks_dir_path, L) == -2) {
         goto deinit;
     }
 

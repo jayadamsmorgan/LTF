@@ -601,13 +601,13 @@ static void free_kv_pair_da(da_t *da) {
 
 void cmd_parser_free_test_options() {
     free_str_da(test_opts.tags);
-    free(test_opts.custom_ltf_lib_path);
-    free(test_opts.target);
     free_kv_pair_da(test_opts.vars);
+    free(test_opts.target);
+    free(test_opts.custom_ltf_lib_path);
 
     free(test_opts.scenario.target);
-    free(test_opts.scenario.ltf_lib_path);
-    free_kv_pair_da(test_opts.scenario.vars);
     free_str_da(test_opts.scenario.tags);
+    free_kv_pair_da(test_opts.scenario.vars);
+    free(test_opts.scenario.ltf_lib_path);
     free_str_da(test_opts.scenario.order);
 }

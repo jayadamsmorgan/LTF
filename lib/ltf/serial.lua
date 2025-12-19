@@ -195,7 +195,6 @@ M.read_until = function(port, pattern, timeout, chunk_size)
 	pattern = pattern or "\n"
 
 	local buftable = {}
-	local buflen = 0
 	local deadline
 	if timeout and timeout > 0 then
 		deadline = now_ms() + timeout
@@ -221,11 +220,10 @@ M.read_until = function(port, pattern, timeout, chunk_size)
 
 		if chunk and #chunk > 0 then
 			table.insert(buftable, chunk)
-			buflen = buflen + #chunk
 
-			local full_buf = table.concat(buftable)
-			if full_buf:find(pattern, 1, true) then
-				return full_buf
+			local full_buff = table.concat(buftable)
+			if full_buff:find(pattern, 1, true) then
+				return full_buff
 			end
 		end
 
