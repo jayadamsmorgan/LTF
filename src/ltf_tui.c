@@ -86,7 +86,7 @@ char *ll_to_str[] = {
     "CRT", "ERR", "WRN", "INF", "DBG", "TRC",
 };
 
-void ltf_tui_log(ltf_state_test_t *test, ltf_state_test_output_t *output) {
+void ltf_tui_log(ltf_state_test_t *, ltf_state_test_output_t *output) {
 
     // Filter for logs with lower log level
     if (output->level > ui_state.log_level) {
@@ -303,7 +303,7 @@ static void ltf_tui_test_progress_render(pico_t *ui) {
                 20 + 4 + (len > 40 ? 3 : 0) + strlen(file_str) +
                     ((ui_state.current_line == 0)
                          ? 1
-                         : (int)log10(fabs(ui_state.current_line)) + 1),
+                         : (int)log10(abs(ui_state.current_line)) + 1),
                 "%s", ui_state.current_line_str);
         }
     }
@@ -525,8 +525,7 @@ void ltf_tui_defer_queue_finished(ltf_state_test_t *test) {
     pico_printf(ui, " Defers Finished For %s \n", test->name);
 }
 
-void ltf_tui_defer_failed(ltf_state_test_t *test,
-                          ltf_state_test_output_t *output) {
+void ltf_tui_defer_failed(ltf_state_test_t *, ltf_state_test_output_t *output) {
 
     pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
     pico_print(ui, "[LTF]");
@@ -550,7 +549,7 @@ void ltf_tui_test_finished(ltf_state_test_t *test) {
         for (size_t i = 0; i < errors_count; ++i) {
             ltf_state_test_output_t *error = da_get(test->failure_reasons, i);
             pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-            pico_printf(ui, " [%d] ", i + 1);
+            pico_printf(ui, " [%zu] ", i + 1);
             pico_set_colors(ui, PICO_COLOR_BRIGHT_RED, -1);
             pico_print_block(ui, error->msg);
         }

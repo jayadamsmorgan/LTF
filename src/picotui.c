@@ -181,23 +181,23 @@ static void emit_el(pico_t *ui) {
     write_cstr("\x1b[K");
 }
 
-static void emit_save_cursor(pico_t *ui) {
-    if (ui->cap_sav) {
-        write_cstr(ui->cap_sav);
-        return;
-    }
-    /* CSI s is widely supported; (DEC 7 is "\x1b7") */
-    write_cstr("\x1b[s");
-}
-
-static void emit_restore_cursor(pico_t *ui) {
-    if (ui->cap_res) {
-        write_cstr(ui->cap_res);
-        return;
-    }
-    /* CSI u (DEC 8 would be "\x1b8") */
-    write_cstr("\x1b[u");
-}
+// Might be needed later, commented out to get rid of warnings
+// static void emit_save_cursor(pico_t *ui) {
+//     if (ui->cap_sav) {
+//         write_cstr(ui->cap_sav);
+//         return;
+//     }
+//     /* CSI s is widely supported; (DEC 7 is "\x1b7") */
+//     write_cstr("\x1b[s");
+// }
+// static void emit_restore_cursor(pico_t *ui) {
+//     if (ui->cap_res) {
+//         write_cstr(ui->cap_res);
+//         return;
+//     }
+//     /* CSI u (DEC 8 would be "\x1b8") */
+//     write_cstr("\x1b[u");
+// }
 
 /* ---------- colors (16-color fg/bg) ---------- */
 static int clamp16(int v) { return v < 0 ? -1 : (v > 15 ? 15 : v); }
@@ -709,13 +709,11 @@ void pico_underline_off(pico_t *ui) {
     }
 }
 
-void pico_remove_cursor()
-{
+void pico_remove_cursor() {
     write_cstr("\033[?25l"); // Turn off cursor
 }
 
-void pico_restore_cursor()
-{
+void pico_restore_cursor() {
     printf("\033[?25h"); // Turn on cursor
 }
 /* ------------ shutdown/free ------------------------------------------------
