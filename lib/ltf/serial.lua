@@ -103,7 +103,7 @@ M.low = ts
 --- @field pid number? product id of usb serial device
 --- @field usb_address number? usb port address of usb serial device
 --- @field usb_bus number? usb bus number of usb serial device
---- @field bluetooth_address string? bluetooth MAC address of bluetooth serial device
+--- @field bluetooth_address string? MAC address of bluetooth serial device
 
 --- @alias close_func fun(self:serial_port)
 --- @alias drain_func fun(self:serial_port)
@@ -112,9 +112,9 @@ M.low = ts
 --- @alias get_waiting_input_func fun(self:serial_port): integer
 --- @alias get_waiting_output_func fun(self:serial_port): integer
 --- @alias open_func fun(self:serial_port, mode: serial_mode)
---- @alias read_blocking_func fun(self:serial_port, byte_amount:integer, timeout:integer?): string
---- @alias read_nonblocking_func fun(self:serial_port, byte_amount:integer): string
---- @alias read_until_func fun(self:serial_port, pattern:string?, timeout:number?, chunk_size:number?): string
+--- @alias read_blocking_func fun(self:serial_port, chunk_size:integer, timeout:integer?): string
+--- @alias read_nonblocking_func fun(self:serial_port, chunk_size:integer): string
+--- @alias read_until_func fun(self:serial_port, opts: serial_read_until_opts): found: boolean, read: string
 --- @alias set_baudrate_func fun(self:serial_port, baudrate:integer)
 --- @alias set_bits_func fun(self:serial_port, bits:serial_data_bits)
 --- @alias set_cts_func fun(self:serial_port, cts:serial_cts)
@@ -125,7 +125,7 @@ M.low = ts
 --- @alias set_rts_func fun(self:serial_port, rts:serial_rts)
 --- @alias set_stopbits_func fun(self:serial_port, stopbits:serial_stop_bits)
 --- @alias set_xon_xoff_func fun(self:serial_port, xonxoff:serial_xonxoff)
---- @alias write_blocking_func fun(self:serial_port, str:string, timeout:integer): integer
+--- @alias write_blocking_func fun(self:serial_port, str:string, timeout:integer?): integer
 --- @alias write_nonblocking_func fun(self:serial_port, str:string): integer
 
 --- Serial port handle
@@ -138,8 +138,9 @@ M.low = ts
 --- @field get_waiting_input get_waiting_input_func
 --- @field get_waiting_output get_waiting_output_func
 --- @field open open_func
---- @field read_blocking read_blocking_func
---- @field read_nonblocking read_nonblocking_func
+--- @field private read_blocking read_blocking_func
+--- @field private read_nonblocking read_nonblocking_func
+--- @field read read_nonblocking_func
 --- @field read_until read_until_func
 --- @field set_baudrate set_baudrate_func
 --- @field set_bits set_bits_func
@@ -153,6 +154,53 @@ M.low = ts
 --- @field set_xon_xoff set_xon_xoff_func
 --- @field private write_blocking write_blocking_func
 --- @field private write_nonblocking write_nonblocking_func
+--- @field write write_nonblocking_func
+
+--- @class serial_read_until_opts
+--- @field pattern string? pattern to look for using `string:find(pattern, 1, true)`. Default: "\n"
+--- @field timeout integer? timeout in milliseconds for how long we should wait for the pattern to appear. Default: 200
+--- @field chunk_size integer? size of the "chunk" for single read operation
+
+--- Reads from serial port until it encounters the matching pattern
+--- `found` will be true if pattern appeared within timeout, false otherwise
+--- `read` will be always present and represents everything that was read
+---
+--- @param port serial_port
+--- @param opts serial_read_until_opts
+---
+--- @return boolean found, string read
+local read_until = function(port, opts)
+	port:flush("io")
+
+	local now_ms = function()
+		return ltf:millis()
+	end
+
+	opts.pattern = opts.pattern or "\n"
+	opts.timeout = opts.timeout or 200
+	opts.chunk_size = opts.chunk_size or 64
+
+	local buftable = {}
+	local deadline = now_ms() + opts.timeout
+
+	while true do
+		local remaining = math.max(0, math.ceil(deadline - now_ms()))
+		if remaining == 0 then
+			return false, table.concat(buftable)
+		end
+
+		local chunk = port:read(opts.chunk_size)
+
+		if chunk and #chunk > 0 then
+			table.insert(buftable, chunk)
+
+			local full_buff = table.concat(buftable)
+			if full_buff:find(opts.pattern, 1, true) then
+				return true, full_buff
+			end
+		end
+	end
+end
 
 --- Get port by it's path or name (but not open it)
 ---
@@ -162,8 +210,9 @@ M.low = ts
 M.get_port = function(path)
 	local port = ts:get_port(path)
 	local mt = getmetatable(port)
-	function mt.__index:read_until(pattern, timeout, chunk_size)
-		return M.read_until(self, pattern, timeout, chunk_size)
+	--- @param opts serial_read_until_opts
+	function mt.__index:read_until(opts)
+		return read_until(self, opts)
 	end
 	return port
 end
@@ -173,66 +222,6 @@ end
 --- @return serial_port_info[] result
 M.list_devices = function()
 	return ts:list_devices()
-end
-
---- Reads from serial port until it encounters the matching pattern
---- Returns full string read if pattern occured, empty string otherwise
----
---- @param port serial_port
---- @param pattern string? the pattern to look for, defaults to newline
---- @param timeout number? optional timeout value. keep nil for blocking indefinetely, 0 for nonblocking reads
---- @param chunk_size number? the size of the read chunks, defaults to 64
----
---- @return string result
-M.read_until = function(port, pattern, timeout, chunk_size)
-	port:flush("io")
-
-	local now_ms = function()
-		return ltf:millis()
-	end
-
-	chunk_size = chunk_size or 64
-	pattern = pattern or "\n"
-
-	local buftable = {}
-	local deadline
-	if timeout and timeout > 0 then
-		deadline = now_ms() + timeout
-	end
-
-	while true do
-		if deadline then
-			local remaining = math.max(0, math.ceil(deadline - now_ms()))
-			if remaining == 0 then
-				error("timeout")
-			end
-		end
-
-		local chunk
-		if timeout == nil then
-			chunk = port:read_blocking(chunk_size, 0)
-		elseif timeout == 0 then
-			chunk = port:read_nonblocking(chunk_size)
-		else
-			local remaining = math.max(1, math.ceil(deadline - now_ms()))
-			chunk = port:read_blocking(chunk_size, remaining)
-		end
-
-		if chunk and #chunk > 0 then
-			table.insert(buftable, chunk)
-
-			local full_buff = table.concat(buftable)
-			if full_buff:find(pattern, 1, true) then
-				return full_buff
-			end
-		end
-
-		if timeout == 0 and (not chunk or #chunk == 0) then
-			break
-		end
-	end
-
-	return ""
 end
 
 return M
