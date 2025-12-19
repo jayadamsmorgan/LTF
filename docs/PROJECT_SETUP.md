@@ -76,7 +76,7 @@ ltf init your_project_name --multitarget
 
 This will create the base structure, including the essential `tests/common/` directory.
 
-> **Note:** Multi-Target project may be converted to Single-Target by [Removing a Target](#adding-a-target) when you only have 1 target left
+> **Note:** Multi-Target project may be converted to Single-Target by [Removing a Target](#removing-a-target) when you only have 1 target left
 
 ### Managing Targets
 
@@ -130,23 +130,23 @@ Next, create a new file inside the `tests/` directory (e.g., `tests/hello_world_
 local ltf = require("ltf")
 
 -- Define a new test case
-ltf.test("My Very First Test", function()
+ltf.test({
+    name = "My Very First Test",
+    body = function()
+        ltf.log_info("The test is starting...")
+        ltf.sleep(1000) -- Pause execution for 1000 milliseconds
 
-    ltf.log_info("The test is starting...")
-    ltf.sleep(1000) -- Pause execution for 1000 milliseconds (1 second)
+        -- ltf.print is an alias for ltf.log_info
+        ltf.print("Hello from LTF!")
 
-    -- ltf.print is an alias for ltf.log_info
-    ltf.print("Hello from LTF!")
-
-    ltf.sleep(1000)
-    ltf.log_info("The test is finishing.")
-end)
+        ltf.sleep(1000)
+        ltf.log_info("The test is finishing.")
+    end,
+})
 ```
-
-> **`ltf.test(name, body)`**
 > This is the primary function for registering a new test case.
-> *   The first argument is a `string` describing the test's purpose.
-> *   The second argument is a `function` containing the actual test logic.
+> *   The `name` parameter is a `string` describing the test's purpose.
+> *   The `body` parameter is a `function` containing the actual test logic.
 
 ### 3. Run the Test
 

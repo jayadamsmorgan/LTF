@@ -35,24 +35,28 @@ First, you create the generic test in the `tests/common/` directory.
 ```lua
 local ltf = require("ltf")
 
-ltf.test("Verify Kernel Version", { "system", "smoke" }, function()
-    ltf.log_info("Running the standard kernel version check...")
-    
-    -- Standard command to get kernel version
-    local result = ltf.proc.run({ exe = "uname", args = {"-r"} })
+ltf.test({
+    name = "Verify Kernel Version",
+    tags = { "system", "smoke" },
+    body = function()
+        ltf.log_info("Running the standard kernel version check...")
+        
+        -- Standard command to get kernel version
+        local result = ltf.proc.run({ exe = "uname", args = {"-r"} })
 
-    if result.exitcode ~= 0 then
-        ltf.log_critical("Failed to run 'uname -r'")
-    end
+        if result.exitcode ~= 0 then
+            ltf.log_critical("Failed to run 'uname -r'")
+        end
 
-    local version = result.stdout
-    ltf.log_info("Detected kernel version:", version)
-    
-    -- Assert that the version starts with "5."
-    if not version:match("^5.") then
-        ltf.log_error("Expected a 5.x kernel, but got " .. version)
-    end
-end)
+        local version = result.stdout
+        ltf.log_info("Detected kernel version:", version)
+        
+        -- Assert that the version starts with "5."
+        if not version:match("^5.") then
+            ltf.log_error("Expected a 5.x kernel, but got " .. version)
+        end
+    end,
+})
 ```
 
 This test will run for every target by default.
@@ -66,24 +70,28 @@ Now, for your special target named `special_device`, you need a different implem
 local ltf = require("ltf")
 
 -- This test will OVERRIDE the one defined in tests/common/
-ltf.test("Verify Kernel Version", { "system", "special" }, function()
-    ltf.log_info("Running the CUSTOM kernel version check for special_device...")
-    
-    -- A custom command or method for this specific device
-    local result = ltf.proc.run({ exe = "get_special_kernel_version.sh" })
+ltf.test({
+    name = "Verify Kernel Version",
+    tags = { "system", "special" },
+    body = function()
+        ltf.log_info("Running the CUSTOM kernel version check for special_device...")
+        
+        -- A custom command or method for this specific device
+        local result = ltf.proc.run({ exe = "get_special_kernel_version.sh" })
 
-    if result.exitcode ~= 0 then
-        ltf.log_critical("Failed to run custom kernel script")
-    end
+        if result.exitcode ~= 0 then
+            ltf.log_critical("Failed to run custom kernel script")
+        end
 
-    local version = result.stdout
-    ltf.log_info("Detected special kernel version:", version)
-    
-    -- This device uses a 4.x kernel
-    if not version:match("^4.") then
-        ltf.log_error("Expected a 4.x kernel for this device, but got " .. version)
-    end
-end)
+        local version = result.stdout
+        ltf.log_info("Detected special kernel version:", version)
+        
+        -- This device uses a 4.x kernel
+        if not version:match("^4.") then
+            ltf.log_error("Expected a 4.x kernel for this device, but got " .. version)
+        end
+    end,
+})
 ```
 
 ### Execution Outcome

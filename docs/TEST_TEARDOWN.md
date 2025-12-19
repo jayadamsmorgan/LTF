@@ -11,23 +11,26 @@ The primary purpose of `ltf.defer` is to guarantee that cleanup code runs, even 
 ```lua
 local ltf = require("ltf")
 
-ltf.test("Resource cleanup example", function()
-    ltf.log_info("Opening a resource...")
-    local resource = open_critical_resource()
-    assert(resource, "Test cannot continue if resource failed to open")
+ltf.test({
+    name = "Resource cleanup example",
+    body = function()
+        ltf.log_info("Opening a resource...")
+        local resource = open_critical_resource()
+        assert(resource, "Test cannot continue if resource failed to open")
 
-    -- This defer is now registered.
-    ltf.defer(function()
-        ltf.log_info("Closing the critical resource.")
-        close_critical_resource(resource)
-    end)
+        -- This defer is now registered.
+        ltf.defer(function()
+            ltf.log_info("Closing the critical resource.")
+            close_critical_resource(resource)
+        end)
 
-    ltf.log_info("Performing actions with the resource...")
-    -- ... more test logic ...
-    
-    -- Let's imagine the test fails here
-    -- ltf.log_critical("Something went wrong!")
-end)
+        ltf.log_info("Performing actions with the resource...")
+        -- ... more test logic ...
+
+        -- Let's imagine the test fails here
+        -- ltf.log_critical("Something went wrong!")
+    end,
+})
 ```
 
 > **Important:**
@@ -46,19 +49,22 @@ end)
 You can register multiple `defer` functions within a single test. They are executed in a "Last-In, First-Out" (LIFO) order, meaning the last defer registered is the first one to run upon completion.
 
 ```lua
-ltf.test("LIFO defer demonstration", function()
-    -- First defer registered
-    ltf.defer(function()
-        print("This defer runs second.")
-    end)
+ltf.test({
+    name = "LIFO defer demonstration",
+    body = function()
+        -- First defer registered
+        ltf.defer(function()
+            print("This defer runs second.")
+        end)
 
-    -- Second defer registered
-    ltf.defer(function()
-        print("This defer runs first!")
-    end)
-    
-    print("Test logic is executing...")
-end)
+        -- Second defer registered
+        ltf.defer(function()
+            print("This defer runs first!")
+        end)
+        
+        print("Test logic is executing...")
+    end,
+})
 ```
 
 **Test Output:**
@@ -76,22 +82,25 @@ A deferred function can optionally accept a single argument, which LTF will prov
 This allows you to perform conditional logic during teardown, such as saving extra debug information only when a test fails.
 
 ```lua
-ltf.test("Conditional defer example", function()
-    ltf.defer(function(status)
-        if status == "failed" then
-            print("Oh no! The test failed. Saving diagnostic data...")
-            -- save_debug_logs()
-        elseif status == "passed" then
-            print("Hooray! The test passed.")
-        end
-    end)
+ltf.test({
+    name = "Conditional defer example",
+    body = function()
+        ltf.defer(function(status)
+            if status == "failed" then
+                print("Oh no! The test failed. Saving diagnostic data...")
+                -- save_debug_logs()
+            elseif status == "passed" then
+                print("Hooray! The test passed.")
+            end
+        end)
 
-    -- Test logic that might pass or fail
-    local success = perform_complex_operation()
-    if not success then
-        ltf.log_error("The complex operation failed!")
-    end
-end)
+        -- Test logic that might pass or fail
+        local success = perform_complex_operation()
+        if not success then
+            ltf.log_error("The complex operation failed!")
+        end
+    end,
+})
 ```
 
 ## Simplified Syntax: Passing Arguments Directly
@@ -101,22 +110,25 @@ For simple cleanup calls, you can use an alternative syntax that avoids writing 
 ```lua
 local ltf = require("ltf")
 
-ltf.test("Simplified defer syntax", function()
-    local port = open_some_port()
-    assert(port, "Port could not be opened")
+ltf.test({
+    name = "Simplified defer syntax",
+    body = function()
+        local port = open_some_port()
+        assert(port, "Port could not be opened")
 
-    -- Default defer style:
-    ltf.defer(function()
-        print("Closing port...")
-    end)
+        -- Default defer style:
+        ltf.defer(function()
+            print("Closing port...")
+        end)
 
-    -- Simplified defer style:
-    -- Passes the 'port' variable to the 'close_some_port' function on execution.
-    ltf.defer(close_some_port, port)
+        -- Simplified defer style:
+        -- Passes the 'port' variable to the 'close_some_port' function on execution.
+        ltf.defer(close_some_port, port)
 
-    -- This is also valid and is equivalent to the first defer.
-    ltf.defer(print, "Closing port...")
-end)
+        -- This is also valid and is equivalent to the first defer.
+        ltf.defer(print, "Closing port...")
+    end,
+})
 ```
 
 Both styles are fully supported. The simplified syntax can make your code more concise, while the standard function block offers more flexibility for complex logic. Choose the style that you find more readable and elegant for your use case.

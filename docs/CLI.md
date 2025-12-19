@@ -17,8 +17,9 @@ ltf <command> [sub-command] [arguments...] [options...]
 | [`test`](#ltf-test) | Run tests for a project. |
 | [`target`](#ltf-target) | Manage targets for a multi-target project. |
 | [`logs`](#ltf-logs) | Parse and display information from LTF log files. |
-| `version` | Display the installed LTF version. |
-| `help` | Display the main help message. |
+| [`eval`](#ltf-eval) | Run Lua scripts with support for LTF libraries |
+| `version`\|`--version`\|`-v` | Display the installed LTF version. |
+| `help`\|`--help`\|`-h` | Display the main help message. |
 
 ---
 
@@ -72,9 +73,11 @@ ltf test <target_name> [options...]
 | Option | Alias | Description |
 | :--- | :--- | :--- |
 | `--log-level <level>` | `-l` | Sets the minimum log level to display in the TUI. Valid levels are `critical`, `error`, `warning`, `info`, `debug`, `trace`. See the [Logging](./Logging.md) documentation for details. |
-| `--tags <tags>` | `-t` | Runs only the tests that have at least one of the specified comma-separated tags. See the [Tag System](./Tag-system.md) documentation for details. |
 | `--no-logs` | `-n` | Disables the creation of log files for this test run. |
+| `--ltf-lib-path` | `-p` | Provide custom path to LTF Lua libraries location. |
+| `--tags <tags>` | `-t` | Runs only the tests that have at least one of the specified comma-separated tags. See the [Tag System](./Tag-system.md) documentation for details. |
 | `--internal-log`| `-i` | Dumps an internal LTF log file for advanced debugging. |
+| `--headless` | `-e` | Runs LTF in "headless" mode (no TUI). Performs faster but without fancy TUI. |
 | `--help` | `-h` | Displays the help message for the `test` command. |
 
 #### Examples
@@ -139,4 +142,39 @@ ltf logs info <path_to_log | latest>
 ```bash
 # Get a summary of the last test run
 ltf logs info latest
+```
+
+---
+
+### `ltf eval`
+
+Runs specified lua file with access to LTF libraries. Useful for scripts.
+
+**Usage:**
+```bash
+ltf eval <file.lua> [args...]
+```
+
+#### Arguments
+*   `file.lua` Lua script to run
+*   `args` any amount of arguments passed to the Lua in the `args` table
+
+#### Example
+```lua
+--- script.lua
+local ltf = require("ltf")
+
+print("Hello, " .. args[1])
+print(args[2])
+
+```
+
+```bash
+ltf eval script.lua LTF test
+```
+
+**Output:**
+```
+Hello, LTF
+test
 ```

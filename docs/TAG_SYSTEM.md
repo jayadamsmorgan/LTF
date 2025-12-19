@@ -9,25 +9,36 @@ This is especially useful for:
 
 ## Defining Tags in Your Tests
 
-You can assign tags to any test by passing a table of strings as the second argument to the `ltf.test` function.
+You can assign tags to any test by assigning a table of strings to the optional parameter `tags`:
 
 ```lua
 local ltf = require("ltf")
 
 -- This test is tagged as both "api" and "smoke"
-ltf.test("Verify user login endpoint", { "api", "smoke" }, function()
-    -- ... Test logic ...
-end)
+ltf.test({
+    name = "Verify user login endpoint",
+    tags = { "api", "smoke" },
+    body = function()
+        -- ... Test logic ...
+    end,
+})
 
 -- This test is only tagged as "api"
-ltf.test("Check user profile data", { "api" }, function()
-    -- ... Test logic ...
-end)
+ltf.test({
+    name = "Check user profile data",
+    tags = { "api" },
+    body = function()
+        -- ... Test logic ...
+    end,
+})
 
 -- This test has no tags
-ltf.test("Simple utility function check", function()
-    -- ... Test logic ...
-end)
+ltf.test({
+    name = "Simple utility function check",
+    body = function()
+        -- ... Test logic ...
+    end,
+})
 ```
 
 > Tags are passed as a simple array-like table of strings: `{ "tag1", "tag2", ... }`.
