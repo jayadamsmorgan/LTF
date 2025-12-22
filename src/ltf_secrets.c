@@ -79,8 +79,7 @@ int ltf_secrets_parse_file(da_t *out) {
     project_parsed_t *proj = get_parsed_project();
 
     char *secret_vars_path = NULL;
-    if (asprintf(&secret_vars_path, "%s/.secret_vars", proj->project_path) <
-        0) {
+    if (asprintf(&secret_vars_path, "%s/.secrets", proj->project_path) < 0) {
         fprintf(stderr, "Error: OOM building secrets path\n");
         return -100;
     }
