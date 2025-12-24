@@ -1,5 +1,6 @@
 #include "cmd_parser.h"
 
+#include "ltf_eval.h"
 #include "ltf_init.h"
 #include "ltf_logs.h"
 #include "ltf_target.h"
@@ -17,6 +18,8 @@ int main(int argc, char **argv) {
         return ltf_init();
     case CMD_TEST:
         return ltf_test();
+    case CMD_EVAL:
+        return ltf_eval();
     case CMD_LOGS_INFO:
         return ltf_logs_info();
     case CMD_TARGET_ADD:

@@ -116,6 +116,7 @@ sources = [
   'src/ltf_state.c',
   'src/headless.c',
   'src/cmd_parser.c',
+  'src/ltf_eval.c',
   'src/internal_logging.c',
   'src/keyword_status.c',
   'src/project_parser.c',

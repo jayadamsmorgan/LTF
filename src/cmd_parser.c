@@ -175,6 +175,12 @@ cmd_logs_info_options *cmd_parser_get_logs_info_options() {
     return &logs_info_opts;
 }
 
+static cmd_eval_options eval_opts;
+cmd_eval_options *cmd_parser_get_eval_options() {
+    //
+    return &eval_opts;
+}
+
 typedef struct {
     const char *long_opt;
     const char *short_opt;
@@ -543,6 +549,54 @@ static cmd_category parse_target_options(int argc, char **argv) {
     return CMD_UNKNOWN;
 }
 
+static void print_eval_help(FILE *file) {
+    fprintf(file, "Usage: ltf eval <script_name>\n"
+                  "       ltf eval <script_name> -- <arg1> <arg2> <arg3>\n");
+}
+
+static void get_eval_help(const char *) {
+    print_eval_help(stdout);
+    exit(EXIT_SUCCESS);
+}
+
+static cmd_option all_eval_options[] = {
+    {"--internal-log", "-i", false, set_internal_logging},
+    {"--help", "-h", false, get_eval_help},
+    {NULL, NULL, false, NULL},
+};
+
+static cmd_category parse_eval_options(int argc, char **argv) {
+    if (argc < 3) {
+        fprintf(stderr, "'ltf eval' requires lua script name");
+        print_eval_help(stderr);
+        return CMD_UNKNOWN;
+    }
+
+    if (STR_EQ(argv[2], "--help") || STR_EQ(argv[2], "-h")) {
+        print_eval_help(stdout);
+        return CMD_HELP;
+    }
+
+    eval_opts.name = argv[2];
+
+    if (argc < 4) {
+        return CMD_EVAL;
+    } else if (STR_EQ(argv[3], "--") && argc > 4) {
+        eval_opts.args = da_init(1, sizeof(char *));
+        for (int i = 4; i < argc; ++i) {
+            da_append(eval_opts.args, argv[i]);
+        }
+        return CMD_EVAL;
+    } else {
+        parse_additional_options(all_eval_options, 3, argc, argv);
+        return CMD_EVAL;
+    }
+
+    fprintf(stderr, "Unknown target category %s\n", argv[2]);
+    print_eval_help(stderr);
+    return CMD_UNKNOWN;
+}
+
 cmd_category cmd_parser_parse(int argc, char **argv) {
     if (argc < 2) {
         print_help(stderr);
@@ -553,6 +607,8 @@ cmd_category cmd_parser_parse(int argc, char **argv) {
         return parse_init_options(argc, argv);
     if (STR_EQ(argv[1], "test"))
         return parse_test_options(argc, argv);
+    if (STR_EQ(argv[1], "eval"))
+        return parse_eval_options(argc, argv);
     if (STR_EQ(argv[1], "logs"))
         return parse_logs_options(argc, argv);
     if (STR_EQ(argv[1], "target"))
@@ -610,4 +666,9 @@ void cmd_parser_free_test_options() {
     free_kv_pair_da(test_opts.scenario.vars);
     free_str_da(test_opts.scenario.tags);
     free_str_da(test_opts.scenario.order);
+}
+
+void cmd_parser_free_eval_options() {
+    free(eval_opts.name);
+    free_str_da(eval_opts.args);
 }

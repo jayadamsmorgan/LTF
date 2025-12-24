@@ -11,6 +11,7 @@
 typedef enum {
     CMD_INIT,
     CMD_TEST,
+    CMD_EVAL,
     CMD_LOGS_INFO,
     CMD_HELP,
     CMD_TARGET_ADD,
@@ -70,6 +71,11 @@ typedef struct {
     char *target;
     bool internal_logging;
 } cmd_target_remove_options;
+
+typedef struct {
+    char *name;
+    da_t *args;
+} cmd_eval_options;
 
 cmd_category cmd_parser_parse(int argc, char **argv);
 
