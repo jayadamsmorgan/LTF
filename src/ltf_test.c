@@ -522,19 +522,6 @@ int ltf_test() {
         fprintf(stderr, "No tests to execute.\n");
         goto deinit;
     }
-    state = ltf_state_new();
-
-    l_module_ltf_init(state);
-
-    if (!opts->no_logs) {
-        ltf_log_init(state);
-    }
-
-    ltf_hooks_init(state);
-    asprintf(&project_hooks_dir_path, "%s/hooks", proj->project_path);
-    if (load_lua_dir(project_hooks_dir_path, L) == -2) {
-        goto deinit;
-    }
 
     if (!opts->headless && ltf_tui_init(state)) {
         goto deinit;
