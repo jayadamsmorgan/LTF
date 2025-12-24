@@ -96,29 +96,28 @@ M.register_vars = function(vars)
 	tm.register_vars(vars)
 end
 
+--- @alias ltf_var_name string
+--- @alias ltf_var_value string
+
 --- @class ltf_var_t
---- @field name string
---- @field value string
+--- @field name ltf_var_name
+--- @field value ltf_var_value
 
 --- Returns all registered variables
 ---
---- @return [ltf_var_t]
+--- @return table<ltf_var_name, ltf_var_value>
 M.get_vars = function()
 	return tm:get_vars()
 end
 
---- Returns variable with the specified name
+--- Returns specified variable value
 ---
 --- @param var_name string
 ---
---- @return ltf_var_t
+--- @return ltf_var_value
 M.get_var = function(var_name)
 	return tm:get_var(var_name)
 end
-
---- @class ltf_secret_t
---- @field name string
---- @field value string
 
 --- Register secrets
 ---
@@ -127,13 +126,27 @@ M.register_secrets = function(secrets)
 	tm.register_secrets(secrets)
 end
 
---- Returns secret variable with the specified name
+--- Returns specified secret variable value
 ---
 --- @param secret_name string
 ---
---- @return ltf_secret_t
+--- @return secret_value
 M.get_secret = function(secret_name)
 	return tm:get_secret(secret_name)
+end
+
+--- @alias secret_name string
+--- @alias secret_value string
+
+--- @class ltf_secret_t
+--- @field name secret_name
+--- @field value secret_value
+
+--- Returns all secret variables
+---
+--- @return table<secret_name, secret_value>
+M.get_secrets = function()
+	return tm:get_secrets()
 end
 
 --- Print something to logs & TUI. Same as default Lua `print()`. Both will use 'info' log level

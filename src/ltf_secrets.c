@@ -6,6 +6,7 @@
 #include "util/files.h"
 #include "util/kv.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -109,6 +110,26 @@ int ltf_secrets_parse_file(da_t *out) {
 
         if (in_multiline) {
             const char *p = line;
+
+            // If the closing """ starts this line (ignoring leading
+            // whitespace), don't include this line content and strip exactly
+            // ONE trailing '\n' that we previously appended after the last
+            // content line.
+            const char *q = p;
+            while (*q && isspace((unsigned char)*q))
+                q++;
+
+            if (strncmp(q, "\"\"\"", 3) == 0) {
+                if (blen > 0 && buf && buf[blen - 1] == '\n') {
+                    buf[--blen] = '\0';
+                }
+                if (finish_multiline(out, &ml_key, &buf, &blen, &bcap,
+                                     &in_multiline) != 0)
+                    goto oom;
+                continue; // ignore anything after closing delimiter line
+            }
+
+            // closing delimiter somewhere later on the line?
             const char *clos = strstr(p, "\"\"\"");
             if (clos) {
                 // append content before closing

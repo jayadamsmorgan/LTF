@@ -6,11 +6,13 @@
 #include "ltf_vars.h"
 #include "test_case.h"
 
+#include "util/da.h"
 #include "util/kv.h"
 #include "util/lua.h"
 #include "util/time.h"
 
 #include <assert.h>
+#include <lua.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -268,16 +270,6 @@ static ltf_var_entry_t *find_var(const char *name, da_t *vars) {
     return NULL;
 }
 
-static void push_var(lua_State *L, ltf_var_entry_t *e) {
-    lua_newtable(L);
-
-    lua_pushstring(L, e->name);
-    lua_setfield(L, -2, "name");
-
-    lua_pushstring(L, e->final_value);
-    lua_setfield(L, -2, "value");
-}
-
 int l_module_ltf_get_var(lua_State *L) {
     LOG("Getting var...");
 
@@ -295,7 +287,7 @@ int l_module_ltf_get_var(lua_State *L) {
         return 0;
     }
 
-    push_var(L, e);
+    lua_pushstring(L, e->final_value);
 
     return 1;
 }
@@ -354,26 +346,38 @@ int l_module_ltf_get_secret(lua_State *L) {
     int s = selfshift(L);
     const char *secret_name = luaL_checkstring(L, s);
 
+    LOG("Getting secret %s", secret_name);
+
     da_t *secrets = ltf_get_secrets();
 
     size_t secrets_count = da_size(secrets);
     for (size_t i = 0; i < secrets_count; ++i) {
         kv_pair_t *secret = da_get(secrets, i);
-        if (strcmp(secret->value, secret_name) == 0) {
-            lua_newtable(L);
-
-            lua_pushstring(L, secret->key);
-            lua_setfield(L, -2, "name");
-
+        if (strcmp(secret->key, secret_name) == 0) {
             lua_pushstring(L, secret->value);
-            lua_setfield(L, -2, "value");
-
             return 1;
         }
     }
 
-    luaL_error(L, "Unable to find secret '%s'");
+    luaL_error(L, "Unable to find secret '%s'", secret_name);
     return 0;
+}
+
+int l_module_ltf_get_secrets(lua_State *L) {
+
+    LOG("Getting secrets...");
+
+    da_t *secrets = ltf_get_secrets();
+    lua_newtable(L);
+
+    size_t secrets_count = da_size(secrets);
+    for (size_t i = 0; i < secrets_count; ++i) {
+        kv_pair_t *secret = da_get(secrets, i);
+        lua_pushstring(L, secret->value);
+        lua_setfield(L, -2, secret->key);
+    }
+
+    return 1;
 }
 
 static inline void log_helper(ltf_log_level level, int n, int s, lua_State *L) {
