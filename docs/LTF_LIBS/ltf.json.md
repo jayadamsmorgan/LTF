@@ -1,99 +1,126 @@
 # JSON Utilities (`ltf.json`)
 
-The `ltf.json` library provides fast and flexible functions for serializing Lua tables to JSON strings and deserializing JSON strings back into Lua tables.
+`ltf.json` provides fast helpers for serializing Lua values to JSON strings and deserializing JSON strings back into Lua tables.
 
-## Getting Started
+## Getting started
 
-The `json` library is exposed as a submodule of the main `ltf` object.
+`json` is exposed as a submodule of `ltf`:
 
 ```lua
 local ltf = require("ltf")
-local json = ltf.json -- Access the JSON module
+local json = ltf.json
 ```
 
-## API Reference
+## API reference
 
 ### `ltf.json.serialize(object, opts)`
 
-Converts a Lua value (typically a table) into a JSON formatted string.
+Converts a Lua value (typically a table) into a JSON string.
 
 **Parameters:**
-*   `object` (`any`): The Lua value to serialize.
-*   `opts` (`json_serialize_opts`, optional): A table of options to control the output formatting.
+
+* `object` (`any`): Lua value to serialize
+* `opts` (`json_serialize_opts`, optional): formatting/behavior options
 
 **Returns:**
-*   (`string`): The resulting JSON string.
+
+* (`string`): JSON string
 
 #### `json_serialize_opts` (table)
 
-The options table allows you to customize the appearance of the output JSON.
-
-| Field | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `pretty` | `boolean` | `false` | If `true`, formats the output with newlines and indentation for human readability. |
-| `pretty_tab` | `boolean` | `false` | If `true` and `pretty` is also `true`, uses tabs for indentation instead of the default 2 spaces. |
-| `spaced` | `boolean` | `false` | If `true`, adds spaces between keys, colons, and values in objects (e.g., `{ "key" : "value" }`). |
-| `color` | `boolean`| `false` | If `true`, adds terminal escape codes to colorize the JSON output. Useful for printing to the console. |
-| `no_trailing_zero`| `boolean`| `false`| If `true`, removes trailing zeros from floating-point numbers (e.g., `1.200` becomes `1.2`). |
-| `slash_escape` | `boolean`| `false`| By default, slashes are **not** escaped. Set to `true` to escape forward slashes (e.g., `/` becomes `\/`). |
+| Field              | Type      | Default | Description                                               |
+| ------------------ | --------- | ------- | --------------------------------------------------------- |
+| `pretty`           | `boolean` | `false` | Pretty-print with indentation (2 spaces).                 |
+| `pretty_tab`       | `boolean` | `false` | If `pretty` is true, indent with tabs instead of spaces.  |
+| `spaced`           | `boolean` | `false` | Add extra spaces where appropriate (more human-readable). |
+| `color`            | `boolean` | `false` | Add terminal escape codes to colorize the JSON output.    |
+| `no_trailing_zero` | `boolean` | `false` | Remove trailing zeros from floats (e.g. `1.200` → `1.2`). |
+| `slash_escape`     | `boolean` | `false` | Escape `/` characters (e.g. `/` → `\/`).                  |
 
 **Example:**
+
 ```lua
-ltf.test("JSON Serialization", function()
+local ltf = require("ltf")
+local json = ltf.json
+
+ltf.test({
+  name = "JSON serialization",
+  body = function()
     local my_data = {
-        name = "LTF Test",
-        id = 123,
-        active = true,
-        tags = {"core", "api"},
-        path = "c:/temp/data"
+      name = "LTF Test",
+      id = 123,
+      active = true,
+      tags = { "core", "api" },
+      path = "c:/temp/data",
     }
 
-    -- Default compact serialization
-    local compact_json = json.serialize(my_data)
-    ltf.print("Compact JSON:", compact_json)
-    -- Output: {"name":"LTF Test","id":123,"active":true,"tags":["core","api"],"path":"c:/temp/data"}
+    local compact = json.serialize(my_data)
+    ltf.print("Compact JSON:", compact)
 
-    -- Pretty-printed serialization
-    local pretty_json = json.serialize(my_data, { pretty = true, slash_escape = true })
+    local pretty = json.serialize(my_data, { pretty = true, slash_escape = true })
     ltf.print("Pretty JSON with escaped slashes:")
-    ltf.print(pretty_json)
-    -- Output:
-    -- {
-    --   "name": "LTF Test",
-    --   "id": 123,
-    --   "active": true,
-    --   "tags": [
-    --     "core",
-    --     "api"
-    --   ],
-    --   "path": "c:\/temp\/data"
-    -- }
-end)
+    ltf.print(pretty)
+  end,
+})
 ```
+
+---
 
 ### `ltf.json.deserialize(str)`
 
-Parses a JSON formatted string and converts it into a Lua table.
+Parses a JSON string into a Lua table.
 
 **Parameters:**
-*   `str` (`string`): The JSON string to parse.
+
+* `str` (`string`): JSON string to parse
 
 **Returns:**
-*   (`table`): The resulting Lua table. Will raise an error if the JSON is invalid.
+
+* (`table`): parsed Lua object
+
+**Errors:**
+
+* Raises an error if the JSON is invalid.
 
 **Example:**
+
 ```lua
-ltf.test("JSON Deserialization", function()
-    local json_string = '{"user": "test_user", "permissions": ["read", "write"], "session_id": 98765}'
-    
+local ltf = require("ltf")
+local json = ltf.json
+
+ltf.test({
+  name = "JSON deserialization",
+  body = function()
+    local json_string = '{"user":"test_user","permissions":["read","write"],"session_id":98765}'
     local data = json.deserialize(json_string)
-    
+
     ltf.print("User:", data.user)
     ltf.print("First permission:", data.permissions[1])
-    
-    -- You can now work with the Lua table
+
     if data.session_id > 90000 then
-        ltf.log_info("High session ID detected.")
+      ltf.log_info("High session ID detected.")
     end
-end)
+  end,
+})
 ```
+
+---
+
+### Low-level access
+
+#### `ltf.json.low`
+
+`json.low` exposes the underlying low-level module (`require("ltf-json")`). Most users should use `json.serialize()` / `json.deserialize()`.
+
+## Type reference (Lua annotations)
+
+```lua
+--- @class json_serialize_opts
+--- @field spaced boolean?
+--- @field pretty boolean?
+--- @field pretty_tab boolean?
+--- @field no_trailing_zero boolean?
+--- @field slash_escape boolean?
+--- @field color boolean?
+```
+

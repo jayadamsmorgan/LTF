@@ -70,7 +70,7 @@ If a test name in `order` is not part of the selected set (wrong tags/target or 
 
 * Type: `string`
 * Meaning: Log verbosity.
-* Allowed values: `"error"`, `"warning"`, `"info"`, `"debug"`, `"trace"`.
+* Allowed values: `"critical"`, `"error"`, `"warning"`, `"info"`, `"debug"`, `"trace"`.
 
 ### `cmd.no_logs`
 

@@ -27,7 +27,99 @@ This file is a machine-readable JSON document containing a complete, structured 
 
 *   **Filename:** `test_run_[DATE]-[TIME]_raw.json`
 *   **Latest Symlink:** A symlink named `test_run_latest_raw.json` always points to the latest raw log.
-*   **Schema:** <!-- TODO --> [The schema for the raw log format can be found here.]()
+*   **Schema:** [The schema for the raw log format can be found here.](./raw_log_json_schema.json)
+
+#### What’s inside `*_raw.json`
+
+A raw log file is a single JSON object with:
+
+* **Run metadata**: project name, LTF version, OS, timestamps, selected target, selected tags, and resolved variables.
+* **All discovered/selected tests** (in execution order), each with:
+  * timestamps and final status
+  * tags
+  * complete output captured during the test
+  * structured failure reasons
+  * teardown output/errors (from `ltf.defer`)
+  * keyword/step timeline (nested “call stack”-like structure)
+
+This makes `*_raw.json` a good source of truth for:
+* building custom HTML reports
+* CI summaries and dashboards
+* “what changed?” comparisons between runs
+* post-processing output into JUnit, Allure, etc.
+
+#### Top-level fields (overview)
+
+At the top level you’ll usually see:
+
+* `project_name` — project directory name
+* `ltf_version` — LTF build version string
+* `os`, `os_version` — runtime platform information
+* `started`, `finished` — timestamps for the overall run
+* `target` — selected target (for multi-target) or project name
+* `variables` — resolved variables for this run (after CLI/scenario overrides)
+* `tags` — tags that filtered this run (if any)
+* `tests` — array of per-test entries
+* `total_amount`, `passed_amount`, `failed_amount`, `finished_amount` — summary counters
+
+> **Timestamp format:** LTF timestamps use a compact string form like `MM.DD.YY-HH:MM:SS` (example: `12.25.25-00:29:10`). This is documented and validated in the JSON schema.
+
+#### Per-test entries
+
+Each item in `tests[]` contains:
+
+* `name` — test name (unique identifier)
+* `started`, `finished`
+* `status` — `"PASSED"` / `"FAILED"`
+* `tags` — tags attached to the test
+* `output[]` — all log lines produced during the test body
+* `failure_reasons[]` — log entries that represent the failure reason(s)
+* `teardown_output[]` / `teardown_errors[]` — output/errors produced during deferred teardown
+* `keywords[]` — nested keyword timeline (steps)
+
+##### `output[]` / `failure_reasons[]` / `teardown_*[]`
+
+These arrays all share the same entry structure:
+
+* `file` — source file path where the message was emitted
+* `line` — line number
+* `date_time` — timestamp
+* `level` — `"CRITICAL"|"ERROR"|"WARNING"|"INFO"|"DEBUG"|"TRACE"`
+* `msg` — message string
+
+Because the raw log captures **all** levels, it’s normal for `*_raw.json` to contain more detail than the TUI/output log at lower verbosity levels.
+
+##### `keywords[]` (step timeline)
+
+`keywords` is a structured timeline that represents nested “steps” inside a test.
+
+Each keyword contains:
+
+* `name`
+* `started`, `finished`
+* `file`, `line` (source location of the keyword)
+* `children[]` (nested keywords)
+
+This is useful for:
+* measuring step durations
+* building expandable timelines in reports
+* debugging “where did the time go?” inside long tests
+
+#### Using the schema
+
+The raw log schema exists for tooling and integration. It helps you:
+
+* validate log files in CI (catch format regressions)
+* generate typed models (TypeScript/Python/Go, etc.)
+* build parsers without guessing field names
+
+Example validation (using `ajv`):
+
+```bash
+ajv validate -s docs/raw_log_json_schema.json -d logs/test_run_latest_raw.json
+````
+
+> Note: the schema is intentionally strict (`additionalProperties: false`) so that accidental format changes are detected early.
 
 ---
 
@@ -36,12 +128,13 @@ This file is a machine-readable JSON document containing a complete, structured 
 LTF supports six hierarchical log levels, allowing you to control the verbosity of the output in the TUI and the [Output Log](#-output-log).
 
 The levels, from most to least severe, are:
-*   `critical`
-*   `error`
-*   `warning`
-*   `info` (Default)
-*   `debug`
-*   `trace`
+
+* `critical`
+* `error`
+* `warning`
+* `info` (Default)
+* `debug`
+* `trace`
 
 You can set the minimum log level for a run using the `--log-level` (or `-l`) option. Only messages of the specified level or higher will be displayed.
 
@@ -65,7 +158,7 @@ LTF includes a command-line utility for quickly parsing and viewing information 
 
 ### `ltf logs info`
 
-This command parses a [Raw Log](#-raw-log-json) file and presents a concise summary of the test run, including test counts, pass/fail rates, and duration.
+This command parses a [Raw Log](#raw-log-json) file and presents a concise summary of the test run, including test counts, pass/fail rates, and duration.
 
 **Usage:**
 

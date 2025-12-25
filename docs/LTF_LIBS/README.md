@@ -1,37 +1,50 @@
 # LTF Core Libraries
 
-Welcome to the documentation for the LTF core libraries. This set of libraries provides the fundamental building blocks for creating robust and powerful automated tests.
+Welcome to the documentation for the LTF core libraries. These libraries are the building blocks for writing tests: core test registration + logging, plus modules for processes, HTTP, SSH, serial devices, JSON, browser automation, and more.
 
-The core libraries are accessed through the main `ltf` object, which is loaded at the beginning of every test script:
+All core modules are accessed through the main `ltf` entry point:
 
 ```lua
 local ltf = require("ltf")
 ```
 
-## Available Modules
+## Available modules
 
-Each module provides a distinct set of functionalities. Click on a module name to view its detailed API documentation.
+Each module provides a focused set of functionality. Click a module to open its API docs.
 
-*   [**`ltf` (Core Library)**](./ltf.md)
-    *   **Purpose:** The heart of the framework. Use this for defining tests, logging, controlling test flow with `defer`, and basic utilities like `sleep`.
-    *   **Key Functions:** `ltf.test()`, `ltf.log_info()`, `ltf.log_error()`, `ltf.defer()`
+* [**`ltf` (Core Library)**](./ltf.md)
+  **Purpose:** The main test authoring API: define tests, log output, defer cleanup, and access variables/secrets and run context.
+  **Key functions:** `ltf.test()`, `ltf.log_info()`, `ltf.log_error()`, `ltf.defer()`, `ltf.register_vars()`, `ltf.register_secrets()`
 
-*   [**`ltf.webdriver`**](./ltf.webdriver.md)
-    *   **Purpose:** End-to-end web browser automation. It provides a client for the W3C WebDriver standard, allowing you to control browsers like Chrome, Firefox, and Safari.
-    *   **Key Functions:** `webdriver.spawn_webdriver()`, `webdriver.session_start()`, `webdriver.open_url()`, `webdriver.find_element()`, `webdriver.click()`
+* [**`ltf.hooks`**](./ltf.hooks.md)
+  **Purpose:** Register callbacks around the test lifecycle (run started/finished, test started/finished).
+  **Key functions:** `hooks.test_run_started()`, `hooks.test_started()`, `hooks.test_finished()`, `hooks.test_run_finished()`
 
-*   [**`ltf.http`**](./ltf.http.md)
-    *   **Purpose:** A powerful, low-level HTTP client for making API requests. Based on libcurl, it gives you fine-grained control over every aspect of a network transfer.
-    *   **Key Functions:** `http.new()`, `handle:setopt()`, `handle:perform()`
+* [**`ltf.proc`**](./ltf.proc.md)
+  **Purpose:** Run and interact with external system processes. Supports synchronous execution (`run`) and interactive spawning (`spawn`).
+  **Key functions:** `proc.run()`, `proc.spawn()`, `handle:read()`, `handle:write()`, `handle:wait()`, `handle:kill()`
 
-*   [**`ltf.proc`**](./ltf.proc.md)
-    *   **Purpose:** Run and interact with external system processes and command-line tools. Supports both synchronous execution (run and wait) and asynchronous spawning for complex interactions.
-    *   **Key Functions:** `proc.run()`, `proc.spawn()`, `handle:read()`, `handle:kill()`
+* [**`ltf.http`**](./ltf.http.md)
+  **Purpose:** Low-level HTTP client based on libcurl. Create a handle, configure options, perform the request, then cleanup.
+  **Key functions:** `http.new()`, `handle:setopt()`, `handle:perform()`, `handle:cleanup()`
 
-*   [**`ltf.serial`**](./ltf.serial.md)
-    *   **Purpose:** Communicate with hardware devices over serial ports (COM ports, `/dev/tty*`). Useful for testing embedded systems and other hardware.
-    *   **Key Functions:** `serial.list_devices()`, `serial.get_port()`, `port:open()`, `port:read_until()`, `port:write_blocking()`
+* [**`ltf.ssh`**](./ltf.ssh.md)
+  **Purpose:** SSH connectivity for tests: remote command execution, interactive shell channels (PTY), and SFTP file transfer.
+  **Key functions:** `ssh.new_session()`, `session:connect()`, `session:new_exec_channel()`, `exec_chan:exec()`, `session:new_sftp_channel()`
 
-*   [**`ltf.json`**](./ltf.json.md)
-    *   **Purpose:** Fast and simple utilities for serializing Lua tables into JSON strings and deserializing JSON back into Lua tables.
-    *   **Key Functions:** `json.serialize()`, `json.deserialize()`
+* [**`ltf.serial`**](./ltf.serial.md)
+  **Purpose:** Communicate with serial devices (`COM*`, `/dev/tty*`). Includes device discovery, port configuration, and read/write helpers like `read_until`.
+  **Key functions:** `serial.list_devices()`, `serial.get_port()`, `port:open()`, `port:read()`, `port:write()`, `port:read_until()`
+
+* [**`ltf.webdriver`**](./ltf.webdriver.md)
+  **Purpose:** Browser automation using the W3C WebDriver protocol. Spawn a driver, create a session, interact with pages/elements, then close.
+  **Key functions:** `webdriver.spawn_webdriver()`, `webdriver.new_session()`, `session:open_url()`, `session:find_element()`, `session:click()`
+
+* [**`ltf.json`**](./ltf.json.md)
+  **Purpose:** JSON serialization/deserialization utilities for Lua tables (with formatting options).
+  **Key functions:** `json.serialize()`, `json.deserialize()`
+
+* [**`ltf.util`**](./ltf.util.md)
+  **Purpose:** Small general-purpose helpers. Currently includes file inspection (`file_info`).
+  **Key functions:** `util.file_info()`
+

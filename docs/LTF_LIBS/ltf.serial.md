@@ -1,241 +1,226 @@
 # Serial Communication (`ltf.serial`)
 
-The `ltf.serial` library provides a comprehensive interface for communicating with serial port devices (like COM ports or `/dev/tty*` devices). It allows you to list available ports, configure communication parameters, and perform read/write operations within your tests.
+`ltf.serial` provides an interface for communicating with serial port devices (COM ports or `/dev/tty*`). It can list available ports, open/configure a port, and perform read/write operations.
 
-## Getting Started
+## Getting started
 
-The `serial` library is exposed as a submodule of the main `ltf` object.
+`serial` is exposed as a submodule of `ltf`:
 
 ```lua
 local ltf = require("ltf")
-local serial = ltf.serial -- Access the serial module
+local serial = ltf.serial
 ```
 
-## API Reference
+## API reference
 
-### Device Discovery
-
-Functions to find and select serial ports available on the system.
+### Device discovery
 
 #### `ltf.serial.list_devices()`
 
 Lists all serial ports detected on the system.
 
 **Returns:**
-*   (`table`): An array of `serial_port_info` objects, one for each detected device.
+
+* (`serial_port_info[]`): array of `serial_port_info`
 
 **Example:**
+
 ```lua
 local ltf = require("ltf")
 local serial = ltf.serial
 
-ltf.test("List all serial ports", function()
+ltf.test({
+  name = "List all serial ports",
+  body = function()
     local devices = serial.list_devices()
     if #devices > 0 then
-        ltf.print("Found", #devices, "serial devices:")
-        for _, device in ipairs(devices) do
-            ltf.print(("- %s (%s)"):format(device.path, device.description))
-        end
+      ltf.print("Found", #devices, "serial devices:")
+      for _, device in ipairs(devices) do
+        ltf.print(("- %s (%s)"):format(device.path, device.description))
+      end
     else
-        ltf.log_warning("No serial devices found.")
+      ltf.log_warning("No serial devices found.")
     end
-end)
+  end,
+})
 ```
 
 #### `ltf.serial.get_port(path)`
 
-Gets a handle for a specific serial port by its path (e.g., `"COM3"` or `"/dev/ttyUSB0"`). This function retrieves the handle but does not open the port for communication.
+Gets a handle for a specific serial port by its path/name (e.g. `"COM3"` or `"/dev/ttyUSB0"`). This does **not** open the port.
 
 **Parameters:**
-*   `path` (`string`): The system path or name of the serial port.
+
+* `path` (`string`): port path or name
 
 **Returns:**
-*   (`serial_port`): A `serial_port` object handle used for all further interactions.
+
+* (`serial_port`): serial port handle
 
 ---
 
-### The `serial_port` Object
+### The `serial_port` object
 
-The `serial_port` object is the main handle for interacting with an individual serial device. It is obtained by calling `ltf.serial.get_port(path)` and contains methods for controlling and communicating with the port.
+The `serial_port` handle is returned by `ltf.serial.get_port(path)` and provides methods for configuring and communicating with the port.
 
 #### `port:open(mode)`
 
-Opens the serial port for communication.
+Opens the port.
 
 **Parameters:**
-*   `mode` (`serial_mode`): The mode to open the port in (`"r"`, `"w"`, or `"rw"`).
+
+* `mode` (`serial_mode`): `"r"`, `"w"`, or `"rw"`
 
 #### `port:close()`
 
-Closes the serial port. It's highly recommended to call this using `ltf.defer` to ensure the port is closed even if the test fails.
+Closes the port. Recommended to call via `ltf.defer(...)`.
 
-#### `port:read_blocking(byte_amount, timeout)`
+#### `port:read(chunk_size) -> string`
 
-Reads a specified number of bytes from the port, blocking execution until the data is received or a timeout occurs.
+Reads up to `chunk_size` bytes (non-blocking).
 
-**Parameters:**
-*   `byte_amount` (`integer`): The number of bytes to read.
-*   `timeout` (`integer`, optional): The maximum time to wait in milliseconds. If `0` or `nil`, it will wait indefinitely.
+#### `port:write(data) -> integer`
 
-**Returns:**
-*   (`string`): The data read from the port.
+Writes data (non-blocking). Returns number of bytes written.
 
-#### `port:read_nonblocking(byte_amount)`
+#### `port:read_until(opts) -> (found, read)`
 
-Attempts to read a specified number of bytes from the port without blocking. Returns immediately with any available data.
+Reads repeatedly until the pattern appears or timeout is reached.
 
 **Parameters:**
-*   `byte_amount` (`integer`): The maximum number of bytes to read.
+
+* `opts` (`serial_read_until_opts`):
+
+  * `pattern` (`string`, optional): literal string pattern (uses `string.find(..., true)`). Default: `"\n"`.
+  * `timeout` (`integer`, optional): timeout in milliseconds. Default: `200`.
+  * `chunk_size` (`integer`, optional): read chunk size. Default: `64`.
 
 **Returns:**
-*   (`string`): The data read from the port, which may be empty or less than `byte_amount`.
 
-#### `port:read_until(pattern, timeout, chunk_size)`
+* `found` (`boolean`): `true` if pattern was found before timeout, `false` otherwise
+* `read` (`string`): everything that was read (always returned)
 
-Reads from the serial port in chunks until a specific string pattern is found. This is a powerful helper for reading line-based or delimited data.
+### Port configuration methods
 
-**Parameters:**
-*   `pattern` (`string`, optional): The pattern to search for. Defaults to a newline character (`"\n"`).
-*   `timeout` (`number`, optional): Total time to wait in milliseconds.
-    *   `nil` (default): Block indefinitely until the pattern is found.
-    *   `0`: Perform a single non-blocking read and check.
-    *   `> 0`: Wait up to this duration for the pattern to appear.
-*   `chunk_size` (`number`, optional): The size of each read chunk in bytes. Defaults to `64`.
+These configure the communication parameters:
 
-**Returns:**
-*   (`string`): The complete string read from the port, including the pattern. Throws a timeout error if the pattern is not found within the specified time.
+* `port:set_baudrate(baudrate)`
+* `port:set_bits(bits)`
+* `port:set_parity(parity)`
+* `port:set_stopbits(stopbits)`
+* `port:set_flowcontrol(flowctrl)`
+* `port:set_rts(rts_option)`
+* `port:set_dtr(dtr_option)`
+* `port:set_cts(cts_option)`
+* `port:set_dsr(dsr_option)`
+* `port:set_xon_xoff(xonxoff_option)`
 
-#### `port:write_blocking(data, timeout)`
+### Port status & control
 
-Writes a string of data to the port, blocking until the write is complete or a timeout occurs.
+* `port:flush(direction)`
+* `port:drain()`
+* `port:get_waiting_input() -> integer`
+* `port:get_waiting_output() -> integer`
+* `port:get_port_info() -> serial_port_info`
 
-**Parameters:**
-*   `data` (`string`): The data to write.
-*   `timeout` (`integer`): The maximum time to wait in milliseconds.
+---
 
-**Returns:**
-*   (`integer`): The number of bytes written.
+## Full example
 
-#### `port:write_nonblocking(data)`
-
-Writes a string of data to the port without blocking.
-
-**Parameters:**
-*   `data` (`string`): The data to write.
-
-**Returns:**
-*   (`integer`): The number of bytes written.
-
-#### Port Configuration Methods
-
-These methods configure the communication parameters of the open serial port.
-
-*   `port:set_baudrate(baudrate)`: Sets the baud rate (e.g., `9600`, `115200`).
-*   `port:set_bits(bits)`: Sets the number of data bits (`serial_data_bits`).
-*   `port:set_parity(parity)`: Sets the parity mode (`serial_parity`).
-*   `port:set_stopbits(stopbits)`: Sets the number of stop bits (`serial_stop_bits`).
-*   `port:set_flowcontrol(flowctrl)`: Sets the hardware/software flow control method (`serial_flowctrl`).
-*   `port:set_rts(rts_option)`: Sets the Request to Send (RTS) line behavior (`serial_rts`).
-*   `port:set_dtr(dtr_option)`: Sets the Data Terminal Ready (DTR) line behavior (`serial_dtr`).
-*   `port:set_cts(cts_option)`: Sets the Clear to Send (CTS) line behavior (`serial_cts`).
-*   `port:set_dsr(dsr_option)`: Sets the Data Set Ready (DSR) line behavior (`serial_dsr`).
-*   `port:set_xon_xoff(xonxoff_option)`: Configures XON/XOFF software flow control (`serial_xonxoff`).
-
-#### Port Status & Control
-
-*   `port:flush(direction)`: Discards data from the input, output, or both buffers (`serial_flush_direction`).
-*   `port:drain()`: Waits until all data in the output buffer has been transmitted.
-*   `port:get_waiting_input()`: Returns the number of bytes available in the input buffer.
-*   `port:get_waiting_output()`: Returns the number of bytes waiting in the output buffer.
-*   `port:get_port_info()`: Returns a `serial_port_info` table with detailed information about the specific port instance.
-
-#### Full Example
 ```lua
 local ltf = require("ltf")
 local serial = ltf.serial
 
-ltf.test("Communicate with GPS Device", {"hardware", "gps"}, function()
-    -- Find a specific device by its USB product string
+ltf.test({
+  name = "Communicate with GPS Device",
+  tags = { "hardware", "gps" },
+  body = function()
     local devices = serial.list_devices()
-    local gps_path
+
+    local gps_path = nil
     for _, dev in ipairs(devices) do
-        if dev.product and dev.product:find("GPS") then
-            gps_path = dev.path
-            break
-        end
+      if dev.product and dev.product:find("GPS") then
+        gps_path = dev.path
+        break
+      end
     end
 
     if not gps_path then
-        ltf.log_critical("GPS device not found!")
+      ltf.log_critical("GPS device not found!")
     end
 
     ltf.log_info("Found GPS device at:", gps_path)
+
     local port = serial.get_port(gps_path)
+    ltf.defer(port.close, port)
 
-    -- Ensure the port is closed at the end of the test
-    ltf.defer(function()
-        port:close()
-        ltf.print("GPS port closed.")
-    end)
-
-    -- Open and configure the port
     port:open("rw")
     port:set_baudrate(9600)
     port:set_bits(8)
     port:set_parity("none")
     port:set_stopbits(1)
-    
+
     ltf.print("Port configured. Waiting for NMEA sentence...")
 
-    -- Read until we get a GPGGA sentence, with a 5-second timeout
-    local sentence = port:read_until("$GPGGA", 5000)
+    local found, data = port:read_until({
+      pattern = "$GPGGA",
+      timeout = 5000,
+      chunk_size = 64,
+    })
 
-    if sentence:find("$GPGGA") then
-        ltf.log_info("Received GPGGA sentence:", sentence)
+    if found then
+      ltf.log_info("Received GPGGA sentence:", data)
     else
-        ltf.log_error("Did not receive a GPGGA sentence in time.")
+      ltf.log_error("Did not receive a GPGGA sentence in time. Read:", data)
     end
-end)
+  end,
+})
 ```
 
 ---
 
-### Data Structures & Types
+## Data structures & types
 
-#### `serial_port_info` (table)
+### `serial_port_info` (table)
 
-A table containing detailed information about a serial port, returned by `ltf.serial.list_devices()` and `port:get_port_info()`.
+Returned by `ltf.serial.list_devices()` and `port:get_port_info()`.
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `path` | `string` | Path or name of the serial port (e.g., `COM3`, `/dev/ttyS0`). |
-| `type` | `serial_port_type` | The type of port (`"native"`, `"usb"`, `"bluetooth"`, `"unknown"`). |
-| `description` | `string` | A human-readable description of the device. |
-| `serial` | `string` (optional) | Serial number, if it's a USB device. |
-| `product` | `string` (optional) | Product name string, if it's a USB device. |
-| `manufacturer` | `string` (optional) | Manufacturer name string, if it's a USB device. |
-| `vid` | `number` (optional) | Vendor ID, if it's a USB device. |
-| `pid` | `number` (optional) | Product ID, if it's a USB device. |
-| `usb_address` | `number` (optional) | USB port address, if it's a USB device. |
-| `usb_bus` | `number` (optional) | USB bus number, if it's a USB device. |
-| `bluetooth_address`| `string` (optional) | MAC address, if it's a Bluetooth device. |
+| Field               | Type               | Description                                        |
+| ------------------- | ------------------ | -------------------------------------------------- |
+| `path`              | `string`           | Path/name of the port (e.g. `COM3`, `/dev/ttyS0`). |
+| `type`              | `serial_port_type` | `"native"`, `"usb"`, `"bluetooth"`, `"unknown"`.   |
+| `description`       | `string`           | Human-readable description.                        |
+| `serial`            | `string?`          | USB serial number (if available).                  |
+| `product`           | `string?`          | USB product string (if available).                 |
+| `manufacturer`      | `string?`          | USB manufacturer string (if available).            |
+| `vid`               | `number?`          | USB vendor ID (if available).                      |
+| `pid`               | `number?`          | USB product ID (if available).                     |
+| `usb_address`       | `number?`          | USB port address (if available).                   |
+| `usb_bus`           | `number?`          | USB bus number (if available).                     |
+| `bluetooth_address` | `string?`          | Bluetooth MAC address (if available).              |
 
+### Type aliases
 
-#### Type Aliases
+| Alias                    | Accepted values                                  | Description                  |
+| ------------------------ | ------------------------------------------------ | ---------------------------- |
+| `serial_mode`            | `"r"`, `"w"`, `"rw"`                             | Read / Write / Read+Write.   |
+| `serial_flush_direction` | `"i"`, `"o"`, `"io"`                             | Flush input / output / both. |
+| `serial_data_bits`       | `5`, `6`, `7`, `8`                               | Data bits.                   |
+| `serial_parity`          | `"none"`, `"odd"`, `"even"`, `"mark"`, `"space"` | Parity mode.                 |
+| `serial_stop_bits`       | `1`, `2`                                         | Stop bits.                   |
+| `serial_flowctrl`        | `"dtrdsr"`, `"rtscts"`, `"xonxoff"`, `"none"`    | Flow control.                |
+| `serial_rts`             | `"off"`, `"on"`, `"flowctrl"`                    | RTS behavior.                |
+| `serial_dtr`             | `"off"`, `"on"`, `"flowctrl"`                    | DTR behavior.                |
+| `serial_cts`             | `"ignore"`, `"flowctrl"`                         | CTS behavior.                |
+| `serial_dsr`             | `"ignore"`, `"flowctrl"`                         | DSR behavior.                |
+| `serial_xonxoff`         | `"i"`, `"o"`, `"io"`, `"disable"`                | XON/XOFF mode.               |
+| `serial_port_type`       | `"native"`, `"usb"`, `"bluetooth"`, `"unknown"`  | Port connection type.        |
 
-These aliases define the set of accepted values for various function parameters.
+---
 
-| Alias Name | Accepted Values | Description |
-| :--- | :--- | :--- |
-| `serial_mode` | `"r"`, `"w"`, `"rw"` | Read, Write, or Read/Write mode for opening a port. |
-| `serial_flush_direction`| `"i"`, `"o"`, `"io"` | Flush the Input, Output, or both buffers. |
-| `serial_data_bits` | `5`, `6`, `7`, `8` | Number of data bits. |
-| `serial_parity` | `"none"`, `"odd"`, `"even"`, `"mark"`, `"space"` | Parity checking mode. |
-| `serial_stop_bits` | `1`, `2` | Number of stop bits. |
-| `serial_flowctrl` | `"dtrdsr"`, `"rtscts"`, `"xonxoff"`, `"none"` | Flow control method. |
-| `serial_rts` | `"off"`, `"on"`, `"flowctrl"` | Behavior of the RTS line. |
-| `serial_dtr` | `"off"`, `"on"`, `"flowctrl"` | Behavior of the DTR line. |
-| `serial_cts` | `"ignore"`, `"flowctrl"` | Behavior of the CTS line. |
-| `serial_dsr` | `"ignore"`, `"flowctrl"` | Behavior of the DSR line. |
-| `serial_xonxoff` | `"i"`, `"o"`, `"io"`, `"disable"` | Software flow control on input, output, both, or disabled. |
-| `serial_port_type` | `"native"`, `"usb"`, `"bluetooth"`, `"unknown"`| The physical type of serial port connection. |
+### Low-level access
+
+#### `ltf.serial.low`
+
+`serial.low` exposes the underlying low-level module (`require("ltf-serial")`). Most users should use the high-level API above.
+

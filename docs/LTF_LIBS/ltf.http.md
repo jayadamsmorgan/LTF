@@ -1,167 +1,203 @@
 # HTTP Client (`ltf.http`)
 
-The `ltf.http` library provides a low-level, powerful interface for making HTTP(S) and other network requests. It is a thin wrapper around the ubiquitous **libcurl** library, giving you fine-grained control over every aspect of a network transfer.
+`ltf.http` is a low-level HTTP client built as a thin wrapper around **libcurl**. You create a handle, configure it using `setopt()`, perform the transfer, and then clean up the handle.
 
-Due to its low-level nature, familiarity with libcurl concepts is beneficial.
+## Getting started
 
-## Getting Started
-
-The `http` library is exposed as a submodule of the main `ltf` object.
+`http` is exposed as a submodule of `ltf`:
 
 ```lua
 local ltf = require("ltf")
-local http = ltf.http -- Access the HTTP module
+local http = ltf.http
 ```
 
-## API Reference
+## API reference
 
-The basic workflow for any request follows the libcurl pattern:
-1.  Create a handle with `http.new()`.
-2.  Configure the handle with one or more `handle:setopt()` calls.
-3.  Execute the request with `handle:perform()`.
-4.  Clean up resources with `handle:cleanup()`, ideally using `ltf.defer`.
+The typical request flow is:
 
-### Handle Management
+1. Create a handle with `http.new()`
+2. Configure it with `handle:setopt(...)`
+3. Execute with `handle:perform()`
+4. Release resources with `handle:cleanup()` (recommended via `ltf.defer`)
+
+---
+
+### Handle management
 
 #### `ltf.http.new()`
 
-Creates and returns a new HTTP handle. A handle represents a single transfer session and is the starting point for any request.
+Creates and returns a new HTTP handle.
 
 **Returns:**
-*   (`http_handle`): A new `http_handle` object.
+
+* (`http_handle`): a new `http_handle` object
 
 ---
 
-### The `http_handle` Object
+### The `http_handle` object
 
-The `http_handle` object is the main interface for building and executing a request.
+#### `handle:setopt(curlopt, value) -> http_handle`
 
-#### `handle:setopt(curlopt, value)`
-
-Sets an option on the handle. This is the primary method for configuring all aspects of a request, such as the URL, request method, headers, and data callbacks. This method is chainable.
+Sets a libcurl option on the handle. This method is chainable.
 
 **Parameters:**
-*   `curlopt` (`integer`): An option constant from the `ltf.http.OPT_*` list (e.g., `http.OPT_URL`).
-*   `value` (`boolean`|`integer`|`string`|`table`|`function`): The value for the option. The required type depends on the specific option being set.
+
+* `curlopt` (`integer`): one of the `http.OPT_*` constants
+* `value` (`boolean|integer|string|string[]|function`): option value
 
 **Returns:**
-*   (`http_handle`): The handle itself, allowing for chained calls.
+
+* (`http_handle`): the same handle (for chaining)
 
 #### `handle:perform()`
 
-Executes the transfer as configured by all previous `setopt()` calls. This is a synchronous, blocking operation that completes when the transfer is finished or has failed.
+Performs the transfer (blocking).
 
 #### `handle:cleanup()`
 
-Releases all resources used by the handle. It is critical to call this for every handle you create to prevent memory leaks. The garbage collector will also attempt to call this, but using `ltf.defer` is the recommended and safest approach.
+Frees resources associated with the handle. You should call this for every handle you create.
 
 ---
 
-### Option Constants (`http.OPT_*`)
+### Option constants (`http.OPT_*`)
 
-The `ltf.http` module exposes a large number of constants that map directly to libcurl's `CURLOPT_` options. These are used with `handle:setopt()` to configure the request.
+`ltf.http` exports many `OPT_*` constants that map directly to libcurl `CURLOPT_*` options.
 
-For a complete list and detailed explanation of what each option does, you must refer to the official **[`curl_easy_setopt` documentation](https://curl.se/libcurl/c/curl_easy_setopt.html)**.
+For detailed meaning of each option, refer to the official curl docs for `curl_easy_setopt`.
 
-Below are some of the most common options to get you started.
+Below are some commonly used options:
 
-| Constant | Value Type | Description |
-| :--- | :--- | :--- |
-| `OPT_URL` | `string` | The URL for the request. |
-| `OPT_FOLLOWLOCATION` | `boolean` | Set to `true` to follow HTTP redirects. |
-| `OPT_VERBOSE` | `boolean` | Set to `true` for detailed operational logs from curl. |
-| `OPT_TIMEOUT_MS` | `integer` | The maximum time in milliseconds for the entire operation to take. |
-| `OPT_POST` | `boolean` | Set to `true` to make a POST request. |
-| `OPT_POSTFIELDS` | `string` | The data to send in the body of a POST request. |
-| `OPT_HTTPHEADER` | `table` of `string` | A list of custom HTTP headers (e.g., `{"Content-Type: application/json"}`). |
-| `OPT_CUSTOMREQUEST`| `string` | Sets a custom request method (e.g., `"PUT"`, `"DELETE"`). |
-| `OPT_WRITEFUNCTION`| `function` | A callback function `function(data)` that receives the response body, chunk by chunk. |
-| `OPT_HEADERFUNCTION`| `function` | A callback function `function(data)` that receives the response headers, line by line. |
-| `OPT_SSL_VERIFYPEER`| `boolean` | Set to `false` to disable SSL certificate verification (use with caution). |
+* `OPT_URL` (`string`) — request URL
+* `OPT_FOLLOWLOCATION` (`boolean|integer`) — follow redirects
+* `OPT_VERBOSE` (`boolean|integer`) — enable verbose curl output
+* `OPT_TIMEOUT_MS` (`integer`) — total timeout in milliseconds
+* `OPT_POST` (`boolean|integer`) — enable POST
+* `OPT_POSTFIELDS` (`string`) — POST body
+* `OPT_HTTPHEADER` (`string[]`) — list of headers (`{ "Header: value", ... }`)
+* `OPT_CUSTOMREQUEST` (`string`) — custom method (`"PUT"`, `"DELETE"`, ...)
+* `OPT_WRITEFUNCTION` (`function`) — body callback
+* `OPT_HEADERFUNCTION` (`function`) — header callback
+* `OPT_SSL_VERIFYPEER` (`boolean|integer`) — enable/disable cert verification
 
-### Full Examples
+> Note: some options are defined as “long” by curl and may expect `0/1` instead of Lua booleans. In practice, both are commonly accepted by wrappers—if you hit type issues, pass `0` or `1`.
 
-#### Simple GET Request
+---
 
-This example performs a GET request and captures the response body into a variable.
+## Examples
+
+### Simple GET request
+
+This example captures the response body into a Lua string.
 
 ```lua
-ltf.test("Simple GET request", function()
-    local response_body_parts = {}
+local ltf = require("ltf")
+local http = ltf.http
+
+ltf.test({
+  name = "Simple GET request",
+  body = function()
+    local parts = {}
+
     local handle = http.new()
-    
-    -- ALWAYS defer cleanup to prevent resource leaks
     ltf.defer(handle.cleanup, handle)
 
     handle:setopt(http.OPT_URL, "https://api.github.com/zen")
     handle:setopt(http.OPT_USERAGENT, "LTF-HTTP-Client/1.0")
-    
-    -- Set a function to capture the response body
+
     handle:setopt(http.OPT_WRITEFUNCTION, function(data)
-        table.insert(response_body_parts, data)
-        return true -- Must return true to continue receiving data
+      table.insert(parts, data)
+      return #data
     end)
-    
+
     ltf.log_info("Performing GET request...")
     handle:perform()
     ltf.log_info("Request finished.")
-    
-    local response_body = table.concat(response_body_parts)
-    ltf.print("Response:", response_body)
-end)
+
+    local body = table.concat(parts)
+    ltf.print("Response:", body)
+  end,
+})
 ```
 
-#### POST Request with JSON and Headers
+### POST JSON with headers
 
-This example shows how to send a POST request with a JSON body and custom headers, while capturing both the response headers and body.
+This example posts JSON and captures both headers and body.
 
 ```lua
-ltf.test("POST JSON data", function()
+local ltf = require("ltf")
+local http = ltf.http
+
+ltf.test({
+  name = "POST JSON data",
+  body = function()
     local response_headers = {}
-    local response_body = ""
-    
-    local post_data = ltf.json.encode({
-        title = "My LTF Test Post",
-        body = "This is a test from the LTF framework.",
-        userId = 1,
+    local response_body_parts = {}
+
+    local post_data = ltf.json.serialize({
+      title = "My LTF Test Post",
+      body = "This is a test from the LTF framework.",
+      userId = 1,
     })
-    
+
     local handle = http.new()
     ltf.defer(handle.cleanup, handle)
-    
-    -- Chain setopt calls for cleaner code
+
     handle:setopt(http.OPT_URL, "https://jsonplaceholder.typicode.com/posts")
-        :setopt(http.OPT_POST, true)
-        :setopt(http.OPT_POSTFIELDS, post_data)
-        :setopt(http.OPT_HTTPHEADER, {
-            "Content-Type: application/json; charset=UTF-8",
-            "Accept: application/json"
-        })
-        :setopt(http.OPT_HEADERFUNCTION, function(header)
-            table.insert(response_headers, header:gsub("[\r\n]", "")) -- Clean up newlines
-            return true
-        end)
-        :setopt(http.OPT_WRITEFUNCTION, function(data)
-            response_body = response_body .. data
-            return true
-        end)
-    
+      :setopt(http.OPT_POST, 1)
+      :setopt(http.OPT_POSTFIELDS, post_data)
+      :setopt(http.OPT_HTTPHEADER, {
+        "Content-Type: application/json; charset=UTF-8",
+        "Accept: application/json",
+      })
+      :setopt(http.OPT_HEADERFUNCTION, function(line)
+        table.insert(response_headers, (line:gsub("[\r\n]", "")))
+        return true
+      end)
+      :setopt(http.OPT_WRITEFUNCTION, function(data)
+        table.insert(response_body_parts, data)
+        return #data
+      end)
+
     ltf.log_info("Performing POST request...")
     handle:perform()
     ltf.log_info("Request finished.")
-    
+
+    local response_body = table.concat(response_body_parts)
+
     ltf.log_debug("--- Response Headers ---")
     for _, h in ipairs(response_headers) do
-        if #h > 0 then ltf.log_debug(h) end
+      if #h > 0 then
+        ltf.log_debug(h)
+      end
     end
+
     ltf.log_debug("--- Response Body ---")
     ltf.print(response_body)
 
-    local decoded_response = ltf.json.decode(response_body)
-    if decoded_response and decoded_response.id then
-        ltf.log_info("Successfully created post with ID:", decoded_response.id)
+    local decoded = ltf.json.deserialize(response_body)
+    if decoded and decoded.id then
+      ltf.log_info("Successfully created post with ID:", decoded.id)
     else
-        ltf.log_error("Failed to parse response or find ID.")
+      ltf.log_error("Failed to parse response or find ID.")
     end
-end)
+  end,
+})
 ```
+
+---
+
+### Low-level access
+
+#### `ltf.http.low`
+
+`http.low` exposes the underlying low-level module (`require("ltf-http")`). Most users should use `http.new()` + `handle:setopt()` + `handle:perform()`.
+
+## Type reference (Lua annotations)
+
+```lua
+--- @class http_handle
+--- @field setopt fun(self: http_handle, curlopt: integer, value: boolean|integer|string|string[]|function): http_handle
+--- @field perform fun(self: http_handle)
+--- @field cleanup fun(self: http_handle)
+```
+

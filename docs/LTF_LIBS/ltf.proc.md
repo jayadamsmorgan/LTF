@@ -1,171 +1,197 @@
 # Process Management (`ltf.proc`)
 
-The `ltf.proc` library provides functions to run and interact with external system processes. It allows you to execute commands synchronously, capturing their output, or spawn them asynchronously for more complex interactions like streaming I/O.
+`ltf.proc` provides helpers for running and interacting with external system processes. You can:
 
-## Getting Started
+* Run a command and wait for it to finish (`proc.run`)
+* Spawn a process and interact with it asynchronously (`proc.spawn`)
+* Access the low-level backend module via `proc.low`
 
-The `proc` library is exposed as a submodule of the main `ltf` object.
+## Getting started
+
+`proc` is exposed as a submodule of `ltf`:
 
 ```lua
 local ltf = require("ltf")
-local proc = ltf.proc -- Access the process management module
+local proc = ltf.proc
 ```
 
----
+## API reference
 
-## API Reference
-
-### High-Level Execution
+### High-level execution
 
 #### `ltf.proc.run(opts, timeout, sleepinterval)`
 
-Runs an external command, waits for it to complete (with an optional timeout), and captures its standard output, standard error, and exit code. This is the simplest and most common way to run an external process.
+Runs an external command, waits for it to complete (optionally with a timeout), and returns captured `stdout`, `stderr`, and `exitcode`.
 
 **Parameters:**
-*   `opts` (`run_opts`): A table specifying the executable and its arguments.
-*   `timeout` (`integer`, optional): The maximum time to wait for the process to complete, in milliseconds. If omitted, it will wait indefinitely.
-*   `sleepinterval` (`integer`, optional): The interval in milliseconds to check for process completion when a timeout is used. Defaults to `20`.
+
+* `opts` (`run_opts`): executable + args
+* `timeout` (`integer`, optional): timeout in milliseconds. If `nil`, waits indefinitely.
+* `sleepinterval` (`integer`, optional): interval (ms) between timeout checks. Default: `20`.
 
 **Returns:**
-*   `result` (`run_result`): A table containing the `stdout`, `stderr`, and `exitcode`.
-*   `err` (`string`, optional): If a timeout occurs, this will be the string `"timeout"`. In this case, `result.exitcode` will be `-1`.
+
+* `result` (`run_result`): `{ stdout, stderr, exitcode }`
+
+**Errors:**
+
+* Throws a Lua error with message `"timeout"` if the timeout is reached.
 
 **Example:**
+
 ```lua
-ltf.test("Run a git command", function()
-    local result, err = proc.run({
+local ltf = require("ltf")
+local proc = ltf.proc
+
+ltf.test({
+  name = "Run a git command",
+  body = function()
+    local ok, result_or_err = pcall(function()
+      return proc.run({
         exe = "git",
-        args = {"--version"}
-    }, 2000) -- 2-second timeout
+        args = { "--version" },
+      }, 2000) -- 2-second timeout
+    end)
 
-    if err then
-        ltf.log_critical("Command timed out:", err)
+    if not ok then
+      if result_or_err == "timeout" then
+        ltf.log_critical("Command timed out")
+      else
+        ltf.log_critical("Command failed:", result_or_err)
+      end
     end
 
+    local result = result_or_err
     if result.exitcode == 0 then
-        ltf.log_info("Git command successful!")
-        ltf.print("Output:", result.stdout)
+      ltf.log_info("Git command successful!")
+      ltf.print("Output:", result.stdout)
     else
-        ltf.log_error("Git command failed with code:", result.exitcode)
-        ltf.print("Error output:", result.stderr)
+      ltf.log_error("Git command failed with code:", result.exitcode)
+      ltf.print("Error output:", result.stderr)
     end
-end)
+  end,
+})
 ```
 
 ---
 
-### Asynchronous Spawning
-
-For advanced use cases where you need to interact with a process while it is running.
+### Asynchronous spawning
 
 #### `ltf.proc.spawn(opts)`
 
-Spawns an external process and immediately returns a handle for interacting with it asynchronously. This allows you to write to its `stdin` and read from its `stdout`/`stderr` while it is still running.
+Spawns an external process and returns a `proc_handle` for interacting with it while it is running.
 
 **Parameters:**
-*   `opts` (`run_opts`): A table specifying the executable and its arguments.
+
+* `opts` (`run_opts`): executable + args
 
 **Returns:**
-*   (`proc_handle`): An object for controlling the spawned process.
+
+* (`proc_handle`): process handle with `read`, `write`, `wait`, `kill`
 
 **Example:**
+
 ```lua
-ltf.test("Interact with a running process", function()
-    -- Spawn 'grep' to search for "Hello"
+local ltf = require("ltf")
+local proc = ltf.proc
+
+ltf.test({
+  name = "Interact with a running process",
+  body = function()
     local handle = proc.spawn({
-        exe = "grep",
-        args = {"Hello"}
+      exe = "grep",
+      args = { "Hello" },
     })
 
-    -- Defer killing the process to ensure cleanup
+    -- Ensure cleanup
     ltf.defer(handle.kill, handle)
 
-    -- Write data to the process's stdin
     handle:write("Line 1\n")
     handle:write("Hello World\n")
     handle:write("Line 3\n")
-    
-    -- Close stdin by writing an empty string (or handle:write()) - this may be platform dependent
-    handle:write("") 
 
-    -- Wait for the process to finish
+    -- Close stdin (platform/process dependent; example kept as-is)
+    handle:write("")
+
     while handle:wait() == nil do
-        ltf.sleep(50)
+      ltf.sleep(50)
     end
 
-    -- Read the output
-    local output = handle:read()
-    ltf.log_info("Grep found:", output) -- Expected: "Hello World\n"
-end)
+    local output = handle:read("stdout")
+    ltf.log_info("Grep found:", output)
+  end,
+})
 ```
 
 ---
 
-### The `proc_handle` Object
+### The `proc_handle` object
 
-The `proc_handle` object is returned by `ltf.proc.spawn()` and provides methods for controlling a running process.
+Returned by `ltf.proc.spawn()`.
 
-#### `handle:read(stream, want)`
+#### `handle:read(stream?, want?) -> string`
 
-Reads from the process's standard output or standard error stream.
-
-**Parameters:**
-*   `stream` (`proc_output_stream`, optional): The stream to read from. Defaults to `"stdout"`.
-*   `want` (`integer`, optional): The maximum number of bytes to read. Defaults to `4096`.
-
-**Returns:**
-*   (`string`): The data read from the stream.
-
-#### `handle:write(buf)`
-
-Writes data to the process's standard input stream.
+Reads from stdout/stderr.
 
 **Parameters:**
-*   `buf` (`string`): The buffer of data to write.
+
+* `stream` (`proc_output_stream`, optional): `"stdout"` (default) or `"stderr"`
+* `want` (`integer`, optional): number of bytes requested (default `4096`)
 
 **Returns:**
-*   (`integer`): The number of bytes successfully written.
 
-#### `handle:wait()`
+* (`string`): bytes read
 
-Performs a non-blocking check to see if the process has exited.
+> Note: `read()` must not be called after `kill()`.
+
+#### `handle:write(buf) -> integer`
+
+Writes to stdin (if the process is still alive).
+
+**Parameters:**
+
+* `buf` (`string`): data to write
 
 **Returns:**
-*   (`integer`): The process's exit code if it has terminated.
-*   (`nil`): If the process is still running.
+
+* (`integer`): number of bytes written
+
+#### `handle:wait() -> integer?`
+
+Non-blocking status check.
+
+**Returns:**
+
+* (`integer`): exit code if process has finished
+* (`nil`): if still running
 
 #### `handle:kill()`
 
-Sends a termination signal (SIGINT) to the process to gracefully shut it down.
+Sends `SIGINT` to the process if it’s still running.
 
 ---
 
-### Data Structures & Types
+### Low-level access
 
-#### `run_opts` (table)
+#### `ltf.proc.low`
 
-Specifies the command to be executed.
+`proc.low` exposes the underlying low-level module (`require("ltf-proc")`). Most users should prefer `proc.spawn()` / `proc.run()`.
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `exe` | `string` | The path to the executable or its name (if in the system's PATH). |
-| `args` | `table` of `string` | (Optional) A list of command-line arguments to pass to the executable. |
+## Data structures & types
 
-#### `run_result` (table)
+### `run_opts` (table)
 
-Contains the results of a completed process, returned by `ltf.proc.run()`.
+* `exe` (`string`): executable path or name (if on `PATH`)
+* `args` (`string[]`, optional): command-line arguments
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `stdout` | `string` | All data captured from the process's standard output. |
-| `stderr` | `string` | All data captured from the process's standard error. |
-| `exitcode`| `integer`| The integer exit code of the process. |
+### `run_result` (table)
 
-#### `proc_output_stream` (alias)
+* `stdout` (`string`): captured stdout
+* `stderr` (`string`): captured stderr
+* `exitcode` (`integer`): process exit code
 
-Defines the output stream to read from in `handle:read()`.
+### `proc_output_stream` (alias)
 
-| Value | Description |
-| :--- | :--- |
-| `"stdout"` | The standard output stream (default). |
-| `"stderr"` | The standard error stream. |
+* `"stdout"` (default)
+* `"stderr"`
+

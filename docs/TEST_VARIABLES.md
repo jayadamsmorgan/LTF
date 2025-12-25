@@ -81,7 +81,7 @@ Use when most runs share a common value, but you occasionally change it.
 ```lua
 ltf.register_vars({
   log_level = {
-    values = { "debug", "info", "warn", "error" },
+    values = { "critical", "debug", "info", "warning", "error" },
   },
 })
 ```

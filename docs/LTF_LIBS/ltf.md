@@ -1,192 +1,267 @@
 # LTF Core Library (`ltf`)
 
-The `ltf` library is the heart of the Test Automation Framework, providing the essential functions and helpers for defining, running, and logging tests.
+`ltf` is the main Lua entry point for writing tests. It provides:
 
-## Getting Started
+* Test registration (`ltf.test`)
+* Logging helpers (`ltf.log_*`, `ltf.print`)
+* Timing and utilities (`ltf.sleep`, `ltf.millis`, `ltf.defer`)
+* Run/test context helpers (`ltf.get_active_tags`, `ltf.get_active_test_tags`, `ltf.get_current_target`)
+* Variable + secret APIs (`ltf.register_vars`, `ltf.get_var`, `ltf.get_vars`, `ltf.register_secrets`, `ltf.get_secret`, `ltf.get_secrets`)
+* Submodules (`ltf.serial`, `ltf.http`, `ltf.ssh`, `ltf.webdriver`, etc.)
 
-To use the library, you must first require it in your test file.
+## Getting started
+
+In any Lua test file:
 
 ```lua
 local ltf = require("ltf")
 ```
 
----
+## Modules
 
-## API Reference
+The `ltf` module exposes several submodules:
 
-### Test Definition
+* `ltf.serial`
+* `ltf.webdriver`
+* `ltf.proc`
+* `ltf.json`
+* `ltf.http`
+* `ltf.hooks`
+* `ltf.ssh`
+* `ltf.util`
 
-Functions for registering and defining your tests.
+Example:
 
-#### `ltf.test(test_name, test_body)`
-#### `ltf.test(test_name, tags, test_body)`
+```lua
+local ltf = require("ltf")
 
-Registers a new test case. This is the primary function for creating a test.
+local serial = ltf.serial
+-- serial.open(...), etc.
+```
+
+## API reference
+
+### Defining tests
+
+#### `ltf.test(opts)`
+
+Registers a new test.
 
 **Parameters:**
-*   `test_name` (`string`): A descriptive name for the test.
-*   `tags` (`table` of `string`, optional): A list of tags to categorize the test.
-*   `test_body` (`function`): The function containing the test logic.
+
+* `opts` (`ltf_test_opts`): test options object:
+
+  * `name` (`string`, required): test name (must be unique within a run)
+  * `description` (`string`, optional): human-readable description
+  * `tags` (`string[]`, optional): tags for filtering
+  * `body` (`function`, required): test function
 
 **Example:**
-```lua
-ltf.test("My First Test", function()
-    ltf.log_info("This test is starting!")
-    -- ... test logic here ...
-    ltf.log_info("Test finished successfully.")
-end)
 
-ltf.test("A Tagged Test", {"smoke", "api"}, function()
-    ltf.log_info("This is a smoke test for the API.")
-    -- ...
-end)
+```lua
+local ltf = require("ltf")
+
+ltf.test({
+  name = "My first test",
+  tags = { "smoke", "api" },
+  body = function()
+    ltf.log_info("Hello from LTF")
+  end,
+})
 ```
 
 ---
 
 ### Logging
 
-Functions for outputting information during a test run. All logs are sent to the console TUI and the log files.
+All logs are written to the log files and shown in the TUI.
 
-#### `ltf.log(log_level, ...)`
+#### `ltf.log(level, ...)`
 
-The main logging function. All other `ltf.log_*` functions are shortcuts for this one.
+Logs a message at the specified level.
 
 **Parameters:**
-*   `log_level` (`string`): The severity level of the log. Can be `"critical"`, `"error"`, `"warning"`, `"info"`, `"debug"`, or `"trace"`. The level can be abbreviated to its first letter (e.g., `"i"`) and is case-insensitive.
-*   `...` (`any`): One or more values to be logged, similar to `print()`.
 
-> **Important Behavior:**
-> *   `"error"`: Marks the test as **failed**, but allows it to continue executing.
-> *   `"critical"`: Immediately **stops and fails** the test.
+* `level` (`log_level`): accepted values are:
 
-#### `ltf.log_critical(...)`
-Logs a message with the `critical` level. **Immediately fails the test.**
+  * Full names: `"critical"`, `"error"`, `"warning"`, `"info"`, `"debug"`, `"trace"`
+  * First-letter shortcuts: `"c"`, `"e"`, `"w"`, `"i"`, `"d"`, `"t"`
+  * Case-insensitive (e.g. `"INFO"`, `"C"`)
+* `...` (`any`): values to log (like Lua `print()`)
 
-#### `ltf.log_error(...)`
-Logs a message with the `error` level. **Marks the test as failed** but continues execution.
+**Behavior:**
 
-#### `ltf.log_warning(...)`
-Logs a message with the `warning` level.
-
-#### `ltf.log_info(...)`
-Logs a message with the `info` level. This is the default level for general information.
-
-#### `ltf.print(...)`
-An alias for `ltf.log_info(...)`. It behaves like the standard Lua `print()` but is integrated with the LTF logging system.
-
-#### `ltf.log_debug(...)`
-Logs a message with the `debug` level, intended for detailed diagnostic information.
-
-#### `ltf.log_trace(...)`
-Logs a message with the `trace` level, the most verbose level for tracing execution flow.
+* `"critical"`: fails the test immediately.
+* `"error"`: marks the test failed but continues execution.
+* Other levels only log.
 
 **Example:**
-```lua
-ltf.test("Logging demonstration", function()
-    ltf.print("Starting the logging demo.") -- Same as ltf.log_info
-    ltf.log_debug("This is a debug message with a value:", 123)
-    
-    -- This will mark the test as failed, but the test will continue
-    ltf.log_error("An error occurred, but we can proceed.")
-    
-    ltf.print("This line will still be executed.")
 
-    -- This will stop the test immediately
-    -- ltf.log_critical("A critical failure occurred!") 
-end)
+```lua
+ltf.test({
+  name = "Logging demonstration",
+  body = function()
+    ltf.print("Same as info")
+    ltf.log_debug("Debug details:", 123)
+
+    ltf.log_error("This fails the test, but continues.")
+    ltf.log_info("This still runs.")
+
+    -- ltf.log_critical("Stops immediately.")
+  end,
+})
+```
+
+#### Convenience helpers
+
+* `ltf.print(...)` — same as `ltf.log("i", ...)`
+* `ltf.log_critical(...)` — same as `ltf.log("c", ...)` (fails immediately)
+* `ltf.log_error(...)` — same as `ltf.log("e", ...)` (marks failed, continues)
+* `ltf.log_warning(...)` — same as `ltf.log("w", ...)`
+* `ltf.log_info(...)` — same as `ltf.log("i", ...)`
+* `ltf.log_debug(...)` — same as `ltf.log("d", ...)`
+* `ltf.log_trace(...)` — same as `ltf.log("t", ...)`
+
+---
+
+### Test control and utilities
+
+#### `ltf.defer(fn, ...)`
+
+Registers a function to be executed after the test finishes (teardown). This is useful for cleanup.
+
+**Parameters:**
+
+* `fn` (`function`): function to call during teardown
+* `...` (`any`): arguments passed to `fn`
+
+**Example:**
+
+```lua
+ltf.test({
+  name = "Defer demonstration",
+  body = function()
+    local port = open_very_important_port()
+    ltf.defer(close_port, port)
+
+    ltf.defer(function()
+      ltf.log_info("Always runs at the end of the test.")
+    end)
+
+    ltf.log_info("Test body runs here.")
+  end,
+})
+```
+
+> Note: defers execute after the test finishes. (If you rely on specific ordering like LIFO/FIFO, document the current behavior in your runtime, because it’s not defined by this Lua wrapper file.)
+
+#### `ltf.sleep(ms)`
+
+Sleeps for `ms` milliseconds.
+
+* `ms` (`number`): milliseconds
+
+```lua
+ltf.sleep(250)
+```
+
+#### `ltf.millis() -> integer`
+
+Returns milliseconds elapsed since the current test started.
+
+```lua
+local elapsed = ltf.millis()
+ltf.log_info("Elapsed:", elapsed, "ms")
 ```
 
 ---
 
-### Test Control & Utilities
+### Run context helpers
 
-Helper functions for managing test flow and timing.
+#### `ltf.get_active_tags() -> string[]`
 
-#### `ltf.defer(defer_func, ...)`
+Returns the active tags for the current **test run**.
 
-Registers a function to be executed after the test finishes, regardless of whether it passed or failed.
+#### `ltf.get_active_test_tags() -> string[]`
 
-**Parameters:**
-*   `defer_func` (`function`): The function to execute upon completion.
-*   `...` (`any`): Arguments to pass to `defer_func` when it is called.
+Returns the active tags for the **currently running test**.
 
-> **Execution Order (LIFO):**
-> Defers are executed in a "Last-In, First-Out" order. The last defer registered is the first one to run.
-> If a test fails, only the defers registered *before* the failure point will be executed.
+#### `ltf.get_current_target() -> string`
 
-> **If no arguments passed after `defer_func`, LTF will pass `status` argument to the defer, which is a string with two values: `"passed"` or `"failed"`**
+Returns the current target name if the project is multi-target, otherwise returns `""`.
 
-**Example:**
+---
+
+### Variables
+
+Variables are named values used across tests and can be set via CLI/scenarios.
+
+#### `ltf.register_vars(vars)`
+
+Registers variables at Lua top level.
+
+* `vars` (`table<string, ltf_var_reg_t|string>`)
+
+A variable may be registered as a constant string or as a table with:
+
+* `default` (`string`, optional)
+* `values` (`string[]`, optional)
+
 ```lua
-ltf.test("Defer demonstration", function()
-    ltf.print("Opening a resource...")
-    ltf.defer(function(status)
-        ltf.print("Closing resource with status:", status)
-    end)
+ltf.register_vars({
+  -- constant
+  device = "stm32wb55",
 
-    ltf.print("Creating a temporary file...")
-    ltf.defer(function()
-        ltf.print("Deleting temporary file.")
-    end)
+  -- required / open value
+  serial_port = {},
 
-    ltf.print("Opening important port...")
-    local port = open_very_important_port()
-    ltf.defer(close_port, port)                     -- inline version
-    ltf.defer(ltf.print, "Closing important port.") -- inline version
-    
-    ltf.print("Test logic is running.")
-end)
--- Test Output:
--- > Opening a resource...
--- > Creating a temporary file...
--- > Opening important port...
--- > Test logic is running.
--- > Closing important port.              <-- Fourth defer
--- > Deleting temporary file.             <-- Second defer
--- > Closing resource with status: passed <-- First defer
+  -- default
+  baud = { default = "115200" },
+
+  -- enum
+  env = { values = { "dev", "staging", "prod" } },
+
+  -- enum + default
+  log_level = { default = "info", values = { "info", "debug", "trace" } },
+})
 ```
 
-#### `ltf.get_active_tags()`
+#### `ltf.get_var(name) -> string`
 
-Returns array of currently active tags for the test run.
+Returns a single variable value.
 
-**Returns:**
-*   (`[string]`): Active tags for the test run.
-
-#### `ltf.get_active_test_tags()`
-
-Returns array of currently active tags for the currently running test.
-
-**Returns:**
-*   (`[string]`): Active tags for the currently running test.
-
-#### `ltf.get_current_target()`
-
-Gets the name of current test target executing if project is multitarget. Otherwise returns an empty string.
-
-**Returns:**
-*   (`string`): Target currently executing.
-
-#### `ltf.sleep(ms)`
-
-Pauses the test execution for a specified duration.
-
-**Parameters:**
-*   `ms` (`number`): The time to sleep, in milliseconds.
-
-#### `ltf.millis()`
-
-Gets the number of milliseconds that have elapsed since the current test started.
-
-**Returns:**
-*   (`number`): The elapsed time in milliseconds.
-
-**Example:**
 ```lua
-ltf.test("Timing test", function()
-    ltf.sleep(100)
-    local elapsed = ltf.millis()
-    ltf.print("Time elapsed after sleep:", elapsed, "ms")
-end)
+local port = ltf.get_var("serial_port")
 ```
+
+#### `ltf.get_vars() -> table<string, string>`
+
+Returns all variables as a map of `name -> value`.
+
+---
+
+### Secrets
+
+Secrets are named sensitive values loaded from `.secrets`.
+
+#### `ltf.register_secrets(names)`
+
+Registers secret names at Lua top level.
+
+* `names` (`string[]`)
+
+```lua
+ltf.register_secrets({ "api_token", "password" })
+```
+
+#### `ltf.get_secret(name) -> string`
+
+Returns a single secret value.
+
+```lua
+local token = ltf.get_secret("api_token")
+```
+
+#### `ltf.get_secrets() -> table<string, string>`
+
+Returns all secrets as a map of `name -> value`.
