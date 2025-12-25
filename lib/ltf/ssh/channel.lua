@@ -56,6 +56,7 @@ local M = {}
 
 --- @param session ssh_session
 ---
+--- @nodiscard
 --- @return ssh_channel
 M.open_channel = function(session)
 	--- @type ssh_channel

@@ -35,6 +35,7 @@ local M = {}
 ---
 --- @param params ssh_create_session_params parameters to create SSH session with. One of the auth methods should be present: [userpass]
 ---
+--- @nodiscard
 --- @return ssh_session
 M.new_session = function(params)
 	low.lib_init()

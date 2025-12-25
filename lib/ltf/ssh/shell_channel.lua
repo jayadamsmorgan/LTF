@@ -109,6 +109,7 @@ local default_ssh_shell_channel_opts = {
 --- @param session ssh_session
 --- @param opts ssh_shell_channel_opts?
 ---
+--- @nodiscard
 --- @return ssh_shell_channel
 M.new_shell_channel = function(session, opts)
 	local low = channel.open_channel(session)

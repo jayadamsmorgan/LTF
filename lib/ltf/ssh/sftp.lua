@@ -147,6 +147,7 @@ end
 
 --- @param ssh_session ssh_session
 ---
+--- @nodiscard
 --- @return sftp_channel
 M.new_sftp_channel = function(ssh_session)
 	local low_channel = low.sftp_init(ssh_session)
@@ -167,7 +168,7 @@ M.new_sftp_channel = function(ssh_session)
 		return self.low:file_info(path)
 	end
 	function mt:close()
-		self.low:shutdown()
+		return self.low:shutdown()
 	end
 
 	setmetatable(channel, mt)

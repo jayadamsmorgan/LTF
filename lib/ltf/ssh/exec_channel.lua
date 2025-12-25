@@ -46,6 +46,7 @@ end
 
 --- @param session ssh_session
 ---
+--- @nodiscard
 --- @return ssh_exec_channel
 M.new_exec_channel = function(session)
 	local chan = require("ltf.ssh.channel").open_channel(session)
