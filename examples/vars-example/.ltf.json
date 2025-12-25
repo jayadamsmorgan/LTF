@@ -1,0 +1,8 @@
+{
+  "project_name": "vars-example",
+  "min_ltf_version": "2.0.0-dev@21a83a3c+",
+  "min_ltf_version_major": 2,
+  "min_ltf_version_minor": 0,
+  "min_ltf_version_patch": 0,
+  "multitarget": false
+}
