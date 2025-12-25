@@ -1,17 +1,8 @@
 local ltf = require("ltf")
 
-local variables = {
-	var1 = { default = "defaultvar1" },
-	var2 = { default = "defaultvar2" },
-	var3 = { default = "defaultvar3" },
-	var4 = { default = "defaultvar4" },
-}
-
-ltf.register_vars(variables)
-
 ltf.test({
 	name = "First test",
-	description = "First test",
+	description = "First test description",
 	tags = { "tag1" },
 	body = function()
 		ltf.log_info("First test running!!!")
@@ -33,7 +24,7 @@ ltf.test({
 
 ltf.test({
 	name = "Second test",
-	description = "First test",
+	description = "Second test description",
 	tags = { "tag2" },
 	body = function()
 		ltf.log_info("Second test running!!!")
@@ -54,7 +45,7 @@ ltf.test({
 
 ltf.test({
 	name = "Third test",
-	description = "First test",
+	description = "Third test description",
 	tags = { "tag3" },
 	body = function()
 		ltf.log_info("Third test running!!!")
@@ -75,7 +66,7 @@ ltf.test({
 
 ltf.test({
 	name = "Fourth test",
-	description = "First test",
+	description = "Fourth test description",
 	tags = { "tag4" },
 	body = function()
 		ltf.log_info("Fourth test running!!!")

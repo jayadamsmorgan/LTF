@@ -7,7 +7,7 @@
             "var3": "somevar3"
         },
         "vars:remove": ["var2"],
-        "log_level": "info"
+        "log_level": "debug"
     },
 
     "order:append": [
