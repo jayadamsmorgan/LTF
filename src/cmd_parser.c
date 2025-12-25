@@ -265,6 +265,7 @@ static void set_internal_logging(const char *) {
     target_remove_opts.internal_logging = true;
     test_opts.internal_logging = true;
     logs_info_opts.internal_logging = true;
+    eval_opts.internal_logging = true;
 }
 
 static cmd_option all_init_options[] = {
@@ -668,7 +669,4 @@ void cmd_parser_free_test_options() {
     free_str_da(test_opts.scenario.order);
 }
 
-void cmd_parser_free_eval_options() {
-    free(eval_opts.name);
-    free_str_da(eval_opts.args);
-}
+void cmd_parser_free_eval_options() { free_str_da(eval_opts.args); }

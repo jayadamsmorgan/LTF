@@ -325,7 +325,7 @@ static void register_clua_module(lua_State *L, const char *name,
     lua_pop(L, 1);
 }
 
-static void register_test_api(lua_State *L) {
+void register_ltf_libs(lua_State *L) {
 
     LOG("Registering test API...");
 
@@ -364,7 +364,7 @@ static int load_lua_files(lua_State *L, str_array_t *files) {
     return 0;
 }
 
-static int load_lua_dir(const char *dir_path, lua_State *L) {
+int load_lua_dir(const char *dir_path, lua_State *L) {
     if (!directory_exists(dir_path)) {
         LOG("Directory %s doesn't exist.", dir_path);
         return -1;
@@ -462,7 +462,7 @@ int ltf_test() {
         asprintf(&project_test_dir_path, "%s/tests", proj->project_path);
     }
 
-    register_test_api(L);
+    register_ltf_libs(L);
 
     int exitcode = EXIT_FAILURE;
 
