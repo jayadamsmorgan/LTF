@@ -95,13 +95,9 @@ Each hook receives a single argument: `context`, which has type `context_t`.
 --- @field keywords test_keyword_t[]
 ```
 
-## `context.test`
+> `context.test` is always a last started test, i.e. it is updated every `test_started` hook and is nil on `test_run_started`
 
-`context.test` is always a last started test, i.e. it is updated every `test_started` hook and is nil on `test_run_started`
-
-### Keywords
-
-`context.test.keywords` is essentially structured “call stack” / step information for the test: nested keywords with start/finish times and source locations. This is useful for building custom summaries or debugging timelines.
+> `context.test.keywords` is essentially structured “call stack” / step information for the test: nested keywords with start/finish times and source locations. This is useful for building custom summaries or debugging timelines.
 
 ## Example
 
