@@ -134,3 +134,7 @@ LTF validates variables **before any tests run**:
   * `default` (if present) must also be listed in `values`
 
 If validation fails, LTF exits with an error before executing tests.
+
+## Example
+
+[See project example](./../examples/vars-example).

@@ -71,8 +71,6 @@ value
 """
 ```
 
-[See project example](./../examples/secrets-example).
-
 ## Running tests
 
 Once the secrets are registered and `.secrets` is present:
@@ -98,3 +96,6 @@ LTF validates secrets **before any tests run**:
 
 If any registered secret is missing (or has no value), LTF exits with an error and does not start tests.
 
+## Example
+
+[See project example](./../examples/secrets-example).
