@@ -1,15 +1,17 @@
 #include "ltf_eval.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "cmd_parser.h"
 #include "internal_logging.h"
 #include "ltf_test.h"
 #include "project_parser.h"
+
 #include "util/files.h"
+#include "util/time.h"
+
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
+#include <stdio.h>
 
 static char *project_lib_dir_path = NULL;
 
@@ -36,7 +38,7 @@ int ltf_eval() {
     luaL_openlibs(L);
     register_ltf_libs(L);
 
-    LOG("Trying  to pars project libs...");
+    LOG("Trying to pars project libs...");
 
     const char *project = file_find_upwards(".ltf.json");
 
@@ -57,15 +59,29 @@ int ltf_eval() {
         }
 
     } else {
-        LOG("We are not in existing project directory. Skip project libs "
-            "loading");
+        LOG("We are not in existing project directory. Skipping project libs "
+            "loading...");
     }
+
+    size_t argc = da_size(opts->args);
+
+    // Push 'arg' array
+    lua_newtable(L);
+    for (size_t i = 0; i < argc; ++i) {
+        char **arg = da_get(opts->args, i);
+        lua_pushstring(L, *arg);
+        lua_seti(L, -2, (lua_Integer)i + 1);
+    }
+    lua_setglobal(L, "arg");
+
+    reset_millis();
 
     int rc = luaL_dofile(L, opts->name);
     if (rc != LUA_OK) {
         const char *err = lua_tostring(L, -1);
         LOG("Lua error: %s", err);
         lua_pop(L, 1);
+        fprintf(stderr, "%s\n", err);
     } else {
         exitcode = EXIT_SUCCESS;
     }

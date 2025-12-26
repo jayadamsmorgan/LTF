@@ -329,10 +329,6 @@ void register_ltf_libs(lua_State *L) {
 
     LOG("Registering test API...");
 
-    // Change default lua 'print' to our implementation:
-    lua_pushcfunction(L, l_module_ltf_print);
-    lua_setglobal(L, "print");
-
     // Register C lua modules:
     register_clua_module(L, "ltf-http", l_module_http_register_module);
     register_clua_module(L, "ltf-json", l_module_json_register_module);
@@ -463,6 +459,9 @@ int ltf_test() {
     }
 
     register_ltf_libs(L);
+    // Change default lua 'print' to our implementation:
+    lua_pushcfunction(L, l_module_ltf_print);
+    lua_setglobal(L, "print");
 
     int exitcode = EXIT_FAILURE;
 
