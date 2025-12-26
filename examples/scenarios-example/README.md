@@ -1,12 +1,16 @@
 # Scenarios Examples
 
-## Example of Basic Scenario Features
-Demonstrates the basic features available in the scenarios.
+- Refer to:
+    - [scenarios/base_scenario](./scenarios/base_scenario.json)
+    - [scenarios/override_scenario](./scenarios/override_scenario.json)
+    - [documentation](./../../docs/TEST_SCENARIOS.md)
+
+- Examples:
+
 ```
 ltf test -s scenarios/base_scenario.json
 ```
-## Example of Overridden Scenarios
-Shows how to override default scenario settings.
+
 ```
 ltf test -s scenarios/override_scenario.json
 ```

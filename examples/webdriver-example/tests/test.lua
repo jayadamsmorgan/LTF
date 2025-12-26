@@ -4,11 +4,14 @@ local webdriver = ltf.webdriver
 ltf.test({
 	name = "testing web session start",
 	body = function()
-		local webdriver_port = 9515
+		local webdriver_port = ltf.get_var_number("port")
+		local webdriver_name = ltf.get_var("webdriver")
+
+		ltf.log_info("Using webdriver '" .. webdriver_name .. "' at port " .. webdriver_port)
 
 		-- Spawn webdriver instance on port 9515
 		local proc_handle = webdriver.spawn_webdriver({
-			webdriver = "chromedriver",
+			webdriver = webdriver_name,
 			port = webdriver_port,
 		})
 
@@ -25,7 +28,7 @@ ltf.test({
 			headless = true,
 		})
 
-		print("Webdriver session id: " .. session.id)
+		ltf.log_info("Webdriver session id: " .. session.id)
 
 		ltf.defer(function()
 			session:close()
@@ -65,7 +68,7 @@ ltf.test({
 		-- Get the site title
 		local title
 		title = session:get_title()
-		print(title)
+		ltf.log_info(title)
 
 		ltf.sleep(500)
 	end,

@@ -1,17 +1,17 @@
 local ltf = require("ltf")
 local ssh = ltf.ssh
-local vars = require("variables")
 
 ltf.test({
 	name = "SSH channel execute example",
+	tags = { "exec" },
 	body = function()
 		-- Initialize SSH session
 		local session = ssh.new_session({
-			ip = vars.ip,
-			port = vars.port,
+			ip = ltf.get_var("ip"),
+			port = tonumber(ltf.get_var("port")),
 			userpass = {
-				user = vars.user,
-				password = vars.password,
+				user = ltf.get_secret("user"),
+				password = ltf.get_secret("password"),
 			},
 		})
 
@@ -42,14 +42,15 @@ ltf.test({
 
 ltf.test({
 	name = "SSH channel shell example",
+	tags = { "shell" },
 	body = function()
 		-- Initialize SSH session
 		local session = ssh.new_session({
-			ip = vars.ip,
-			port = vars.port,
+			ip = ltf.get_var("ip"),
+			port = tonumber(ltf.get_var("port")),
 			userpass = {
-				user = vars.user,
-				password = vars.password,
+				user = ltf.get_secret("user"),
+				password = ltf.get_secret("password"),
 			},
 		})
 
@@ -98,11 +99,11 @@ ltf.test({
 	body = function()
 		-- Initialize SSH session
 		local session = ssh.new_session({
-			ip = vars.ip,
-			port = vars.port,
+			ip = ltf.get_var("ip"),
+			port = tonumber(ltf.get_var("port")),
 			userpass = {
-				user = vars.user,
-				password = vars.password,
+				user = ltf.get_secret("user"),
+				password = ltf.get_secret("password"),
 			},
 		})
 
@@ -135,6 +136,7 @@ ltf.test({
 		sftp_channel:send({
 			local_file = "/tmp/testfile",
 			remote_file = "/tmp/testfile_copy",
+			mode = "overwrite",
 		})
 		ltf.log_info("Successfully transfered file to remote host")
 

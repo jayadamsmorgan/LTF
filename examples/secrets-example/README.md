@@ -1,7 +1,10 @@
 # LTF Secrets example
 
-Create file `.secrets` and populate with:
+- Refer to [lib/secrets.lua](./lib/secrets.lua) and [documentation](./../../docs/TEST_SECRETS.md).
 
+- Example:
+
+`.secrets:`
 ```
 secret1=somesecretvalue
 secret2="""
@@ -11,8 +14,6 @@ secret
 value
 """
 ```
-
-and run with
 
 ```bash
 ltf test

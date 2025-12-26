@@ -1,8 +1,15 @@
-local M = {}
+local ltf = require("ltf")
 
-M.ip = "127.0.0.1"
-M.port = 22
-M.user = "test"
-M.password = "test"
+ltf.register_vars({
+	ip = {
+		default = "127.0.0.1",
+	},
+	port = {
+		default = "22",
+	},
+})
 
-return M
+ltf.register_secrets({
+	"user",
+	"password",
+})
