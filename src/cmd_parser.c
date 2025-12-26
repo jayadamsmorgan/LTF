@@ -1,5 +1,6 @@
 #include "cmd_parser.h"
 
+#include "util/da.h"
 #include "util/kv.h"
 #include "version.h"
 
@@ -116,6 +117,16 @@ static void print_target_remove_help(FILE *file) {
                   "  -h, --help               Display help\n");
 }
 
+static void print_eval_help(FILE *file) {
+    fprintf(file, "Usage: ltf eval <file.lua> [<options>] -- [args...]\n"
+                  "\n"
+                  "Run Lua scripts with LTF libraries\n"
+                  "\n"
+                  "Options:\n"
+                  "  -i, --internal-log       Dump internal logging file\n"
+                  "  -h, --help               Display help\n");
+}
+
 static void print_help(FILE *file) {
     fprintf(file, "Usage: ltf [<init|logs|target|test|help|version>]\n"
                   "\n"
@@ -127,6 +138,7 @@ static void print_help(FILE *file) {
                   "  target             Perform actions on project targets "
                   "(multitarget)\n"
                   "  test               Perform project tests\n"
+                  "  eval               Run Lua scripts with LTF libraries\n"
                   "  help               Display help\n"
                   "  version            Display LTF version\n"
                   "\n"
@@ -175,6 +187,12 @@ cmd_logs_info_options *cmd_parser_get_logs_info_options() {
     return &logs_info_opts;
 }
 
+static cmd_eval_options eval_opts;
+cmd_eval_options *cmd_parser_get_eval_options() {
+    //
+    return &eval_opts;
+}
+
 typedef struct {
     const char *long_opt;
     const char *short_opt;
@@ -208,10 +226,10 @@ static bool is_option_present(cmd_option *opt, const char *opt_str, int index,
     return true;
 }
 
-static void parse_additional_options(cmd_option *options, int start_index,
-                                     int argc, char **argv) {
+static int parse_additional_options(cmd_option *options, int start_index,
+                                    int argc, char **argv) {
     if (!options || argc <= start_index || !argv) {
-        return;
+        return -1;
     }
     int index = start_index;
     while (index < argc) {
@@ -220,6 +238,9 @@ static void parse_additional_options(cmd_option *options, int start_index,
         if (argv[index][0] != '-') {
             index++;
             continue;
+        }
+        if (STR_EQ(argv[index], "--")) {
+            return index + 1;
         }
         while (opt && (opt->long_opt || opt->short_opt)) {
             if (is_option_present(opt, opt->long_opt, index, argc, argv)) {
@@ -241,6 +262,7 @@ static void parse_additional_options(cmd_option *options, int start_index,
         }
         index++;
     }
+    return 0;
 }
 
 static void set_init_multitarget(const char *) {
@@ -259,6 +281,7 @@ static void set_internal_logging(const char *) {
     target_remove_opts.internal_logging = true;
     test_opts.internal_logging = true;
     logs_info_opts.internal_logging = true;
+    eval_opts.internal_logging = true;
 }
 
 static cmd_option all_init_options[] = {
@@ -543,6 +566,45 @@ static cmd_category parse_target_options(int argc, char **argv) {
     return CMD_UNKNOWN;
 }
 
+static void get_eval_help(const char *) {
+    print_eval_help(stdout);
+    exit(EXIT_SUCCESS);
+}
+
+static cmd_option all_eval_options[] = {
+    {"--internal-log", "-i", false, set_internal_logging},
+    {"--help", "-h", false, get_eval_help},
+    {NULL, NULL, false, NULL},
+};
+
+static cmd_category parse_eval_options(int argc, char **argv) {
+    if (argc < 3) {
+        fprintf(stderr, "'ltf eval' requires lua script name\n");
+        print_eval_help(stderr);
+        return CMD_UNKNOWN;
+    }
+
+    eval_opts.name = argv[2];
+    eval_opts.args = NULL;
+    eval_opts.internal_logging = false;
+
+    if (argc == 3) {
+        return CMD_EVAL;
+    }
+
+    int res = parse_additional_options(all_eval_options, 3, argc, argv);
+
+    if (res > 3) {
+        eval_opts.args = da_init(1, sizeof(char *));
+        for (int i = res; i < argc; ++i) {
+            const char *arg = strdup(argv[i]);
+            da_append(eval_opts.args, &arg);
+        }
+    }
+
+    return CMD_EVAL;
+}
+
 cmd_category cmd_parser_parse(int argc, char **argv) {
     if (argc < 2) {
         print_help(stderr);
@@ -553,6 +615,8 @@ cmd_category cmd_parser_parse(int argc, char **argv) {
         return parse_init_options(argc, argv);
     if (STR_EQ(argv[1], "test"))
         return parse_test_options(argc, argv);
+    if (STR_EQ(argv[1], "eval"))
+        return parse_eval_options(argc, argv);
     if (STR_EQ(argv[1], "logs"))
         return parse_logs_options(argc, argv);
     if (STR_EQ(argv[1], "target"))
@@ -610,4 +674,9 @@ void cmd_parser_free_test_options() {
     free_kv_pair_da(test_opts.scenario.vars);
     free(test_opts.scenario.ltf_lib_path);
     free_str_da(test_opts.scenario.order);
+}
+
+void cmd_parser_free_eval_options() {
+    //
+    free_str_da(eval_opts.args);
 }
