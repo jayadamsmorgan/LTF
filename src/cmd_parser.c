@@ -584,6 +584,11 @@ static cmd_category parse_eval_options(int argc, char **argv) {
         return CMD_UNKNOWN;
     }
 
+    if (STR_EQ(argv[2], "--help") || STR_EQ(argv[2], "-h")) {
+        print_eval_help(stdout);
+        return CMD_HELP;
+    }
+
     eval_opts.name = argv[2];
     eval_opts.args = NULL;
     eval_opts.internal_logging = false;

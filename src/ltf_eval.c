@@ -23,7 +23,7 @@ int ltf_eval() {
 
     if (!file_exists(opts->name)) {
         LOG("File not found: %s ", opts->name);
-        fprintf(stderr, "File not found: %s ", opts->name);
+        fprintf(stderr, "File not found: %s\n", opts->name);
         return exitcode;
     }
 
