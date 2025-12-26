@@ -236,7 +236,7 @@ print(args[2])
 ```
 
 ```bash
-ltf eval script.lua LTF test
+ltf eval script.lua -- LTF test
 ```
 
 **Output:**
