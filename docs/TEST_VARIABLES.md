@@ -109,16 +109,16 @@ Use when there’s a standard choice, but you still want strict allowed values.
 
 ## Setting variables
 
-Pass variables as `name:value` pairs, separated by commas:
+Pass variables as `name=value` pairs, separated by commas:
 
 ```bash
-ltf test --vars serial_port:/dev/ttyUSB0,env:staging,log_level:debug
+ltf test --vars serial_port=/dev/ttyUSB0,env=staging,log_level=debug
 ```
 
 Shorthand:
 
 ```bash
-ltf test -v serial_port:/dev/ttyUSB0,env:staging
+ltf test -v serial_port=/dev/ttyUSB0,env=staging
 ```
 
 Alternatively, variables can also be set via [Test Scenarios](./TEST_SCENARIOS.md).

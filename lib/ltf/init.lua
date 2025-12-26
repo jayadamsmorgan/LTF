@@ -119,6 +119,13 @@ M.get_var = function(var_name)
 	return tm:get_var(var_name)
 end
 
+--- Returns specified variable value as a number
+---
+--- @return number
+M.get_var_number = function(var_name)
+	return assert(tonumber(M.get_var(var_name)))
+end
+
 --- Register secrets
 ---
 --- @param secrets [string]
