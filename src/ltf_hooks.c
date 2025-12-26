@@ -300,6 +300,10 @@ static void free_hooks_da(da_t *hooks, lua_State *L) {
 }
 
 void ltf_hooks_deinit(lua_State *L) {
+    if (!ltf_state) {
+        return;
+    }
+
     LOG("Deinitializing LTF hooks...");
 
     free_hooks_da(ltf_state->hooks_test_run_started, L);

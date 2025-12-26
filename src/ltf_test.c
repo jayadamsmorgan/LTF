@@ -477,17 +477,12 @@ int ltf_test() {
     ltf_state_t *state = NULL;
     da_t *lua_hooks_whitelist = NULL;
 
+    state = ltf_state_new();
+
+    l_module_ltf_init(state);
+
     LOG("Project lib directory path: %s", project_lib_dir_path);
     if (load_lua_dir(project_lib_dir_path, L) == -2) {
-        goto deinit;
-    }
-
-    if (proj->multitarget) {
-        if (load_lua_dir(project_common_test_dir_path, L) == -2) {
-            goto deinit;
-        }
-    }
-    if (load_lua_dir(project_test_dir_path, L) == -2) {
         goto deinit;
     }
 
@@ -499,9 +494,14 @@ int ltf_test() {
         goto deinit;
     }
 
-    state = ltf_state_new();
-
-    l_module_ltf_init(state);
+    if (proj->multitarget) {
+        if (load_lua_dir(project_common_test_dir_path, L) == -2) {
+            goto deinit;
+        }
+    }
+    if (load_lua_dir(project_test_dir_path, L) == -2) {
+        goto deinit;
+    }
 
     if (!opts->no_logs) {
         ltf_log_init(state);
