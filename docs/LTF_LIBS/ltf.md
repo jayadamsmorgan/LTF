@@ -234,6 +234,14 @@ Returns a single variable value.
 local port = ltf.get_var("serial_port")
 ```
 
+#### `ltf.get_var_number(name) -> number`
+
+Returns a single variable value as a number.
+
+```lua
+local port_number = ltf.get_var_number("port_number")
+```
+
 #### `ltf.get_vars() -> table<string, string>`
 
 Returns all variables as a map of `name -> value`.
