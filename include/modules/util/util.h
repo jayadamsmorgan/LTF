@@ -8,14 +8,16 @@
 /******************* API START ***********************/
 
 // file_info:
-// - absolute_path: string
-// - type: "directory"|"file"
+// - type: "directory"|"file"|"symlink"
+// - path: string
 // - size: integer
-// - is_symlink: boolean
-// - resolved_path: string
+// - permissions: integer
 //
-// util:file_info(path: string) -> result: file_info
+// util.file_info(path: string) -> result: file_info
 int l_module_util_file_info(lua_State *L);
+
+// util.resolve_symlink(path: string) -> resolved: string
+int l_module_util_resolve_symlink(lua_State *L);
 
 /******************* API END *************************/
 

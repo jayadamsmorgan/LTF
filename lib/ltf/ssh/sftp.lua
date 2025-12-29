@@ -8,6 +8,7 @@ local M = {}
 --- @field write fun(self: sftp_channel_low, chunk: string, chunk_size: integer)
 --- @field read fun(self: sftp_channel_low, chunk_size: integer)
 --- @field file_info fun(self: sftp_channel_low, remote_file: string): file_info?
+--- @field resolve_symlink fun(self: sftp_channel_low, path: string): string? resolved_path
 --- @field close fun()
 --- @field shutdown fun()
 
@@ -51,8 +52,17 @@ local function send(channel, opts)
 	end
 
 	local path = opts.local_file
-	if file_info.is_symlink and opts.resolve_symlinks then
-		path = file_info.resolved_path
+	if file_info.type == "symlink" and opts.resolve_symlinks then
+		local resolved = util.resolve_symlink(path)
+		if not resolved then
+			-- Dangling symlink, sending as is
+		else
+			path = resolved
+			file_info = util.file_info(path)
+			if not file_info then
+				error("Unknown error, file " .. path .. " does not exist")
+			end
+		end
 	end
 
 	if file_info.type == "directory" then

@@ -225,6 +225,150 @@ int l_module_ssh_sftp_shutdown(lua_State *L) {
     return 0;
 }
 
+static void normalize_abs_path_inplace(char *s) {
+    if (!s || s[0] != '/')
+        return;
+
+    // Stack of segment start positions in output buffer
+    size_t seg_starts_cap = 64;
+    size_t seg_starts_len = 0;
+    size_t *seg_starts = (size_t *)malloc(seg_starts_cap * sizeof(size_t));
+    if (!seg_starts)
+        return; // best-effort; leave as-is
+
+    size_t r = 1; // read index (skip initial '/')
+    size_t w = 0; // write index
+    s[w++] = '/';
+
+    while (s[r]) {
+        while (s[r] == '/')
+            r++;
+        if (!s[r])
+            break;
+
+        size_t seg_start = r;
+        while (s[r] && s[r] != '/')
+            r++;
+        size_t seg_len = r - seg_start;
+
+        // "."
+        if (seg_len == 1 && s[seg_start] == '.') {
+            continue;
+        }
+
+        // ".."
+        if (seg_len == 2 && s[seg_start] == '.' && s[seg_start + 1] == '.') {
+            if (seg_starts_len > 0) {
+                w = seg_starts[--seg_starts_len]; // rewind to start of previous
+                                                  // segment
+                s[w] = '\0';
+            } else {
+                // at root; stay at "/"
+                w = 1;
+                s[w] = '\0';
+            }
+            continue;
+        }
+
+        // ensure capacity for stack push
+        if (seg_starts_len == seg_starts_cap) {
+            seg_starts_cap *= 2;
+            size_t *p =
+                (size_t *)realloc(seg_starts, seg_starts_cap * sizeof(size_t));
+            if (!p)
+                break; // best-effort
+            seg_starts = p;
+        }
+
+        // record where this segment begins in output
+        seg_starts[seg_starts_len++] = w;
+
+        // add separator if not root-only
+        if (w > 1 && s[w - 1] != '/')
+            s[w++] = '/';
+
+        // copy segment
+        memmove(s + w, s + seg_start, seg_len);
+        w += seg_len;
+        s[w] = '\0';
+    }
+
+    // remove trailing slash unless root
+    if (w > 1 && s[w - 1] == '/') {
+        s[--w] = '\0';
+    }
+
+    free(seg_starts);
+}
+
+static char *join_abs_lexical(const char *base_abs, const char *rel) {
+    // base_abs must start with '/'
+    if (!base_abs || base_abs[0] != '/' || !rel)
+        return NULL;
+
+    size_t base_len = strlen(base_abs);
+    size_t rel_len = strlen(rel);
+
+    // base + "/" + rel + NUL (but avoid double slash)
+    bool need_slash = (base_len > 1 && base_abs[base_len - 1] != '/');
+
+    size_t need = base_len + (need_slash ? 1 : 0) + rel_len + 1;
+    char *out = (char *)malloc(need);
+    if (!out)
+        return NULL;
+
+    if (need_slash) {
+        snprintf(out, need, "%s/%s", base_abs, rel);
+    } else {
+        snprintf(out, need, "%s%s", base_abs, rel);
+    }
+
+    // If rel begins with '/', above would produce //; fix by normalizer anyway.
+    normalize_abs_path_inplace(out);
+    return out;
+}
+
+/* Fetch remote cwd as an absolute path string.
+ * Uses libssh2_sftp_realpath(".", ...). This can canonicalize cwd, but we only
+ * use it as a base. Returns malloc'd NUL-terminated string.
+ */
+static char *sftp_get_cwd_abs(LIBSSH2_SFTP *sftp) {
+    char buf[PATH_MAX];
+    int n = libssh2_sftp_realpath(sftp, ".", buf, (int)sizeof(buf) - 1);
+    if (n < 0)
+        return NULL;
+    buf[n] = '\0';
+
+    // Ensure it starts with '/', some servers might return relative-ish (rare).
+    // We'll force.
+    if (buf[0] != '/') {
+        // best-effort: prefix with '/'
+        size_t need = strlen(buf) + 2;
+        char *out = (char *)malloc(need);
+        if (!out)
+            return NULL;
+        snprintf(out, need, "/%s", buf);
+        normalize_abs_path_inplace(out);
+        return out;
+    }
+
+    char *out = strdup(buf);
+    if (!out)
+        return NULL;
+    normalize_abs_path_inplace(out);
+    return out;
+}
+
+static const char *sftp_mode_to_type(unsigned long perm) {
+    if (LIBSSH2_SFTP_S_ISREG(perm))
+        return "file";
+    if (LIBSSH2_SFTP_S_ISDIR(perm))
+        return "directory";
+    if (LIBSSH2_SFTP_S_ISLNK(perm))
+        return "symlink";
+    return NULL;
+}
+
 int l_module_ssh_sftp_file_info(lua_State *L) {
     l_sftp_session_t *u = luaL_checkudata(L, 1, SFTP_SESSION_MT);
     if (!u || !u->sftp_session) {
@@ -233,79 +377,142 @@ int l_module_ssh_sftp_file_info(lua_State *L) {
     }
 
     const char *path = luaL_checkstring(L, 2);
-    LIBSSH2_SFTP_ATTRIBUTES fileinfo;
-    bool link = false;
-    const char *type = NULL;
 
-    int rc = libssh2_sftp_stat_ex(u->sftp_session, path, strlen(path),
-                                  LIBSSH2_SFTP_LSTAT, &fileinfo);
+    LIBSSH2_SFTP_ATTRIBUTES a;
+    memset(&a, 0, sizeof(a));
+
+    int rc =
+        libssh2_sftp_stat_ex(u->sftp_session, path, (unsigned int)strlen(path),
+                             LIBSSH2_SFTP_LSTAT, /* DO NOT follow symlinks */
+                             &a);
 
     if (rc < 0) {
         unsigned long fx = libssh2_sftp_last_error(u->sftp_session);
         if (fx == LIBSSH2_FX_NO_SUCH_FILE || fx == LIBSSH2_FX_NO_SUCH_PATH) {
-            // File does not exist
             lua_pushnil(L);
             return 1;
         }
-        luaL_error(L, "libssh2_sftp_stat_ex returned error: %s",
+        luaL_error(L, "libssh2_sftp_stat_ex(LSTAT) error: %s",
                    ssh_err_to_str(rc));
         return 0;
     }
 
-    if (LIBSSH2_SFTP_S_ISLNK(fileinfo.permissions)) {
-        link = true;
-        rc = libssh2_sftp_stat_ex(u->sftp_session, path, strlen(path),
-                                  LIBSSH2_SFTP_LSTAT, &fileinfo);
-        if (rc < 0) {
-            luaL_error(L, "libssh2_sftp_stat_ex returned error: %s",
-                       ssh_err_to_str(rc));
+    if (!(a.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS)) {
+        luaL_error(L, "SFTP server did not return permissions for '%s'", path);
+        return 0;
+    }
+
+    const char *type = sftp_mode_to_type(a.permissions);
+    if (!type) {
+        luaL_error(L, "Unknown type of remote file for '%s' (perm=%lo)", path,
+                   a.permissions);
+        return 0;
+    }
+
+    /* Compute absolute path WITHOUT resolving the file itself */
+    char *abs = NULL;
+    if (path[0] == '/') {
+        abs = strdup(path);
+        if (!abs) {
+            luaL_error(L, "out of memory");
+            return 0;
+        }
+        normalize_abs_path_inplace(abs);
+    } else {
+        char *cwd = sftp_get_cwd_abs(u->sftp_session);
+        if (!cwd) {
+            luaL_error(L, "libssh2_sftp_realpath('.') failed (cannot build "
+                          "absolute path)");
+            return 0;
+        }
+        abs = join_abs_lexical(cwd, path);
+        free(cwd);
+        if (!abs) {
+            luaL_error(L, "out of memory");
             return 0;
         }
     }
 
-    if (LIBSSH2_SFTP_S_ISREG(fileinfo.permissions)) {
-        type = "file";
-    } else if (LIBSSH2_SFTP_S_ISDIR(fileinfo.permissions)) {
-        type = "directory";
-    } else {
-        luaL_error(L, "Unknown type of file for '%s'", path);
-        return 0;
-    }
-
     lua_newtable(L);
-    lua_pushboolean(L, link);
-    lua_setfield(L, -2, "is_symlink");
 
     lua_pushstring(L, type);
     lua_setfield(L, -2, "type");
 
-    if (link) {
-        char buf[PATH_MAX];
-        rc = libssh2_sftp_readlink(u->sftp_session, path, buf, sizeof(buf) - 1);
-        if (rc < 0) {
-            lua_pop(L, 1);
-            luaL_error(L, "libssh2_sftp_readlink() failed");
-            return 0;
-        }
-        lua_pushlstring(L, buf, rc);
-    } else {
-        lua_pushstring(L, path);
-    }
-    lua_setfield(L, -2, "resolved_path");
-
-    lua_pushinteger(L, (lua_Integer)fileinfo.filesize);
-    lua_setfield(L, -2, "size");
-
-    char buf[PATH_MAX];
-    rc = libssh2_sftp_realpath(u->sftp_session, path, buf, sizeof(buf) - 1);
-    if (rc < 0) {
-        lua_pop(L, 1);
-        luaL_error(L, "libssh2_sftp_realpath() failed");
-        return 0;
-    }
-    lua_pushlstring(L, buf, rc);
+    lua_pushstring(L, abs);
     lua_setfield(L, -2, "path");
 
+    /* size: best-effort; for symlink servers vary (may be link-text length or
+     * 0) */
+    lua_Integer size = 0;
+    if (a.flags & LIBSSH2_SFTP_ATTR_SIZE) {
+        size = (lua_Integer)a.filesize;
+    }
+    lua_pushinteger(L, size);
+    lua_setfield(L, -2, "size");
+
+    lua_Integer perms = 0;
+    if (a.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) {
+        perms = (lua_Integer)(a.permissions);
+    }
+    lua_pushinteger(L, perms);
+    lua_setfield(L, -2, "permissions");
+
+    free(abs);
+    return 1;
+}
+
+int l_module_ssh_sftp_resolve_symlink(lua_State *L) {
+    l_sftp_session_t *u = luaL_checkudata(L, 1, SFTP_SESSION_MT);
+    if (!u || !u->sftp_session) {
+        luaL_error(L, "sftp_session not initialized");
+        return 0;
+    }
+
+    const char *path = luaL_checkstring(L, 2);
+
+    // 1) Confirm the symlink itself exists and is a symlink (LSTAT = no follow)
+    LIBSSH2_SFTP_ATTRIBUTES a;
+    memset(&a, 0, sizeof(a));
+
+    int rc =
+        libssh2_sftp_stat_ex(u->sftp_session, path, (unsigned int)strlen(path),
+                             LIBSSH2_SFTP_LSTAT, &a);
+
+    if (rc < 0) {
+        unsigned long fx = libssh2_sftp_last_error(u->sftp_session);
+        // "symlink does not exist" -> error
+        if (fx == LIBSSH2_FX_NO_SUCH_FILE || fx == LIBSSH2_FX_NO_SUCH_PATH) {
+            luaL_error(L, "symlink does not exist: '%s'", path);
+            return 0;
+        }
+        luaL_error(L, "libssh2_sftp_stat_ex(LSTAT) error: %s",
+                   ssh_err_to_str(rc));
+        return 0;
+    }
+
+    if (!(a.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) ||
+        !LIBSSH2_SFTP_S_ISLNK(a.permissions)) {
+        luaL_error(L, "not a symlink: '%s'", path);
+        return 0;
+    }
+
+    // 2) Resolve it (realpath follows symlinks). If target missing => nil.
+    char buf[PATH_MAX];
+    rc =
+        libssh2_sftp_realpath(u->sftp_session, path, buf, (int)sizeof(buf) - 1);
+    if (rc < 0) {
+        unsigned long fx = libssh2_sftp_last_error(u->sftp_session);
+        // symlink exists but target doesn't -> nil
+        if (fx == LIBSSH2_FX_NO_SUCH_FILE || fx == LIBSSH2_FX_NO_SUCH_PATH) {
+            lua_pushnil(L);
+            return 1;
+        }
+        luaL_error(L, "libssh2_sftp_realpath('%s') failed: %s", path,
+                   ssh_err_to_str(rc));
+        return 0;
+    }
+
+    lua_pushlstring(L, buf, (size_t)rc);
     return 1;
 }
 
@@ -327,6 +534,7 @@ static const luaL_Reg sftp_methods[] = {
     {"write", l_module_ssh_sftp_write},
     {"read", l_module_ssh_sftp_read},
     {"file_info", l_module_ssh_sftp_file_info},
+    {"resolve_symlink", l_module_ssh_sftp_resolve_symlink},
     {"close", l_module_ssh_sftp_close},
     {"shutdown", l_module_ssh_sftp_shutdown},
     {NULL, NULL}};
