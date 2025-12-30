@@ -245,3 +245,6 @@ ltf eval script.lua -- LTF test
 Hello, LTF
 test
 ```
+
+> **Note:** In eval scripts, only the following functions from the LTF library can be used: sleep, millis, print. Using any others may lead to undefined behavior. 
+
