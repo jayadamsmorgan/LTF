@@ -521,6 +521,7 @@ static const luaL_Reg module_fns[] = {
     {"get_var", l_module_ltf_get_var},                           //
     {"get_vars", l_module_ltf_get_vars},                         //
     {"get_secret", l_module_ltf_get_secret},                     //
+    {"get_secrets", l_module_ltf_get_secrets},                   //
     {"sleep", l_module_ltf_sleep},                               //
     {"millis", l_module_ltf_millis},                             //
     {"print", l_module_ltf_print},                               //
