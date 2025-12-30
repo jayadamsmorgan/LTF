@@ -123,7 +123,7 @@ end
 ---
 --- @return number
 M.get_var_number = function(var_name)
-	return assert(tonumber(M.get_var(var_name)))
+	return assert(tonumber(M.get_var(var_name)), "Variable '" .. var_name .. "' is not a number")
 end
 
 --- Register secrets
