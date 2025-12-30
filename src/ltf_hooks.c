@@ -1,12 +1,15 @@
 #include "ltf_hooks.h"
 
 #include "keyword_status.h"
+#include "ltf_secrets.h"
 #include "ltf_state.h"
 
 #include "internal_logging.h"
 
 #include "test_logs.h"
+#include "util/kv.h"
 
+#include <lua.h>
 #include <stdlib.h>
 
 static ltf_state_t *ltf_state = NULL;
@@ -68,6 +71,9 @@ void ltf_hooks_add_to_queue(ltf_hook_t hook) {
 
 static inline void push_string(lua_State *L, const char *key,
                                const char *value) {
+    if (!value) {
+        return;
+    }
     lua_pushstring(L, value);
     lua_setfield(L, -2, key);
 }
@@ -106,29 +112,46 @@ static inline void push_keyword(lua_State *L, const keyword_status_t *s) {
 }
 
 static int hooks_context_push(lua_State *L) {
+    // context
     lua_newtable(L);
 
     // context.test_run
-    lua_newtable(L); // [ context, test_run ]
+    lua_newtable(L);
     push_string(L, "project_name", ltf_state->project_name);
     push_string(L, "ltf_version", ltf_state->ltf_version);
     push_string(L, "os", ltf_state->os);
     push_string(L, "os_version", ltf_state->os_version);
-    if (ltf_state->target)
-        push_string(L, "target", ltf_state->target);
+    push_string(L, "target", ltf_state->target);
     push_string(L, "started", ltf_state->started);
-    if (ltf_state->finished)
-        push_string(L, "finished", ltf_state->finished);
+    push_string(L, "finished", ltf_state->finished);
 
-    // test_run.tags (array)
-    lua_newtable(L); // [ context, test_run, tags ]
+    // context.test_run.tags
+    lua_newtable(L);
     size_t tags_count = da_size(ltf_state->tags);
     for (size_t i = 0; i < tags_count; i++) {
         char **tag = da_get(ltf_state->tags, i);
-        lua_pushstring(L, *tag);               // [ ..., tags, str ]
-        lua_seti(L, -2, (lua_Integer)(i + 1)); // tags[i+1] = str
+        lua_pushstring(L, *tag);
+        lua_seti(L, -2, (lua_Integer)(i + 1));
     }
-    lua_setfield(L, -2, "tags"); // test_run.tags = tags
+    lua_setfield(L, -2, "tags");
+
+    // context.test_run.vars
+    lua_newtable(L);
+    size_t vars_count = da_size(ltf_state->vars);
+    for (size_t i = 0; i < vars_count; i++) {
+        kv_pair_t *var = da_get(ltf_state->vars, i);
+        push_string(L, var->key, var->value);
+    }
+    lua_setfield(L, -2, "vars");
+
+    lua_newtable(L);
+    da_t *secrets = ltf_get_secrets();
+    size_t secrets_count = da_size(secrets);
+    for (size_t i = 0; i < secrets_count; i++) {
+        kv_pair_t *secret = da_get(secrets, i);
+        push_string(L, secret->key, secret->value);
+    }
+    lua_setfield(L, -2, "secrets");
 
     lua_setfield(L, -2, "test_run"); // context.test_run = test_run
 
@@ -137,36 +160,38 @@ static int hooks_context_push(lua_State *L) {
     if (tests_count != 0) {
         ltf_state_test_t *t = da_get(ltf_state->tests, tests_count - 1);
 
-        lua_newtable(L); // [ context, test ]
+        lua_newtable(L);
+
         push_string(L, "name", t->name);
         push_string(L, "started", t->started);
-        if (t->finished)
-            push_string(L, "finished", t->finished);
-        if (t->status)
-            push_string(L, "status", t->status_str);
+        push_string(L, "description", t->description);
+        push_string(L, "finished", t->finished);
+        push_string(L, "status", t->status_str);
+        push_string(L, "teardown_start", t->teardown_start);
+        push_string(L, "teardown_end", t->teardown_end);
 
-        // test.tags (array)
-        lua_newtable(L); // [ context, test, tags ]
+        // test.tags
+        lua_newtable(L);
         size_t tags_count = da_size(t->tags);
         for (size_t i = 0; i < tags_count; i++) {
             char **tag = da_get(t->tags, i);
             lua_pushstring(L, *tag);
             lua_seti(L, -2, (lua_Integer)(i + 1));
         }
-        lua_setfield(L, -2, "tags"); // test.tags = tags
+        lua_setfield(L, -2, "tags");
 
-        // test.outputs (array of objects)
-        lua_newtable(L); // [ context, test, outputs ]
+        // test.outputs
+        lua_newtable(L);
         size_t outputs_count = da_size(t->outputs);
         for (size_t i = 0; i < outputs_count; i++) {
             ltf_state_test_output_t *o = da_get(t->outputs, i);
-            push_output(L, o);                     // pushes elem
-            lua_seti(L, -2, (lua_Integer)(i + 1)); // outputs[i+1] = elem
+            push_output(L, o);
+            lua_seti(L, -2, (lua_Integer)(i + 1));
         }
         lua_setfield(L, -2, "outputs");
 
-        // test.failure_reasons (array of objects)
-        lua_newtable(L); // [ context, test, failure_reasons ]
+        // test.failure_reasons
+        lua_newtable(L);
         size_t failure_reasons_count = da_size(t->failure_reasons);
         for (size_t i = 0; i < failure_reasons_count; i++) {
             ltf_state_test_output_t *o = da_get(t->failure_reasons, i);
@@ -175,11 +200,8 @@ static int hooks_context_push(lua_State *L) {
         }
         lua_setfield(L, -2, "failure_reasons");
 
-        if (t->teardown_start)
-            push_string(L, "teardown_start", t->teardown_start);
-
-        // test.teardown_outputs (array of objects)
-        lua_newtable(L); // [ context, test, teardown_outputs ]
+        // test.teardown_outputs
+        lua_newtable(L);
         size_t teardown_outputs_count = da_size(t->teardown_outputs);
         for (size_t i = 0; i < teardown_outputs_count; i++) {
             ltf_state_test_output_t *o = da_get(t->teardown_outputs, i);
@@ -188,8 +210,8 @@ static int hooks_context_push(lua_State *L) {
         }
         lua_setfield(L, -2, "teardown_outputs");
 
-        // test.teardown_errors (array of objects)
-        lua_newtable(L); // [ context, test, teardown_errors ]
+        // test.teardown_errors
+        lua_newtable(L);
         size_t teardown_errors_count = da_size(t->teardown_errors);
         for (size_t i = 0; i < teardown_errors_count; i++) {
             ltf_state_test_output_t *o = da_get(t->teardown_errors, i);
@@ -198,7 +220,7 @@ static int hooks_context_push(lua_State *L) {
         }
         lua_setfield(L, -2, "teardown_errors");
 
-        // test.keywords (array of objects)
+        // test.keywords
         lua_newtable(L);
         size_t keywords_count = da_size(t->keyword_statuses);
         for (size_t i = 0; i < keywords_count; i++) {
@@ -208,27 +230,26 @@ static int hooks_context_push(lua_State *L) {
         }
         lua_setfield(L, -2, "keywords");
 
-        lua_setfield(L, -2, "test"); // context.test = test
+        lua_setfield(L, -2, "test");
     }
 
     // context.logs
-    lua_newtable(L); // [ context, logs ]
-
+    lua_newtable(L);
     char *logs_dir = ltf_log_get_logs_dir();
     if (logs_dir) {
         push_string(L, "dir", logs_dir);
     }
     char *raw_log_file_path = ltf_log_get_raw_log_file_path();
     if (raw_log_file_path) {
-        push_string(L, "raw_log_path", raw_log_file_path);
+        push_string(L, "raw_log", raw_log_file_path);
     }
     char *output_log_file_path = ltf_log_get_output_log_file_path();
     if (output_log_file_path) {
-        push_string(L, "output_log_path", output_log_file_path);
+        push_string(L, "output_log", output_log_file_path);
     }
-    lua_setfield(L, -2, "logs"); // context.logs = logs
+    lua_setfield(L, -2, "logs");
 
-    return 1; // context remains on the stack
+    return 1;
 }
 
 static void run_ltf_hook_started_cbs(ltf_hook_fn fn) {

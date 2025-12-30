@@ -3,19 +3,26 @@ local th = require("ltf-hooks")
 local M = {}
 
 --- @class context_t
---- @field test_run test_run_context_t
---- @field test test_context_t
---- @field log_dir string
+--- @field test_run test_run_context_t context about current test run
+--- @field test test_context_t current test context for `test_started`|`test_finished`
+--- @field logs context_logs_t
+
+--- @class context_logs_t
+--- @field dir string log directory path
+--- @field raw_log string raw log file path
+--- @field output_log string output log file path
 
 --- @class test_run_context_t
 --- @field project_name string
 --- @field ltf_version string
---- @field started string
---- @field finished string? nil if the test run isn't finished
 --- @field os string
 --- @field os_version string
---- @field target string?
+--- @field target string? nil if project is single-target
+--- @field started string
+--- @field finished string? nil if the test run hasn't finished yet
 --- @field tags [string]
+--- @field vars table<ltf_var_name, ltf_var_value>
+--- @field secrets table<secret_name, secret_value>
 
 --- @class test_output_t
 --- @field file string
@@ -33,17 +40,19 @@ local M = {}
 --- @field children [test_keyword_t]
 
 --- @class test_context_t
---- @field test_file string
 --- @field name string
+--- @field description string
 --- @field started string
---- @field finished string? nil if the test isn't finished
---- @field status "passed"|"failed"|nil nil if the test isn't finished
+--- @field finished string? nil on `test_started`
+--- @field teardown_start string? nil on `test_started`
+--- @field teardown_end string? nil on `test_started`
+--- @field status "passed"|"failed"|nil nil on `test_started`
 --- @field tags [string]
---- @field output [test_output_t]
---- @field failure_reasons [test_output_t]
---- @field teardown_output [test_output_t]
---- @field teardown_errors [test_output_t]
---- @field keywords [test_keyword_t]
+--- @field outputs [test_output_t] populated only on `test_finished`
+--- @field failure_reasons [test_output_t] populated only on `test_finished`
+--- @field teardown_output [test_output_t] populated only on `test_finished`
+--- @field teardown_errors [test_output_t] populated only on `test_finished`
+--- @field keywords [test_keyword_t] populated only on `test_finished`
 
 --- @alias hooks_fn fun(context: context_t)
 

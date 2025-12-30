@@ -43,13 +43,13 @@ Each hook receives a single argument: `context`, which has type `context_t`.
 
 * `context.test_run` contains information about the overall run (project, target, tags, timestamps, OS, etc.)
 * `context.test` contains information about the current test (name, file, vars, secrets, output, status, etc.)
-* `context.log_dir` points to the directory where LTF stores logs/artifacts for the run
+* `context.logs` contains information about the paths of log files and directories
 
 ```lua
 --- @class context_t
 --- @field test_run test_run_context_t
 --- @field test test_context_t
---- @field log_dir string
+--- @field logs context_logs_t
 ```
 
 ## Context types (Lua annotations)
@@ -58,12 +58,14 @@ Each hook receives a single argument: `context`, which has type `context_t`.
 --- @class test_run_context_t
 --- @field project_name string
 --- @field ltf_version string
---- @field started string
---- @field finished string? -- nil until the run is finished
 --- @field os string
 --- @field os_version string
---- @field target string?
---- @field tags string[]
+--- @field target string? nil if project is single-target
+--- @field started string
+--- @field finished string? nil if the test run hasn't finished yet
+--- @field tags [string]
+--- @field vars table<ltf_var_name, ltf_var_value>
+--- @field secrets table<secret_name, secret_value>
 
 --- @class test_output_t
 --- @field file string
@@ -78,23 +80,26 @@ Each hook receives a single argument: `context`, which has type `context_t`.
 --- @field finished string
 --- @field file string
 --- @field line integer
---- @field children test_keyword_t[]
 
 --- @class test_context_t
---- @field test_file string
 --- @field name string
 --- @field description string
 --- @field started string
---- @field finished string? -- nil until the test is finished
---- @field status "passed"|"failed"|nil -- nil until the test is finished
---- @field tags string[]
---- @field vars table<string, string>
---- @field secrets table<string, string>
---- @field output test_output_t[]
---- @field failure_reasons test_output_t[]
---- @field teardown_output test_output_t[]
---- @field teardown_errors test_output_t[]
---- @field keywords test_keyword_t[]
+--- @field finished string? nil on `test_started`
+--- @field teardown_start string? nil on `test_started`
+--- @field teardown_end string? nil on `test_started`
+--- @field status "passed"|"failed"|nil nil on `test_started`
+--- @field tags [string]
+--- @field outputs [test_output_t] populated only on `test_finished`
+--- @field failure_reasons [test_output_t] populated only on `test_finished`
+--- @field teardown_output [test_output_t] populated only on `test_finished`
+--- @field teardown_errors [test_output_t] populated only on `test_finished`
+--- @field keywords [test_keyword_t] populated only on `test_finished`
+
+--- @class context_logs_t
+--- @field dir string log directory path
+--- @field raw_log string raw log file path
+--- @field output_log string output log file path
 ```
 
 > `context.test` is always a last started test, i.e. it is updated every `test_started` hook and is nil on `test_run_started`
