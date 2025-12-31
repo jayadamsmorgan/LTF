@@ -238,8 +238,8 @@ static int run_all_tests(lua_State *L, ltf_state_t *state) {
         ltf_hooks_run(L, LTF_HOOK_FN_TEST_FINISHED);
     }
 
-    ltf_hooks_run(L, LTF_HOOK_FN_TEST_RUN_FINISHED);
     ltf_state_test_run_finished(state);
+    ltf_hooks_run(L, LTF_HOOK_FN_TEST_RUN_FINISHED);
 
     return passed == amount ? EXIT_SUCCESS : EXIT_FAILURE;
 }
@@ -552,6 +552,7 @@ deinit:
 
     LOG("Tidying up...");
 
+    ltf_log_free();
     test_case_free_all(L);
     ltf_hooks_deinit(L);
     lua_hooks_deinit();

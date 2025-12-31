@@ -6,6 +6,7 @@
 
 #include "internal_logging.h"
 
+#include "ltf_vars.h"
 #include "test_logs.h"
 #include "util/kv.h"
 
@@ -137,10 +138,11 @@ static int hooks_context_push(lua_State *L) {
 
     // context.test_run.vars
     lua_newtable(L);
-    size_t vars_count = da_size(ltf_state->vars);
+    da_t *vars = ltf_get_vars();
+    size_t vars_count = da_size(vars);
     for (size_t i = 0; i < vars_count; i++) {
-        kv_pair_t *var = da_get(ltf_state->vars, i);
-        push_string(L, var->key, var->value);
+        ltf_var_entry_t *var = da_get(vars, i);
+        push_string(L, var->name, var->final_value);
     }
     lua_setfield(L, -2, "vars");
 

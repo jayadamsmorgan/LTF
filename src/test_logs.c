@@ -139,10 +139,8 @@ void ltf_log_test_run_finished() {
         replace_symlink(raw_log_file_path, latest_raw);
     }
 
-    free(output_log_file_path);
-    free(raw_log_file_path);
-    free(logs_dir);
     free(latest_raw);
+    free(latest_log);
 
     LOG("Successfully finalized LTF logging.");
 }
@@ -214,4 +212,10 @@ void ltf_log_init(ltf_state_t *state) {
     ltf_state_register_test_run_finished_cb(state, ltf_log_test_run_finished);
 
     LOG("Successfully started LTF test logging.");
+}
+
+void ltf_log_free() {
+    free(output_log_file_path);
+    free(raw_log_file_path);
+    free(logs_dir);
 }
