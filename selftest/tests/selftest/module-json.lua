@@ -1,13 +1,19 @@
 local ltf = require("ltf")
 
 local check = require("test_checkup")
-local util = require("util")
 
 ltf.test({
 	name = "Test module-json",
 	tags = { "module-json" },
 	body = function()
-		local log_obj = util.load_log({ "test", "bootstrap", "-t", "module-json" })
+		local log_obj = check.load_log({
+			"test",
+			"bootstrap",
+			"-t",
+			"module-json",
+			"-v",
+			"any=anyval,enum=value2",
+		})
 
 		assert(log_obj.tags ~= nil)
 		assert(#log_obj.tags == 1)
@@ -18,8 +24,8 @@ ltf.test({
 
 		local test = log_obj.tests[1]
 		check.check_test(test, "Test JSON serialization", "PASSED")
-		util.test_tags(test, { "module-json" })
-		util.error_if(#test.output ~= 1, test, "Outputs not match")
+		check.test_tags(test, { "module-json" })
+		check.error_if(#test.output ~= 1, test, "Outputs not match")
 		check.check_output(test, test.output[1], '"another_object":{"string":"test_string"}', "INFO", true)
 		check.check_output(test, test.output[1], '"int_array":[1,2,3,4]', "INFO", true)
 		check.check_output(test, test.output[1], '"integer":2', "INFO", true)
@@ -29,8 +35,8 @@ ltf.test({
 
 		test = log_obj.tests[2]
 		check.check_test(test, "Test JSON deserialization with good string", "PASSED")
-		util.test_tags(test, { "module-json" })
-		util.error_if(#test.output ~= 5, test, "Outputs not match")
+		check.test_tags(test, { "module-json" })
+		check.error_if(#test.output ~= 5, test, "Outputs not match")
 		check.check_output(test, test.output[1], "2.0", "INFO")
 		check.check_output(test, test.output[2], "3.14", "INFO")
 		check.check_output(test, test.output[3], "test_string", "INFO")
@@ -39,8 +45,8 @@ ltf.test({
 
 		test = log_obj.tests[3]
 		check.check_test(test, "Test JSON deserialization with bad string", "FAILED")
-		util.test_tags(test, { "module-json" })
-		util.error_if(#test.output ~= 0, test, "Outputs not match")
+		check.test_tags(test, { "module-json" })
+		check.error_if(#test.output ~= 0, test, "Outputs not match")
 		check.check_output(test, test.failure_reasons[1], "stack traceback:", "CRITICAL", true)
 	end,
 })

@@ -1,13 +1,19 @@
 local ltf = require("ltf")
 
 local check = require("test_checkup")
-local util = require("util")
 
 ltf.test({
 	name = "Test module-proc",
 	tags = { "module-proc" },
 	body = function()
-		local log_obj = util.load_log({ "test", "bootstrap", "-t", "module-proc" })
+		local log_obj = check.load_log({
+			"test",
+			"bootstrap",
+			"-t",
+			"module-proc",
+			"-v",
+			"any=anyval,enum=value2",
+		})
 
 		assert(log_obj.tags ~= nil)
 		assert(#log_obj.tags == 1)
@@ -18,17 +24,17 @@ ltf.test({
 
 		local test = log_obj.tests[1]
 		check.check_test(test, "Test proc.run() existing binary", "PASSED")
-		util.test_tags(test, { "module-proc" })
-		util.error_if(#test.output ~= 3, test, "Outputs not match")
+		check.test_tags(test, { "module-proc" })
+		check.error_if(#test.output ~= 3, test, "Outputs not match")
 		check.check_output(test, test.output[1], "0", "INFO")
 		check.check_output(test, test.output[2], "", "INFO")
 		check.check_output(test, test.output[3], ".ltf.json", "INFO", true)
 
 		test = log_obj.tests[2]
 		check.check_test(test, "Test proc.run() non-existent binary", "FAILED")
-		util.test_tags(test, { "module-proc" })
-		util.error_if(#test.output ~= 0, test, "Outputs not match")
-		util.error_if(#test.failure_reasons ~= 1, test, "Outputs not match")
+		check.test_tags(test, { "module-proc" })
+		check.error_if(#test.output ~= 0, test, "Outputs not match")
+		check.error_if(#test.failure_reasons ~= 1, test, "Outputs not match")
 		check.check_output(
 			test,
 			test.failure_reasons[1],
@@ -39,29 +45,29 @@ ltf.test({
 
 		test = log_obj.tests[3]
 		check.check_test(test, "Test proc.run() with timeout not triggered", "PASSED")
-		util.test_tags(test, { "module-proc" })
-		util.error_if(#test.output ~= 3, test, "Outputs not match")
+		check.test_tags(test, { "module-proc" })
+		check.error_if(#test.output ~= 3, test, "Outputs not match")
 		check.check_output(test, test.output[1], "0", "INFO")
 		check.check_output(test, test.output[2], "", "INFO")
 		check.check_output(test, test.output[3], "", "INFO")
 
 		test = log_obj.tests[4]
 		check.check_test(test, "Test proc.run() with timeout triggered", "FAILED")
-		util.test_tags(test, { "module-proc" })
-		util.error_if(#test.failure_reasons ~= 1, test, "Outputs not match")
+		check.test_tags(test, { "module-proc" })
+		check.error_if(#test.failure_reasons ~= 1, test, "Outputs not match")
 		check.check_output(test, test.failure_reasons[1], "timeout\nstack traceback:", "CRITICAL", true)
 
 		test = log_obj.tests[5]
 		check.check_test(test, "Test proc:wait()", "PASSED")
-		util.test_tags(test, { "module-proc" })
-		util.error_if(#test.output ~= 2, test, "Outputs not match")
+		check.test_tags(test, { "module-proc" })
+		check.error_if(#test.output ~= 2, test, "Outputs not match")
 		check.check_output(test, test.output[1], "nil", "INFO")
 		check.check_output(test, test.output[2], "0", "INFO")
 
 		test = log_obj.tests[6]
 		check.check_test(test, "Test proc.spawn() with non-existent binary", "FAILED")
-		util.test_tags(test, { "module-proc" })
-		util.error_if(#test.failure_reasons ~= 1, test, "Outputs not match")
+		check.test_tags(test, { "module-proc" })
+		check.error_if(#test.failure_reasons ~= 1, test, "Outputs not match")
 		check.check_output(
 			test,
 			test.failure_reasons[1],
@@ -72,14 +78,14 @@ ltf.test({
 
 		test = log_obj.tests[7]
 		check.check_test(test, "Test proc:read() stdio", "PASSED")
-		util.test_tags(test, { "module-proc" })
-		util.error_if(#test.output ~= 1, test, "Output not match")
+		check.test_tags(test, { "module-proc" })
+		check.error_if(#test.output ~= 1, test, "Output not match")
 		check.check_output(test, test.output[1], "hello\n", "INFO")
 
 		test = log_obj.tests[8]
 		check.check_test(test, "Test proc:read() stderr", "PASSED")
-		util.test_tags(test, { "module-proc" })
-		util.error_if(#test.output ~= 1, test, "Outputs not match")
+		check.test_tags(test, { "module-proc" })
+		check.error_if(#test.output ~= 1, test, "Outputs not match")
 		check.check_output(test, test.output[1], "sleep", "INFO", true)
 	end,
 })

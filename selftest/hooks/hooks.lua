@@ -5,25 +5,21 @@ local json = ltf.json
 local output = {}
 local tests_ran = 0
 
---- @param context context_t
 hooks.test_run_started(function(context)
 	output.run_started_ctx = context
 	output.test_started_ctxs = {}
 	output.test_finished_ctxs = {}
 end)
 
---- @param context context_t
 hooks.test_started(function(context)
 	tests_ran = tests_ran + 1
 	output.test_started_ctxs[tests_ran] = context
 end)
 
---- @param context context_t
 hooks.test_finished(function(context)
 	output.test_finished_ctxs[tests_ran] = context
 end)
 
---- @param context context_t
 hooks.test_run_finished(function(context)
 	output.run_finished_ctx = context
 

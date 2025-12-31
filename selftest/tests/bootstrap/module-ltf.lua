@@ -117,7 +117,7 @@ ltf.test({
 	tags = { "module-ltf", "logging" },
 	body = function()
 		-- This test should throw on the next line:
-		---@diagnostic disable-next-line: param-type-mismatch
+		--- @diagnostic disable-next-line: param-type-mismatch
 		ltf.log("incorrect", "Testing logging with incorrect log level.")
 	end,
 })
@@ -216,6 +216,101 @@ ltf.test({
 		local tags = ltf.get_active_test_tags()
 		for _, value in ipairs(tags) do
 			ltf.log_info(value)
+		end
+	end,
+})
+
+ltf.test({
+	name = "Test description",
+	description = "This is a test description",
+	tags = { "module-ltf", "utils" },
+	body = function()
+		--
+	end,
+})
+
+ltf.test({
+	name = "Test ltf.get_secret",
+	tags = { "module-ltf", "utils" },
+	body = function()
+		ltf.log_info(ltf.get_secret("basic_secret"))
+		ltf.log_info(ltf.get_secret("multiline_secret"))
+		ltf.log_info(ltf.get_secret("quoted_secret"))
+	end,
+})
+
+ltf.test({
+	name = "Test ltf.get_secrets",
+	tags = { "module-ltf", "utils" },
+	body = function()
+		local secrets = ltf.get_secrets()
+		local order = { "basic_secret", "multiline_secret", "quoted_secret" }
+		for _, name in ipairs(order) do
+			ltf.log_info(name .. ":" .. secrets[name])
+		end
+	end,
+})
+
+ltf.test({
+	name = "Test ltf.get_var",
+	tags = { "module-ltf", "utils" },
+	body = function()
+		local constant = ltf.get_var("constant")
+		ltf.log_info(constant)
+		local any = ltf.get_var("any")
+		ltf.log_info(any)
+		local any_default = ltf.get_var("any_default")
+		ltf.log_info(any_default)
+		local enum = ltf.get_var("enum")
+		ltf.log_info(enum)
+		local enum_default = ltf.get_var("enum_default")
+		ltf.log_info(enum_default)
+	end,
+})
+
+ltf.test({
+	name = "Test ltf.get_var (unknown)",
+	tags = { "module-ltf", "utils" },
+	body = function()
+		ltf.get_var("unknown")
+	end,
+})
+
+ltf.test({
+	name = "Test ltf.get_var_number",
+	tags = { "module-ltf", "utils" },
+	body = function()
+		local number = ltf.get_var_number("number")
+		assert(type(number) == "number")
+		ltf.log_info(number)
+	end,
+})
+
+ltf.test({
+	name = "Test ltf.get_var_number (non-number)",
+	tags = { "module-ltf", "utils" },
+	body = function()
+		ltf.get_var_number("constant")
+	end,
+})
+
+ltf.test({
+	name = "Test ltf.get_var_number (unknown)",
+	tags = { "module-ltf", "utils" },
+	body = function()
+		ltf.get_var_number("unknown")
+	end,
+})
+
+ltf.test({
+	name = "Test ltf.get_vars",
+	tags = { "module-ltf", "utils" },
+	body = function()
+		local vars = ltf.get_vars()
+
+		local order = { "constant", "any", "any_default", "enum", "enum_default", "number" }
+		for _, name in ipairs(order) do
+			ltf.print(name .. ":" .. vars[name])
 		end
 	end,
 })
