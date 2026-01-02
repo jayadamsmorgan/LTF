@@ -155,15 +155,6 @@ sources = [
 
 include_dir = include_directories('include')
 
-need_setgid = get_option('install_setgid')
-if is_linux and need_setgid
-  #   rwx r-s r-x   → set-gid + 2755
-  #   this is needed to be able to open serial ports
-  ltf_install_mode = ['rwxr-sr-x', 'root', 'dialout']
-else
-  ltf_install_mode = 'rwxr-xr-x'
-endif
-
 ltf_dir_path = get_option('ltf_dir_path')
 if ltf_dir_path == ''
   # default: ~/.ltf
@@ -219,7 +210,6 @@ executable(
     libssh_dep,
   ],
   install: true,
-  install_mode: ltf_install_mode,
 )
 
 install_subdir('lib', install_dir: ltf_dir_path)

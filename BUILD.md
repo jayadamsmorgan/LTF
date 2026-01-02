@@ -57,7 +57,7 @@ meson install -C build
 sudo pacman -S --needed \
   meson ninja pkgconf \
   clang gcc \
-  lua54 \
+  lua \
   json-c \
   curl \
   unibilium \
@@ -112,30 +112,80 @@ meson compile -C build
 sudo meson install -C build
 ```
 
-### Serial port permissions (Linux)
+### Serial port access permissions (required for `libserialport`)
 
-LTF can optionally install the `ltf` binary with **setgid** and group `dialout` so it can open serial ports without requiring you to run as root.
+On Linux, opening `/dev/ttyUSB*` / `/dev/ttyACM*` devices usually **does not require root**, but it **does require correct permissions**.
 
-This is controlled by the Meson option:
+You have two common options:
 
-* `install_setgid` (boolean)
+#### Option A) Add your user to the serial group (quickest)
 
-If enabled on Linux, Meson installs the binary with mode like `2755` (`rwxr-sr-x`) and group `dialout`.
-
-Example (if your project defines that option in `meson_options.txt`):
+1. Check which group owns your serial device:
 
 ```bash
-meson setup build -Dinstall_setgid=true
-meson compile -C build
-sudo meson install -C build
+ls -l /dev/ttyUSB0 /dev/ttyACM0 2>/dev/null
 ```
 
-If you prefer not to use setgid, the usual alternative is to add your user to the `dialout` (or equivalent) group:
+On many distros the group is:
+
+* **Debian/Ubuntu:** `dialout`
+* **Arch:** `uucp` (sometimes also `lock`)
+* **Fedora:** often `dialout` (can vary)
+
+2. Add your user to the correct group (example: `dialout`):
 
 ```bash
 sudo usermod -aG dialout "$USER"
-# log out and back in
 ```
+
+Then **log out and log back in** (or reboot) for the group change to take effect.
+
+> Tip: You can verify access with:
+>
+> ```bash
+> groups
+> ```
+
+#### Option B) Install a udev rule (recommended for USB serial devices)
+
+This makes device permissions consistent whenever the device is plugged in.
+
+**Group-based rule** (example using `dialout`):
+
+Create `/etc/udev/rules.d/99-ltf-serial.rules`:
+
+```udev
+SUBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", MODE="0660", GROUP="dialout"
+```
+
+Reload rules:
+
+```bash
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+To find your `idVendor` / `idProduct`:
+
+```bash
+lsusb
+```
+
+Or for a specific device:
+
+```bash
+udevadm info -a -n /dev/ttyUSB0 | grep -E 'idVendor|idProduct' | head
+```
+
+**Alternative (ACL-based) rule** (nice on desktop systems with logind):
+
+```udev
+SUBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", TAG+="uaccess"
+```
+
+This grants access to the *active local user* without needing group membership.
+
+> Important: Avoid installing LTF as `setuid root` to “fix” serial access — it will cause any child processes spawned by LTF to run as root. Prefer group/udev permissions instead.
 
 ---
 
