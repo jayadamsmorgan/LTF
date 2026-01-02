@@ -24,6 +24,12 @@ Leveraging the simplicity of Lua for test scripting and the raw performance of a
 * **🧹 Guaranteed Teardown:** Use `ltf.defer` to reliably clean up resources whether a test passes or fails.
 * **🗂️ Detailed Logging:** Human-readable output logs and machine-readable raw JSON logs for every run (ideal for CI, reporting, and tooling).
 
+> [!IMPORTANT]
+>
+> **Please note that this is `alpha` release**.
+>
+> Most features are still in **experimental** state, though API and documented behavior will not change.
+
 ## Overview
 
 ![](overview.gif)
