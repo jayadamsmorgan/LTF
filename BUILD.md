@@ -33,6 +33,13 @@ meson setup build
 meson compile -C build
 ````
 
+Or release version:
+
+```bash
+meson setup build -Dbuildtype=release
+meson compile -C build
+```
+
 Run the resulting binary:
 
 ```bash
@@ -103,6 +110,13 @@ sudo dnf install -y \
 
 ```bash
 meson setup build
+meson compile -C build
+```
+
+Or for release version:
+
+```bash
+meson setup build -Dbuildtype=release
 meson compile -C build
 ```
 
@@ -218,6 +232,13 @@ meson setup build
 meson compile -C build
 ```
 
+Or for release version:
+
+```bash
+meson setup build -Dbuildtype=release
+meson compile -C build
+```
+
 ### 3) Install
 
 ```bash
@@ -241,21 +262,6 @@ meson install -C build
 If you leave `ltf_dir_path` empty (`''`), Meson defaults it to:
 
 * `~/.ltf`
-
-### Release vs Debug
-
-Your Meson project defaults to release:
-
-```meson
-default_options: ['buildtype=release', ...]
-```
-
-To build debug:
-
-```bash
-meson setup build-debug -Dbuildtype=debug
-meson compile -C build-debug
-```
 
 ---
 
