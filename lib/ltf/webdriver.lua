@@ -257,7 +257,11 @@ local open_url = function(session, url)
 	local payload = {
 		url = url,
 	}
-	local res = M.session_cmd(session, "POST", "url", payload)
+	local res = session:cmd({
+		method = "POST",
+		endpoint = "url",
+		payload = payload,
+	})
 	return res
 end
 
@@ -266,7 +270,10 @@ end
 ---
 --- @return table result
 local go_back = function(session)
-	local res = M.session_cmd(session, "POST", "back", {})
+	local res = session:cmd({
+		method = "POST",
+		endpoint = "back",
+	})
 	return res
 end
 
@@ -275,7 +282,10 @@ end
 ---
 --- @return table result
 local go_forward = function(session)
-	local res = M.session_cmd(session, "POST", "forward", {})
+	local res = session:cmd({
+		method = "POST",
+		endpoint = "forward",
+	})
 	return res
 end
 
@@ -284,7 +294,10 @@ end
 ---
 --- @return table result
 local refresh = function(session)
-	local res = M.session_cmd(session, "POST", "refresh", {})
+	local res = session:cmd({
+		method = "POST",
+		endpoint = "refresh",
+	})
 	return res
 end
 
@@ -293,7 +306,10 @@ end
 ---
 --- @return string url
 local get_current_url = function(session)
-	local res = M.session_cmd(session, "GET", "url", {})
+	local res = session:cmd({
+		method = "GET",
+		endpoint = "url",
+	})
 	return res.value
 end
 
@@ -301,7 +317,10 @@ end
 ---
 --- @return string title
 local get_title = function(session)
-	local res = M.session_cmd(session, "GET", "title", {})
+	local res = session:cmd({
+		method = "GET",
+		endpoint = "title",
+	})
 	return res.value
 end
 
@@ -313,9 +332,13 @@ end
 ---
 --- @return string element_id
 local find_element = function(session, using, value)
-	local res = M.session_cmd(session, "POST", "element", {
-		using = using,
-		value = value,
+	local res = session:cmd({
+		method = "POST",
+		endpoint = "element",
+		payload = {
+			using = using,
+			value = value,
+		},
 	})
 	local v = res and res.value
 	if not v then
@@ -332,9 +355,13 @@ end
 ---
 --- @return string[] element_ids
 local find_elements = function(session, using, value)
-	local res = M.session_cmd(session, "POST", "elements", {
-		using = using,
-		value = value,
+	local res = session:cmd({
+		method = "POST",
+		endpoint = "elements",
+		payload = {
+			using = using,
+			value = value,
+		},
 	})
 	local arr = res and res.value
 	if type(arr) ~= "table" then
@@ -354,9 +381,19 @@ end
 local resize_window = function(session, width, height)
 	local res
 	if width and height then
-		res = M.session_cmd(session, "POST", "window/rect", { width = width, height = height })
+		res = session:cmd({
+			method = "POST",
+			endpoint = "window/rect",
+			payload = {
+				width = width,
+				height = height,
+			},
+		})
 	else
-		res = M.session_cmd(session, "POST", "window/maximize", {})
+		res = session:cmd({
+			method = "POST",
+			endpoint = "window/maximize",
+		})
 	end
 	if res.value ~= nil and res.value.error then
 		error("resize failed: " .. tostring(res.value.message))
@@ -370,7 +407,10 @@ end
 --- @param element_id string
 --- @return table result
 local click = function(session, element_id)
-	local res = M.session_cmd(session, "POST", ("element/%s/click"):format(element_id), {})
+	local res = session:cmd({
+		method = "POST",
+		endpoint = ("element/%s/click"):format(element_id),
+	})
 	if res.value ~= nil and res.value.error then
 		error("click failed: " .. tostring(res.value.message))
 	end
@@ -392,7 +432,11 @@ local send_keys = function(session, element_id, text)
 	end
 
 	local payload = { text = text, value = chars }
-	local res = M.session_cmd(session, "POST", ("element/%s/value"):format(element_id), payload)
+	local res = session:cmd({
+		method = "POST",
+		endpoint = ("element/%s/value"):format(element_id),
+		payload = payload,
+	})
 
 	-- Surface driver errors (some return {value={error=..., message=...}})
 	local v = res and res.value
@@ -409,7 +453,10 @@ end
 ---
 --- @return string text
 local get_text = function(session, element_id)
-	local res = M.session_cmd(session, "GET", ("element/%s/text"):format(element_id), {})
+	local res = session:cmd({
+		method = "GET",
+		endpoint = ("element/%s/text"):format(element_id),
+	})
 	return res.value
 end
 
@@ -421,7 +468,14 @@ end
 ---
 --- @return table result
 local execute = function(session, script, args)
-	local res = M.session_cmd(session, "POST", "execute/sync", { script = script, args = args or {} })
+	local res = session:cmd({
+		method = "POST",
+		endpoint = "execute/sync",
+		payload = {
+			script = script,
+			args = args or {},
+		},
+	})
 	return res
 end
 
@@ -431,7 +485,10 @@ end
 ---
 --- @return string? base64_png
 local screenshot = function(session)
-	local res = M.session_cmd(session, "GET", "screenshot", {})
+	local res = session:cmd({
+		method = "GET",
+		endpoint = "screenshot",
+	})
 	return res.value
 end
 
@@ -460,7 +517,11 @@ local drag_and_drop = function(session, source_id, target_id)
 			},
 		},
 	}
-	return M.session_cmd(session, "POST", "actions", payload)
+	return session:cmd({
+		method = "POST",
+		endpoint = "actions",
+		payload = payload,
+	})
 end
 
 --- Input text
@@ -473,9 +534,15 @@ end
 --- @return table raw WebDriver response
 local input_text = function(session, element_id, text, clear_first)
 	if clear_first ~= false then
-		M.session_cmd(session, "POST", ("element/%s/clear"):format(element_id), {})
+		session:cmd({
+			method = "POST",
+			endpoint = ("element/%s/clear"):format(element_id),
+		})
 	end
-	return M.send_keys(session, element_id, text)
+	return session:send_keys({
+		element_id = element_id,
+		text = text,
+	})
 end
 
 -- Wait until element *visible*.
@@ -493,9 +560,15 @@ local wait_until_visible = function(session, using, value, timeout)
 	local elem_id
 
 	while tm.millis() - start < timeout do
-		local ok, id = pcall(M.find_element, session, using, value)
+		local ok, id = pcall(session.find_element, session, {
+			using = using,
+			value = value,
+		})
 		if ok then
-			local res = M.session_cmd(session, "GET", ("element/%s/displayed"):format(id), {})
+			local res = session:cmd({
+				method = "GET",
+				endpoint = ("element/%s/displayed"):format(id),
+			})
 			if res.value == true then
 				elem_id = id
 				break
@@ -518,7 +591,12 @@ end
 --- @return table raw WebDriver response
 local scroll_into_view = function(session, element_id)
 	local js = "arguments[0].scrollIntoView({block:'center',inline:'nearest'});"
-	return M.execute(session, js, { { [M.ELEM_KEY] = element_id } })
+	return session:execute({
+		script = js,
+		args = {
+			{ [M.ELEM_KEY] = element_id },
+		},
+	})
 end
 
 --- Low level helper
