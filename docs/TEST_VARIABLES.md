@@ -13,6 +13,9 @@ ltf.register_vars({
   project = "my-project",
 })
 ```
+> You can call `ltf.register_vars` as much as you need
+> and do it across different files as long as the variables you are
+> registering are unique.
 
 ## Using variables in a test
 
