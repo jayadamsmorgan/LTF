@@ -3,7 +3,6 @@ project(
   'c',
   version: '2.0.0-alpha',
   default_options: [
-    'buildtype=release',
     'c_std=gnu2x',
     'warning_level=3',
     'default_library=static',
