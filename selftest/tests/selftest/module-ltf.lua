@@ -6,7 +6,14 @@ ltf.test({
 	name = "Test module-ltf (common)",
 	tags = { "module-ltf", "common" },
 	body = function()
-		local log_obj = check.load_log({ "test", "bootstrap", "-t", "common" })
+		local log_obj = check.load_log({
+			"test",
+			"bootstrap",
+			"-t",
+			"common",
+			"-v",
+			"any=anyval,enum=value2",
+		})
 
 		assert(log_obj.tags ~= nil)
 		assert(#log_obj.tags == 1)
@@ -30,7 +37,14 @@ ltf.test({
 	name = "Test module-ltf (logging)",
 	tags = { "module-ltf", "logging" },
 	body = function()
-		local log_obj = check.load_log({ "test", "bootstrap", "-t", "logging" })
+		local log_obj = check.load_log({
+			"test",
+			"bootstrap",
+			"-t",
+			"logging",
+			"-v",
+			"any=anyval,enum=value2",
+		})
 
 		assert(log_obj.tags ~= nil)
 		assert(#log_obj.tags == 1)

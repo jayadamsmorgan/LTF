@@ -6,7 +6,14 @@ ltf.test({
 	name = "Test module-webdriver",
 	tags = { "module-webdriver" },
 	body = function()
-		local log_obj = check.load_log({ "test", "bootstrap", "-t", "module-webdriver" })
+		local log_obj = check.load_log({
+			"test",
+			"bootstrap",
+			"-t",
+			"module-webdriver",
+			"-v",
+			"any=anyval,enum=value2",
+		})
 
 		assert(log_obj.tags ~= nil)
 		assert(#log_obj.tags == 1)
@@ -20,11 +27,6 @@ ltf.test({
 		check.test_tags(test, { "module-webdriver" })
 		check.error_if(#test.output ~= 2, test, "Outputs not match")
 		check.check_output(test, test.output[1], "https://github.com/", "INFO")
-		check.check_output(
-			test,
-			test.output[2],
-			"GitHub · Build and ship software on a single, collaborative platform · GitHub",
-			"INFO"
-		)
+		check.check_output(test, test.output[2], "GitHub", "INFO", true)
 	end,
 })

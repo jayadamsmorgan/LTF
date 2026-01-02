@@ -13,16 +13,22 @@ ltf.test({
 		ltf.defer(function()
 			proc_handle:kill()
 		end)
-		ltf.sleep(5000) -- wait for the webdriver to start just to make sure
-		local session = wd.session_start({
+
+		-- Just making sure it runs:
+		ltf.sleep(5000)
+		local status = proc_handle:wait()
+		assert(status == nil)
+
+		-- Actual testing:
+		local session = wd.new_session({
 			port = port,
 			headless = true,
 		})
 		ltf.defer(function()
-			wd.session_end(session)
+			session:close()
 		end)
-		wd.open_url(session, "https://github.com/")
-		ltf.log_info(wd.get_current_url(session))
-		ltf.log_info(wd.get_title(session))
+		session:open_url("https://github.com/")
+		ltf.log_info(session:get_current_url())
+		ltf.log_info(session:get_title())
 	end,
 })

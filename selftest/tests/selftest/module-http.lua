@@ -6,7 +6,14 @@ ltf.test({
 	name = "Test module-http",
 	tags = { "module-http" },
 	body = function()
-		local log_obj = check.load_log({ "test", "bootstrap", "-t", "module-http" })
+		local log_obj = check.load_log({
+			"test",
+			"bootstrap",
+			"-t",
+			"module-http",
+			"-v",
+			"any=anyval,enum=value2",
+		})
 
 		assert(log_obj.tags ~= nil)
 		assert(#log_obj.tags == 1)
