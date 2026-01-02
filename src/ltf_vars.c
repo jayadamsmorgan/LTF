@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ERROR_COLORED "\x1b[31mERROR:\x1b[0m "
+#define WARNING_COLORED "\x1b[33mWARNING:\x1b[0m "
+
 static da_t *vars = NULL;
 
 void ltf_register_vars(da_t *new) {
@@ -60,7 +63,8 @@ int ltf_parse_vars() {
             if (strcmp(l->name, r->name) == 0) {
                 da_append(found_idxs, &j);
                 fprintf(stderr,
-                        "Error: variable '%s' was registered more than once.\n",
+                        ERROR_COLORED
+                        "Variable '%s' was registered more than once.\n",
                         l->name);
                 res = -1;
             }
@@ -91,7 +95,8 @@ int ltf_parse_vars() {
             if (strcmp(l->key, r->key) == 0) {
                 da_append(found_idxs, &j);
                 fprintf(stderr,
-                        "Error: value for variable '%s' was specified more "
+                        ERROR_COLORED
+                        "Value for variable '%s' was specified more "
                         "than once.\n",
                         l->key);
                 res = -1;
@@ -112,7 +117,8 @@ int ltf_parse_vars() {
         }
         if (e->is_scalar) {
             if (found) {
-                fprintf(stderr, "Error: constant variable '%s' redefined.\n",
+                fprintf(stderr,
+                        ERROR_COLORED "Constant variable '%s' redefined.\n",
                         e->name);
                 res = -1;
                 continue;
@@ -126,17 +132,37 @@ int ltf_parse_vars() {
             continue;
         }
 
+        size_t values_count = da_size(e->values);
+
         if (!found) {
-            fprintf(stderr,
-                    "Error: Value for variable '%s' is not specified. Please "
-                    "specify it with `--vars %s=value` or add default value in "
-                    "declaration.\n",
+            if (values_count != 0) {
+                fprintf(stderr,
+                        ERROR_COLORED "Value for variable '%s' is not "
+                                      "specified. Allowed values: ",
+                        e->name);
+                for (size_t j = 0; j < values_count; ++j) {
+                    char **value = da_get(e->values, j);
+                    fprintf(stderr, "'%s'", *value);
+                    if (j < values_count - 1) {
+                        fprintf(stderr, ", ");
+                    }
+                }
+                fprintf(stderr,
+                        ". Please specify it with `--vars %s=value` or add "
+                        "default value in declaration.\n",
+                        e->name);
+            } else {
+                fprintf(
+                    stderr,
+                    ERROR_COLORED
+                    "Value for variable '%s' is not specified. "
+                    "Please specify it with `--vars %s=value` or add default "
+                    "value in declaration.\n",
                     e->name, e->name);
+            }
             res = -1;
             continue;
         }
-
-        size_t values_count = da_size(e->values);
 
         if (values_count == 0) {
             e->final_value = strdup(found->value);
@@ -156,7 +182,8 @@ int ltf_parse_vars() {
         }
 
         fprintf(stderr,
-                "Error: Value for variable '%s' is not an allowed value. "
+                ERROR_COLORED
+                "Value for variable '%s' is not an allowed value. "
                 "Allowed values: ",
                 e->name);
         for (size_t j = 0; j < values_count; ++j) {
@@ -183,8 +210,7 @@ int ltf_parse_vars() {
         if (found) {
             continue;
         }
-        fprintf(stderr, "Error: Variable '%s' was not registered\n", opt->key);
-        res = -1;
+        printf(WARNING_COLORED "Variable '%s' was not registered.\n", opt->key);
     }
 
     return res;

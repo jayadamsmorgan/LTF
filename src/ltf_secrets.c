@@ -3,6 +3,7 @@
 #include "internal_logging.h"
 #include "project_parser.h"
 
+#include "util/da.h"
 #include "util/files.h"
 #include "util/kv.h"
 
@@ -10,6 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define ERROR_COLORED "\x1b[31mERROR:\x1b[0m "
+#define WARNING_COLORED "\x1b[33mWARNING:\x1b[0m "
 
 static char *rtrim(char *s) {
     if (!s)
@@ -81,7 +85,7 @@ int ltf_secrets_parse_file(da_t *out) {
 
     char *secret_vars_path = NULL;
     if (asprintf(&secret_vars_path, "%s/.secrets", proj->project_path) < 0) {
-        fprintf(stderr, "Error: OOM building secrets path\n");
+        fprintf(stderr, ERROR_COLORED "OOM building secrets path\n");
         return -100;
     }
     if (!file_exists(secret_vars_path)) {
@@ -277,6 +281,73 @@ int ltf_parse_secrets() {
 
     size_t registered_size = da_size(secrets);
     size_t specified_size = da_size(specified);
+
+    // Check for duplicates in registered:
+    da_t *found_idxs = da_init(1, sizeof(size_t));
+    for (size_t i = 0; i < registered_size; ++i) {
+        for (size_t j = 0; j < registered_size; ++j) {
+            if (i == j) {
+                continue;
+            }
+            bool found = false;
+            for (size_t k = 0; k < da_size(found_idxs); ++k) {
+                size_t *idx = da_get(found_idxs, k);
+                if (*idx == i || *idx == j) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                continue;
+            }
+
+            kv_pair_t *l = da_get(secrets, i);
+            kv_pair_t *r = da_get(secrets, j);
+
+            if (strcmp(l->key, r->key) == 0) {
+                da_append(found_idxs, &j);
+                fprintf(stderr,
+                        ERROR_COLORED
+                        "Secret '%s' was registered more than once.\n",
+                        l->key);
+                res = -1;
+            }
+        }
+    }
+    da_free(found_idxs);
+
+    // Check for duplicates in specified:
+    found_idxs = da_init(1, sizeof(size_t));
+    for (size_t i = 0; i < specified_size; ++i) {
+        for (size_t j = 0; j < specified_size; ++j) {
+            if (i == j) {
+                continue;
+            }
+            bool found = false;
+            for (size_t k = 0; k < da_size(found_idxs); ++k) {
+                size_t *idx = da_get(found_idxs, k);
+                if (*idx == i || *idx == j) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                continue;
+            }
+            kv_pair_t *l = da_get(specified, i);
+            kv_pair_t *r = da_get(specified, j);
+            if (strcmp(l->key, r->key) == 0) {
+                da_append(found_idxs, &j);
+                fprintf(stderr,
+                        ERROR_COLORED
+                        "Value for secret '%s' was specified more than once.\n",
+                        l->key);
+                res = -1;
+            }
+        }
+    }
+    da_free(found_idxs);
+
     for (size_t i = 0; i < registered_size; ++i) {
         kv_pair_t *reg = da_get(secrets, i);
         bool found = false;
@@ -292,10 +363,28 @@ int ltf_parse_secrets() {
         if (found)
             continue;
         fprintf(stderr,
+                ERROR_COLORED
                 "Value for secret '%s' is not provided. Please add it "
                 "in '.secrets' file.\n",
                 reg->key);
         res = -1;
+    }
+
+    for (size_t i = 0; i < specified_size; ++i) {
+        kv_pair_t *spec = da_get(specified, i);
+        bool found = false;
+        for (size_t j = 0; j < registered_size; ++j) {
+            kv_pair_t *reg = da_get(secrets, j);
+            if (strcmp(spec->key, reg->key) == 0) {
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            continue;
+        }
+        fprintf(stderr, WARNING_COLORED "Secret '%s' was not registered.\n",
+                spec->key);
     }
 
     free_any_secrets(specified);

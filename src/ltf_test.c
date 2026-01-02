@@ -415,11 +415,12 @@ int ltf_test() {
         LTF_VERSION_NUM(proj->min_ltf_ver_major, proj->min_ltf_ver_minor,
                         proj->min_ltf_ver_patch);
     if (min_version_required > LTF_VERSION_NUM_CURRENT) {
-        printf("\x1b[33mWARNING: This project was created with a newer LTF "
-               "version '%s' "
-               "(current LTF version '%s'), some features might not work as "
-               "expected.\n\x1b[0m",
-               proj->min_ltf_ver_str, LTF_VERSION);
+        printf(
+            "\x1b[33mWARNING:\x1b[0m This project was created with a newer LTF "
+            "version '%s' "
+            "(current LTF version '%s'), some features might not work as "
+            "expected.\n",
+            proj->min_ltf_ver_str, LTF_VERSION);
     }
 
     if (!opts->target && proj->multitarget) {
