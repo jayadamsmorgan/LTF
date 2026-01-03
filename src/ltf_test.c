@@ -545,9 +545,9 @@ int ltf_test() {
 
     exitcode = run_all_tests(L, state);
 
-    if (!opts->headless) {
-        ltf_tui_deinit();
-    }
+    // if (!opts->headless) {
+    //     ltf_tui_deinit();
+    // }
 
 deinit:
 
