@@ -367,89 +367,6 @@ static int test_result_to_color(ltf_state_test_t *test) {
     }
 }
 
-static void ltf_tui_test_run_result(pico_t *ui, size_t tests_count) {
-
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
-
-    /* Line 8: Test Progress */
-    pico_ui_clear_line(ui, 8);
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    pico_ui_puts_yx(ui, 8, 0, "├─ ");
-    pico_ui_puts_yx(ui, 8, 3, "Test Results:");
-
-    /* Line 9: Test Name and millis from the start*/
-    for (size_t i = 0; i < tests_count - 1; ++i) {
-        ltf_state_test_t *test = da_get(ltf_state->tests, i);
-        pico_ui_clear_line(ui, 9 + i * 4);
-        pico_ui_clear_line(ui, 10 + i * 4);
-        pico_ui_clear_line(ui, 11 + i * 4);
-        pico_ui_clear_line(ui, 12 + i * 4);
-
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-        pico_ui_puts_yx(ui, 9 + i * 4, 0, "│  ├─ ");
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-        pico_ui_puts_yx(ui, 9 + i * 4, 6, "Name: ");
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
-        pico_ui_printf_yx(ui, 9 + i * 4, 12, "%s ", test->name);
-
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-        pico_ui_puts_yx(ui, 9 + i * 4 + 1, 0, "│  │  ├─ ");
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-        pico_ui_puts_yx(ui, 9 + i * 4 + 1, 9, "Result:    ");
-        pico_set_colors(ui, test_result_to_color(test), -1);
-        pico_ui_printf_yx(ui, 9 + i * 4 + 1, 19, "%s", test->status_str);
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-        pico_ui_puts_yx(ui, 9 + i * 4 + 2, 0, "│  │  ├─ ");
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-        pico_ui_puts_yx(ui, 9 + i * 4 + 2, 9, "Started:  ");
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
-        pico_ui_printf_yx(ui, 9 + i * 4 + 2, 19, "%s", test->started + 9);
-
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-        pico_ui_puts_yx(ui, 9 + i * 4 + 3, 0, "│  │  └─ ");
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-        pico_ui_puts_yx(ui, 9 + i * 4 + 3, 9, "Finished: ");
-        pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
-        pico_ui_printf_yx(ui, 9 + i * 4 + 3, 19, "%s", test->finished + 9);
-    }
-
-    size_t offset = tests_count - 1;
-    ltf_state_test_t *test = da_get(ltf_state->tests, offset);
-    pico_ui_clear_line(ui, 9 + offset * 4);
-    pico_ui_clear_line(ui, 10 + offset * 4);
-    pico_ui_clear_line(ui, 11 + offset * 4);
-    pico_ui_clear_line(ui, 12 + offset * 4);
-
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    pico_ui_puts_yx(ui, 9 + offset * 4, 0, "│  └─ ");
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    pico_ui_puts_yx(ui, 9 + offset * 4, 6, "Name: ");
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
-    pico_ui_printf_yx(ui, 9 + offset * 4, 12, "%s", test->name);
-
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    pico_ui_puts_yx(ui, 9 + offset * 4 + 1, 0, "│     ├─ ");
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    pico_ui_puts_yx(ui, 9 + offset * 4 + 1, 9, "Result:   ");
-    pico_set_colors(ui, test_result_to_color(test), -1);
-    pico_ui_printf_yx(ui, 9 + offset * 4 + 1, 19, "%s", test->status_str);
-
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    pico_ui_puts_yx(ui, 9 + offset * 4 + 2, 0, "│     ├─ ");
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    pico_ui_puts_yx(ui, 9 + offset * 4 + 2, 9, "Started:  ");
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
-    pico_ui_printf_yx(ui, 9 + offset * 4 + 2, 19, "%s", test->started + 9);
-
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    pico_ui_puts_yx(ui, 9 + offset * 4 + 3, 0, "│     └─ ");
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    pico_ui_puts_yx(ui, 9 + offset * 4 + 3, 9, "Finished: ");
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_CYAN, -1);
-    pico_ui_printf_yx(ui, 9 + offset * 4 + 3, 19, "%s", test->finished + 9);
-    pico_reset_colors(ui);
-}
-
 static void render_ui(pico_t *ui, void *ud) {
     (void)ud;
 
@@ -512,7 +429,7 @@ static inline const char *pico_fg_color(int color) {
     }
 }
 
-static void render_result(pico_t *ui, void *ud) {
+void tui_render_result(void *ud) {
     (void)ud;
 
     render_ui(ui, NULL);
@@ -520,10 +437,20 @@ static void render_result(pico_t *ui, void *ud) {
     pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
     pico_ui_puts_yx(ui, 14, 0, "   ├─ ");
 
+    //  "-" Gap  between logs
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    term_size_t terminal_size = get_term_size();
+    for (int i = 0; i < terminal_size.cols - 1; ++i) {
+        pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+        pico_print(ui, "-");
+    }
+    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
+    pico_println(ui, "-");
     ltf_tui_deinit();
 
     // Remove gap between tui and new text
     printf("\x1b[1A");
+
     // Test run results
     printf("%s   └─ Tests:%s\n", pico_fg_color(PICO_COLOR_BRIGHT_MAGENTA),
            ANSI_RESET);
@@ -563,8 +490,8 @@ static void render_result(pico_t *ui, void *ud) {
         printf("%s %s%s\n", pico_fg_color(PICO_COLOR_BRIGHT_CYAN),
                test->finished, ANSI_RESET);
     }
-    // Laste element render
 
+    // Last element render
     ltf_state_test_t *test = da_get(ltf_state->tests, tests_count - 1);
     // Test name
     printf("%s      └─ %s", pico_fg_color(PICO_COLOR_BRIGHT_MAGENTA),
@@ -586,7 +513,6 @@ static void render_result(pico_t *ui, void *ud) {
     printf("%sStarted: %s", pico_fg_color(PICO_COLOR_BRIGHT_WHITE), ANSI_RESET);
     printf("%s  %s%s\n", pico_fg_color(PICO_COLOR_BRIGHT_CYAN), test->started,
            ANSI_RESET);
-
     // Test Finished
     printf("%s         └─ %s", pico_fg_color(PICO_COLOR_BRIGHT_MAGENTA),
            ANSI_RESET);
@@ -594,6 +520,7 @@ static void render_result(pico_t *ui, void *ud) {
            ANSI_RESET);
     printf("%s %s%s\n", pico_fg_color(PICO_COLOR_BRIGHT_CYAN), test->finished,
            ANSI_RESET);
+
     // Part of deinit
     cmd_test_options *opts = cmd_parser_get_test_options();
     if (!opts->no_logs) {
@@ -605,7 +532,7 @@ void ltf_tui_test_started(ltf_state_test_t *test) {
 
     render_ui(ui, NULL);
 
-    // //  "-" Gap  between logs
+    //  "-" Gap  between logs
     pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
     term_size_t terminal_size = get_term_size();
     for (int i = 0; i < terminal_size.cols - 1; ++i) {
@@ -622,21 +549,9 @@ void ltf_tui_test_started(ltf_state_test_t *test) {
     pico_printf(ui, " Test '%s' \n", test->name);
 }
 
-void ltf_tui_defer_queue_started(ltf_state_test_t *test) {
+void ltf_tui_defer_queue_started(ltf_state_test_t *) { render_ui(ui, NULL); }
 
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
-    // pico_print(ui, "[LTF]");
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    // pico_printf(ui, " Defers Started For %s \n", test->name);
-}
-
-void ltf_tui_defer_queue_finished(ltf_state_test_t *test) {
-
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
-    // pico_print(ui, "[LTF]");
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    // pico_printf(ui, " Defers Finished For %s \n", test->name);
-}
+void ltf_tui_defer_queue_finished(ltf_state_test_t *) { render_ui(ui, NULL); }
 
 void ltf_tui_defer_failed(ltf_state_test_t *, ltf_state_test_output_t *output) {
 
@@ -683,19 +598,8 @@ void ltf_tui_tests_set_finished() { render_ui(ui, NULL); }
 void ltf_tui_hook_started(ltf_hook_fn fn) {
 
     render_ui(ui, NULL);
-
-    char *str = "";
-    switch (fn) {
-    case 0:
-        str = "Test Run Started";
-        break;
-    case 1:
-        str = "Test Started";
-        break;
-    case 2:
-        str = "Test Finished";
-        break;
-    case 3:
+    // If Test Run Finished
+    if (fn == 3) {
         //  "-" Gap  between logs
         pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
         term_size_t terminal_size = get_term_size();
@@ -705,54 +609,10 @@ void ltf_tui_hook_started(ltf_hook_fn fn) {
         }
         pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
         pico_println(ui, "-");
-        str = "Test Run Finished";
-        break;
     }
-    // // Hook Started message
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
-    // pico_print(ui, "[LTF]");
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    // pico_printf(ui, " Hooks Started: %s\n", str);
 }
 
-void ltf_tui_hook_finished(ltf_hook_fn fn) {
-    // Update UI
-    render_ui(ui, NULL);
-
-    // Update log
-    char *str = "";
-    switch (fn) {
-    case 0:
-        str = "Test Run Started";
-        break;
-    case 1:
-        str = "Test Started";
-        break;
-    case 2:
-        str = "Test Finished";
-        break;
-    case 3:
-        str = "Test Run Finished";
-        render_result(ui, NULL);
-        break;
-    }
-    // // Test Finished message
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_GREEN, -1);
-    // pico_print(ui, "[LTF]");
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
-    // pico_printf(ui, " Hooks Finished: %s\n", str);
-    //
-    // //  "-" Gap  between logs
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    // term_size_t terminal_size = get_term_size();
-    // for (int i = 0; i < terminal_size.cols - 1; ++i) {
-    //     pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    //     pico_print(ui, "_");
-    // }
-    // pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    // pico_println(ui, "_");
-    //
-}
+void ltf_tui_hook_finished(ltf_hook_fn) { render_ui(ui, NULL); }
 
 void ltf_tui_hook_failed(ltf_hook_fn fn, const char *msg) {
 
