@@ -348,7 +348,7 @@ static void ltf_tui_summary_render(pico_t *ui, size_t size) {
 
     pico_ui_clear_line(ui, size + 2);
     pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    pico_ui_puts_yx(ui, size + 2, 0, "   └─ ");
+    pico_ui_puts_yx(ui, size + 2, 0, "   ├─ ");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
     pico_ui_puts_yx(ui, size + 2, 6, "Elapsed Time: ");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
@@ -524,7 +524,7 @@ void tui_render_result(void *ud) {
     // Part of deinit
     cmd_test_options *opts = cmd_parser_get_test_options();
     if (!opts->no_logs) {
-        puts("For more info: 'ltf logs info latest'");
+        puts("\nFor more info: 'ltf logs info latest'");
     }
 }
 
