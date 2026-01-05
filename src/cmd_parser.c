@@ -472,6 +472,11 @@ static void set_skip_hooks(const char *) {
     test_opts.skip_hooks = true;
 }
 
+static void set_skip_hooks(const char *) {
+    //
+    test_opts.skip_hooks = true;
+}
+
 static cmd_option all_test_options[] = {
     {"--log-level", "-l", true, set_log_level},
     {"--skip-hooks", NULL, false, set_skip_hooks},

@@ -45,6 +45,8 @@ typedef struct {
 
     bool skip_hooks;
 
+    bool skip_hooks;
+
     char *target;
 
     bool internal_logging;
