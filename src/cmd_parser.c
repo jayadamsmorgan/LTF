@@ -1,5 +1,6 @@
 #include "cmd_parser.h"
 
+#include "ltf_log_level.h"
 #include "util/da.h"
 #include "util/kv.h"
 #include "version.h"
@@ -315,6 +316,15 @@ static void set_test_tags(const char *arg) {
         fprintf(stderr, "Unknown error: Unable to set test tags.");
         exit(EXIT_FAILURE);
     }
+    size_t sz = da_size(test_opts.tags);
+    if (sz) {
+        for (size_t i = 0; i < sz; ++i) {
+            char **tag = da_get(test_opts.tags, i);
+            free(*tag);
+        }
+        da_free(test_opts.tags);
+        test_opts.tags = da_init(1, sizeof(kv_pair_t));
+    }
     for (size_t i = 0; i < da_size(tags); ++i) {
         da_append(test_opts.tags, da_get(tags, i));
     }
@@ -347,7 +357,23 @@ static void set_test_vars(const char *arg) {
             .key = strdup(token),
             .value = strdup(eq + 1),
         };
-        da_append(test_opts.vars, &pair);
+
+        bool found = false;
+        for (size_t i = 0; i < da_size(test_opts.vars); ++i) {
+            kv_pair_t *var = da_get(test_opts.vars, i);
+            if (STR_EQ(pair.key, var->key)) {
+                free(var->key);
+                free(var->value);
+                var->key = pair.key;
+                var->value = pair.value;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            da_append(test_opts.vars, &pair);
+        }
 
         token = strtok(NULL, ",");
     }
@@ -367,6 +393,7 @@ static void set_log_level(const char *arg) {
         exit(EXIT_FAILURE);
     }
 
+    test_opts.log_level_set = true;
     test_opts.log_level = log_level;
 }
 
@@ -376,6 +403,7 @@ static void get_test_help(const char *) {
 }
 
 static void set_test_ltf_lib_path(const char *arg) {
+    free(test_opts.custom_ltf_lib_path);
     test_opts.custom_ltf_lib_path = strdup(arg);
 }
 
@@ -391,23 +419,52 @@ static void set_test_scenario(const char *arg) {
     }
     test_opts.scenario_parsed = true;
     ltf_test_scenario_parsed_t *sc = &test_opts.scenario;
+
     for (size_t i = 0; i < da_size(sc->vars); ++i) {
-        da_append(test_opts.vars, da_get(sc->vars, i));
+        bool found = false;
+        for (size_t j = 0; j < da_size(test_opts.vars); ++j) {
+            kv_pair_t *scenario_var = da_get(sc->vars, i);
+            kv_pair_t *reg_var = da_get(test_opts.vars, j);
+            if (STR_EQ(scenario_var->key, reg_var->key)) {
+                // Giving priority to CLI
+                free(scenario_var->value);
+                scenario_var->value = NULL;
+                free(scenario_var->key);
+                scenario_var->key = NULL;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            da_append(test_opts.vars, da_get(sc->vars, i));
+        }
     }
-    for (size_t i = 0; i < da_size(sc->tags); ++i) {
-        da_append(test_opts.tags, da_get(sc->tags, i));
+
+    if (da_size(test_opts.tags) != 0) {
+        for (size_t i = 0; i < da_size(sc->tags); ++i) {
+            da_append(test_opts.tags, da_get(sc->tags, i));
+        }
     }
+
     if (sc->target) {
         free(test_opts.target);
         test_opts.target = strdup(sc->target);
     }
-    test_opts.log_level = sc->log_level;
-    if (sc->ltf_lib_path) {
-        free(test_opts.custom_ltf_lib_path);
+    if (!test_opts.log_level_set) {
+        test_opts.log_level = sc->log_level;
+    }
+    if (!test_opts.custom_ltf_lib_path && sc->ltf_lib_path) {
         test_opts.custom_ltf_lib_path = strdup(sc->ltf_lib_path);
     }
-    test_opts.headless = sc->headless;
-    test_opts.no_logs = sc->no_logs;
+    if (!test_opts.skip_hooks) {
+        test_opts.skip_hooks = sc->skip_hooks;
+    }
+    if (!test_opts.headless) {
+        test_opts.headless = sc->headless;
+    }
+    if (!test_opts.no_logs) {
+        test_opts.no_logs = sc->no_logs;
+    }
 }
 
 static void set_skip_hooks(const char *) {
@@ -434,6 +491,7 @@ static cmd_category parse_test_options(int argc, char **argv) {
     test_opts.tags = da_init(1, sizeof(char *));
     test_opts.target = NULL;
     test_opts.no_logs = false;
+    test_opts.log_level_set = false;
     test_opts.log_level = LTF_LOG_LEVEL_INFO;
     test_opts.internal_logging = false;
     test_opts.custom_ltf_lib_path = NULL;
