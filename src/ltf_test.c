@@ -509,7 +509,7 @@ int ltf_test() {
 
     ltf_hooks_init(state);
     asprintf(&project_hooks_dir_path, "%s/hooks", proj->project_path);
-    if (load_lua_dir(project_hooks_dir_path, L) == -2) {
+    if (!opts->skip_hooks && load_lua_dir(project_hooks_dir_path, L) == -2) {
         goto deinit;
     }
 

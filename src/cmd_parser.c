@@ -31,17 +31,15 @@ static void print_test_help(FILE *file) {
             "       ltf test <target_name> [<options>]\n"
             "\n"
             "Perform project tests.\n"
-            "Must specify target name if project "
-            "is multitarget.\n"
+            "Must specify target name if project is multitarget.\n"
             "\n"
             "Options:\n"
-            "  -l, --log-level <critical|error|warning|info|debug|trace>   Log "
-            "level "
-            "for TUI output\n"
-            "  -n, --no-logs                                               Do "
-            "not output "
-            "log files after a "
-            "test run\n"
+            "  -l, --log-level <critical|error|warning|info|debug|trace>   "
+            "Log level for TUI output\n"
+            "  -n, --no-logs                                               "
+            "Do not output log files after a test run\n"
+            "  --skip-hooks                                                "
+            "Skip LTF hooks execution for the test run\n"
             "  -p, --ltf-lib-path <path>                                   "
             "Specify custom path to LTF Lua libraries\n"
             "  -t, --tags <tag1,tag2>                                      "
@@ -412,8 +410,14 @@ static void set_test_scenario(const char *arg) {
     test_opts.no_logs = sc->no_logs;
 }
 
+static void set_skip_hooks(const char *) {
+    //
+    test_opts.skip_hooks = true;
+}
+
 static cmd_option all_test_options[] = {
     {"--log-level", "-l", true, set_log_level},
+    {"--skip-hooks", NULL, false, set_skip_hooks},
     {"--no-logs", "-n", false, set_test_no_logs},
     {"--ltf-lib-path", "-p", true, set_test_ltf_lib_path},
     {"--tags", "-t", true, set_test_tags},
@@ -434,6 +438,7 @@ static cmd_category parse_test_options(int argc, char **argv) {
     test_opts.internal_logging = false;
     test_opts.custom_ltf_lib_path = NULL;
     test_opts.headless = NULL;
+    test_opts.skip_hooks = false;
     test_opts.vars = da_init(1, sizeof(kv_pair_t));
     memset(&test_opts.scenario, 0, sizeof(test_opts.scenario));
     test_opts.scenario_parsed = false;

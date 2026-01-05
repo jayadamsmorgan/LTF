@@ -41,6 +41,8 @@ typedef struct {
     bool no_logs;
     ltf_log_level log_level;
 
+    bool skip_hooks;
+
     char *target;
 
     bool internal_logging;

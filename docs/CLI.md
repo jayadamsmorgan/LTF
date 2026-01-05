@@ -81,6 +81,7 @@ ltf test <target_name> [options...]
 | :---------------------- | :---- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--log-level <level>`   | `-l`  | Sets the minimum log level to display in the TUI. Valid levels are `critical`, `error`, `warning`, `info`, `debug`, `trace`. See [Logging](./LOGGING.md). |
 | `--no-logs`             | `-n`  | Disables the creation of log files for this test run.                                                                                                     |
+| `--skip-hooks`          |       | Disables LTF hooks for this test run.                                                                                                                     |
 | `--ltf-lib-path <path>` | `-p`  | Provide custom path to LTF Lua libraries location.                                                                                                        |
 | `--tags <tags>`         | `-t`  | Runs only tests that have at least one of the specified comma-separated tags. See [Tag System](./TAG-SYSTEM.md).                                          |
 | `--vars <vars>`         | `-v`  | Set one or more test variables as a comma-separated list of `name:value` pairs. See [Test Variables](./TEST_VARIABLES.md).                                |
@@ -223,7 +224,7 @@ ltf eval <file.lua> -- [args...]
 ### Arguments
 
 * `file.lua`: Lua script to run
-* `args`: any amount of arguments passed to the Lua in the `args` table
+* `args`: any amount of arguments passed to the Lua in the `arg` table
 
 ### Example
 
@@ -231,8 +232,8 @@ ltf eval <file.lua> -- [args...]
 --- script.lua
 local ltf = require("ltf")
 
-print("Hello, " .. args[1])
-print(args[2])
+print("Hello, " .. arg[1])
+print(arg[2])
 ```
 
 ```bash
@@ -246,5 +247,5 @@ Hello, LTF
 test
 ```
 
-> **Note:** In eval scripts, only the following functions from the LTF library can be used: sleep, millis, print. Using any others may lead to undefined behavior. 
+> **Note:** In eval scripts, only the following functions from the [LTF Core Library](./LTF_LIBS/ltf.md) can be used: sleep, millis. Using any others may lead to undefined behavior. 
 
