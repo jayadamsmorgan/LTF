@@ -28,6 +28,7 @@ typedef struct {
 
     int log_level;
     bool no_logs;
+    bool skip_hooks;
     bool headless;
 
     char *ltf_lib_path;
@@ -220,6 +221,13 @@ static int ltf_test_scenario_from_json(const char *file_path,
         if (json_object_object_get_ex(v, "target", &cmd_v)) {
             ERR_CHECK(json_string_to_string(file_path, "cmd.target", cmd_v,
                                             &out->cmd.target));
+        }
+        if (json_object_object_get_ex(v, "skip_hooks", &cmd_v)) {
+            if (!json_object_is_type(cmd_v, json_type_boolean)) {
+                return ltf_test_scenario_parse_err(
+                    file_path, "'cmd.no_logs' should be a boolean.");
+            }
+            out->cmd.skip_hooks = json_object_get_boolean(cmd_v);
         }
         if (json_object_object_get_ex(v, "log_level", &cmd_v)) {
             char *log_level_str;
@@ -428,6 +436,7 @@ static int ltf_test_scenario_parse_file(const char *file_path,
     }
     parsed.headless = s->cmd.headless;
     parsed.no_logs = s->cmd.no_logs;
+    parsed.skip_hooks = s->cmd.skip_hooks;
     if (s->cmd.ltf_lib_path) {
         if (parsed.ltf_lib_path) {
             free(parsed.ltf_lib_path);

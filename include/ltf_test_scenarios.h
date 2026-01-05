@@ -11,6 +11,7 @@ typedef struct {
     da_t *vars; // [kv_pair_t]
     ltf_log_level log_level;
     bool no_logs;
+    bool skip_hooks;
     bool headless;
     char *ltf_lib_path;
     da_t *order; // [char *]

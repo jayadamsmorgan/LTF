@@ -39,7 +39,9 @@ typedef struct {
     da_t *vars;
 
     bool no_logs;
+
     ltf_log_level log_level;
+    bool log_level_set;
 
     bool skip_hooks;
 
