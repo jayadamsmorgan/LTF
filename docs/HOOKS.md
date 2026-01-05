@@ -2,7 +2,7 @@
 
 Hooks let you run custom Lua code at specific points during a test run (before/after each test, and at the beginning/end of the run). This is useful for setup/cleanup, diagnostics, custom reporting, or collecting extra artifacts.
 
-> **Note:** In hooks, only the following functions from the LTF library can be used: sleep, millis, print, log. Using any others may lead to undefined behavior. 
+> **Note:** In hooks, only the following functions from the [LTF Core Library](./LTF_LIBS/ltf.md) can be used: sleep, millis, print, log. Using any others may lead to undefined behavior. 
 
 ## Registering hooks
 
