@@ -124,4 +124,4 @@ Common patterns:
 
 ## Examples
 
-[See project example](./../examples/scenarios-example).
+[See project example](https://github.com/jayadamsmorgan/LTF/tree/master/examples/scenarios-example).

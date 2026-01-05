@@ -4,28 +4,19 @@ on:
   push:
     branches: [ "master", "gh_actions" ]
   pull_request:
+  workflow_dispatch: 
 
 jobs:
   build-and-test:
     name: Build for Ubuntu
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Check out
         uses: actions/checkout@v4
 
-      - name: Install Homebrew
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          echo "/home/linuxbrew/.linuxbrew/bin"  >> "$GITHUB_PATH"
-          echo "/home/linuxbrew/.linuxbrew/sbin" >> "$GITHUB_PATH"
-
       - name: Install dependencies
         run: |
-          brew install meson curl json-c notcurses lua libserialport libunistring
-          wget https://storage.googleapis.com/chrome-for-testing-public/140.0.7294.0/linux64/chrome-linux64.zip
-          wget https://storage.googleapis.com/chrome-for-testing-public/140.0.7294.0/linux64/chromedriver-linux64.zip
-          unzip chrome-linux64.zip
-          unzip chromedriver-linux64.zip
+          brew install meson curl json-c lua libserialport libunistring libssh2 unibilium chromedriver google-chrome
 
       - name: Build & Install
         run: |
@@ -66,3 +57,21 @@ jobs:
         with:
           name: selftest-logs
           path: selftest/logs/ci
+
+  docs:
+    name: Docs Build and Deploy
+    needs: build-and-test 
+    runs-on: self-hosted
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Build and Deploy Docs
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install mkdocs mkdocs-material
+          mkdocs gh-deploy
+
+
+

@@ -153,4 +153,4 @@ If validation fails, LTF exits with an error before executing tests.
 
 ## Example
 
-[See project example](./../examples/vars-example).
+[See project example](https://github.com/jayadamsmorgan/LTF/tree/master/examples/secrets-example).
