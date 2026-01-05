@@ -124,6 +124,19 @@ Shorthand:
 ltf test -v serial_port=/dev/ttyUSB0,env=staging
 ```
 
+You can also set variables by multiple `-v/--vars`:
+
+```bash
+ltf test -v serial_port=/dev/ttyUSB0 -v env=staging
+```
+
+If you need to set variable which contains comma(s), just wrap it in quotes:
+
+```bash
+ltf test -v enumeration="one,two,three",serial_port=/dev/ttyUSB0
+```
+
+
 Alternatively, variables can also be set via [Test Scenarios](./TEST_SCENARIOS.md).
 
 ## Validation rules
@@ -132,9 +145,9 @@ LTF validates variables **before any tests run**:
 
 * **Constant** variables cannot be overridden from the CLI.
 * For **Enum** and **Enum with default**:
-
   * CLI values must be listed in `values`
   * `default` (if present) must also be listed in `values`
+* If specified variable was not registered LTF will print **warning** message but continue executing tests.
 
 If validation fails, LTF exits with an error before executing tests.
 
