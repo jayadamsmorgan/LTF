@@ -16,7 +16,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install meson curl json-c lua libserialport libunistring libssh2 unibilium chromedriver google-chrome
+          brew install unzip meson curl json-c lua libserialport libunistring libssh2 unibilium chromedriver google-chrome 
 
       - name: Build & Install
         run: |
