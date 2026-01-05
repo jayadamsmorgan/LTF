@@ -98,4 +98,4 @@ If any registered secret is missing (or has no value), LTF exits with an error a
 
 ## Example
 
-[See project example](./../examples/secrets-example).
+[See project example](https://github.com/jayadamsmorgan/LTF/tree/master/examples/secrets-example).

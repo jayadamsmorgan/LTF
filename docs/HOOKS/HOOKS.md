@@ -108,4 +108,4 @@ Each hook receives a single argument: `context`, which has type `context_t`.
 
 ## Example
 
-[See project example](./../examples/hooks-example)
+[See project example](https://github.com/jayadamsmorgan/LTF/tree/master/examples/hooks-example)

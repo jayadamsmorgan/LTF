@@ -9,7 +9,7 @@ The `ltf` executable uses a command/sub-command structure.
 **Usage:**
 ```bash
 ltf <command> [sub-command] [arguments...] [options...]
-````
+```
 
 | Command                    | Description                                       |
 | :------------------------- | :------------------------------------------------ |
@@ -63,11 +63,13 @@ Executes the tests within the current project.
 
 **Usage:**
 
+* For Single-Target projects
 ```bash
-# For Single-Target projects
 ltf test [options...]
+```
 
-# For Multi-Target projects
+* For Multi-Target projects
+```
 ltf test <target_name> [options...]
 ```
 
@@ -79,26 +81,30 @@ ltf test <target_name> [options...]
 
 | Option                  | Alias | Description                                                                                                                                               |
 | :---------------------- | :---- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--log-level <level>`   | `-l`  | Sets the minimum log level to display in the TUI. Valid levels are `critical`, `error`, `warning`, `info`, `debug`, `trace`. See [Logging](./LOGGING.md). |
+| `--log-level <level>`   | `-l`  | Sets the minimum log level to display in the TUI. Valid levels are `critical`, `error`, `warning`, `info`, `debug`, `trace`. See [Logging](./TESTS/LOGGING.md). |
 | `--no-logs`             | `-n`  | Disables the creation of log files for this test run.                                                                                                     |
 | `--ltf-lib-path <path>` | `-p`  | Provide custom path to LTF Lua libraries location.                                                                                                        |
-| `--tags <tags>`         | `-t`  | Runs only tests that have at least one of the specified comma-separated tags. See [Tag System](./TAG-SYSTEM.md).                                          |
-| `--vars <vars>`         | `-v`  | Set one or more test variables as a comma-separated list of `name:value` pairs. See [Test Variables](./TEST_VARIABLES.md).                                |
-| `--scenario <file>`     | `-s`  | Run using a scenario JSON file (tags/vars/log settings/ordering). CLI flags still override scenario values. See [Test Scenarios](./TEST_SCENARIOS.md).    |
+| `--tags <tags>`         | `-t`  | Runs only tests that have at least one of the specified comma-separated tags. See [Tag System](./TESTS/TAG_SYSTEM.md).                                          |
+| `--vars <vars>`         | `-v`  | Set one or more test variables as a comma-separated list of `name:value` pairs. See [Test Variables](./TESTS/TEST_VARIABLES.md).                                |
+| `--scenario <file>`     | `-s`  | Run using a scenario JSON file (tags/vars/log settings/ordering). CLI flags still override scenario values. See [Test Scenarios](./TESTS/TEST_SCENARIOS.md).    |
 | `--internal-log`        | `-i`  | Dumps an internal LTF log file for advanced debugging.                                                                                                    |
 | `--headless`            | `-e`  | Runs LTF in "headless" mode (no TUI). Performs faster but without fancy TUI.                                                                              |
 | `--help`                | `-h`  | Displays the help message for the `test` command.                                                                                                         |
 
 ### Examples
 
+* Run all tests in a single-target project
 ```bash
-# Run all tests in a single-target project
 ltf test
+```
 
-# Run only smoke tests
+* Run only smoke tests
+```
 ltf test --tags smoke
+```
 
-# Run tests for a specific target in a multi-target project with a verbose log level
+* Run tests for a specific target in a multi-target project with a verbose log level
+```
 ltf test my_board_v2 -l debug
 ```
 
@@ -125,7 +131,7 @@ Notes:
 * Values are treated as strings on the CLI side.
 * Variable validation happens before any tests run (required vars must be provided; enums must match allowed values, etc.).
 
-See: [Test Variables](./TEST_VARIABLES.md)
+See: [Test Variables](./TESTS/TEST_VARIABLES.md)
 
 ---
 
@@ -147,7 +153,7 @@ Anything under `cmd` in the scenario can still be overridden with CLI flags. **C
 ltf test -s scenarios/scenario.json -v var1:new_value
 ```
 
-See: [Test Scenarios](./TEST_SCENARIOS.md)
+See: [Test Scenarios](./TESTS/TEST_SCENARIOS.md)
 
 ---
 

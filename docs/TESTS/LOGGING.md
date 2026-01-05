@@ -27,7 +27,7 @@ This file is a machine-readable JSON document containing a complete, structured 
 
 *   **Filename:** `test_run_[DATE]-[TIME]_raw.json`
 *   **Latest Symlink:** A symlink named `test_run_latest_raw.json` always points to the latest raw log.
-*   **Schema:** [The schema for the raw log format can be found here.](./raw_log_json_schema.json)
+*   **Schema:** [The schema for the raw log format can be found here.](../raw_log_json_schema.json)
 
 #### What’s inside `*_raw.json`
 

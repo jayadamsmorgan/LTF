@@ -1,0 +1,66 @@
+site_name: LTF
+site_url: https://jayadamsmorgan.github.io/LTF/ 
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.path
+    - navigation.top
+    - navigation.tabs
+    - navigation.sections
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - content.code.copy
+    - content.code.select
+    - navigation.tracking
+    - navigation.path
+    - content.action.edit
+    - content.action.view
+  icon:
+    repo: fontawesome/brands/github 
+    edit: material/pencil 
+    view: material/eye
+  palette:
+    scheme: slate
+    primary: black
+
+repo_url: https://github.com/jayadamsmorgan/LTF 
+repo_name: jayadamsmorgan/LTF
+extra:
+  social:
+    - icon: fontawesome/brands/github 
+      link: https://github.com/jayadamsmorgan/LTF 
+
+nav:
+  - Getting Started: index.md
+  - Project:
+      - Setup: PROJECT_SETUP.md
+  - CLI:
+      - Overview: CLI.md
+  - Hooks:
+      - Overview: HOOKS/HOOKS.md
+  - LTF Libraries: 
+      - Overview:  LTF_LIBS/index.md
+      - Core: LTF_LIBS/ltf.md
+      - Hooks: LTF_LIBS/ltf.hooks.md
+      - Utils: LTF_LIBS/ltf.util.md
+      - Http: LTF_LIBS/ltf.http.md
+      - Json: LTF_LIBS/ltf.json.md
+      - Proc: LTF_LIBS/ltf.proc.md
+      - Serial: LTF_LIBS/ltf.serial.md
+      - SSH: LTF_LIBS/ltf.ssh.md
+      - Webdriver: LTF_LIBS/ltf.webdriver.md
+  - Tests:
+      - Logging: TESTS/LOGGING.md
+      - Tags: TESTS/TAG_SYSTEM.md
+      - Description: TESTS/TEST_DESCRIPTION.md
+      - Overriding: TESTS/TEST_OVERRIDING.md
+      - Scenarios: TESTS/TEST_SCENARIOS.md
+      - Secrets: TESTS/TEST_SECRETS.md
+      - Teardown: TESTS/TEST_TEARDOWN.md
+      - Variables: TESTS/TEST_VARIABLES.md
+  - Formats:
+      - Raw log JSON schema: raw_log_json_schema.json
