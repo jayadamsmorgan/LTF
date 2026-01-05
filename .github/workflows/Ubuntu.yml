@@ -2,7 +2,7 @@ name: Ubuntu
 
 on:
   push:
-    branches: [ "master", "gh_actions" ]
+    branches: [ "master", "dev" , "gh_actions" ]
   pull_request:
   workflow_dispatch: 
 
