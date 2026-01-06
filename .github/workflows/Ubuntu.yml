@@ -34,7 +34,7 @@ jobs:
 
           for m in "${modules[@]}"; do
             echo "::group::module-$m"
-            ltf test selftest -t module-"$m" -e
+            ltf test selftest -t module-"$m" -e -v any=anyval,enum=value2
             STATUS=$?
             echo "::endgroup::"
 
