@@ -5,6 +5,7 @@
 #include <libssh2.h>
 #include <lua.h>
 #include <lualib.h>
+#include <util/da.h>
 
 typedef enum {
     SSH_AUTH_USERPASS,
@@ -26,7 +27,7 @@ typedef struct {
     union {
         l_ssh_session_auth_userpass_t userpass;
     };
-
+    da_t *active_channels;
 } l_ssh_session_t;
 
 #define SSH_SESSION_MT "ltf-ssh-session"

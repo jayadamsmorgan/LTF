@@ -4,6 +4,7 @@
 #include "modules/ssh/ltf-ssh-session.h"
 
 #include "internal_logging.h"
+#include "util/da.h"
 
 #include <lauxlib.h>
 #include <lua.h>
@@ -38,13 +39,18 @@ int l_module_ssh_channel_open_session(lua_State *L) {
 
     l_ssh_channel_t *u = lua_newuserdata(L, sizeof *u);
     u->channel = libssh2_channel_open_session(s->session);
-    u->session = s->session;
+    u->session = s;
     if (u->channel == NULL) {
-        int rc = libssh2_session_last_error(u->session, NULL, NULL, 0);
+        int rc = libssh2_session_last_error(u->session->session, NULL, NULL, 0);
         u->session = NULL;
         luaL_error(L, "libssh2_session_last_error failed with code: %s",
                    ssh_err_to_str(rc));
 
+        return 0;
+    }
+
+    if (!da_append(u->session->active_channels, &u)) {
+        luaL_error(L, "Out of memory");
         return 0;
     }
 
@@ -269,6 +275,24 @@ int l_module_ssh_channel_close(lua_State *L) {
         return 0;
     }
 
+    libssh2_channel_free(u->channel);
+    int cleanup = 0;
+    size_t size = da_size(u->session->active_channels);
+    for (size_t i = 0; i < size; ++i) {
+        l_ssh_channel_t **val = da_get(u->session->active_channels, i);
+        if (*val == u) {
+            da_remove(u->session->active_channels, i);
+            cleanup++;
+            size--;
+        }
+    }
+    if (cleanup != 1) {
+        luaL_error(L, "Something wrong with channels pointers");
+        return 0;
+    }
+
+    u->channel = NULL;
+    u->session = NULL;
     return 0;
 }
 
@@ -343,15 +367,22 @@ int l_channel_ssh_gc(lua_State *L) {
         return 0;
     }
 
-    l_module_ssh_channel_close(L);
-
-    int rc = libssh2_channel_free(u->channel);
-    if (rc) {
-        luaL_error(L, "libssh2_channel_free() failed with code: %s",
-                   ssh_err_to_str(rc));
+    if (!u->channel) {
         return 0;
     }
+    libssh2_channel_close(u->channel);
+
+    libssh2_channel_free(u->channel);
+
+    size_t size = da_size(u->session->active_channels);
+    for (size_t i = 0; i < size; ++i) {
+        l_ssh_channel_t **val = da_get(u->session->active_channels, i);
+        if (*val == u) {
+            da_remove(u->session->active_channels, i);
+        }
+    }
     u->channel = NULL;
+    u->session = NULL;
 
     return 0;
 }

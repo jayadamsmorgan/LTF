@@ -1,8 +1,11 @@
 #include "modules/ssh/ltf-ssh-session.h"
+// #include "modules/ssh/ltf-ssh-channel.h"
 
+#include "modules/ssh/ltf-ssh-channel.h"
 #include "modules/ssh/ltf-ssh-lib.h"
 
 #include "internal_logging.h"
+#include "util/da.h"
 
 #include <lauxlib.h>
 #include <lua.h>
@@ -70,6 +73,7 @@ int l_module_ssh_session_init_userpass(lua_State *L) {
     u->userpass.user = strdup(user);
     u->userpass.password = strdup(password);
 
+    u->active_channels = da_init(1, sizeof(l_ssh_channel_t *));
     luaL_getmetatable(L, SSH_SESSION_MT);
     lua_setmetatable(L, -2);
 
@@ -171,13 +175,26 @@ int l_module_ssh_session_close(lua_State *L) {
         return 1;
     }
 
-    if (u->sock_fd != -1) {
-        int res = l_module_ssh_session_disconnect(L);
-        if (res) {
-            return res;
+    // Check if there is no channels assigned to this session
+    size_t size = da_size(u->active_channels);
+    if (size != 0) {
+        for (size_t i = 0; i < size; ++i) {
+            LOG("First time?");
+            l_ssh_channel_t **val = da_get(u->active_channels, i);
+            int rc = libssh2_channel_close((*val)->channel);
+            if (rc) {
+                luaL_error(L, "libssh2_channel_close() failed with code: %s",
+                           ssh_err_to_str(rc));
+                return 0;
+            }
+
+            libssh2_channel_free((*val)->channel);
+            (*val)->channel = NULL;
+            (*val)->session = NULL;
         }
     }
 
+    da_free(u->active_channels);
     int rc = libssh2_session_free(u->session);
     if (rc) {
         lua_pushfstring(L, "libssh2_session_free failed with code: %s",
@@ -185,6 +202,12 @@ int l_module_ssh_session_close(lua_State *L) {
         return 1;
     }
 
+    if (u->sock_fd != -1) {
+        int res = l_module_ssh_session_disconnect(L);
+        if (res) {
+            return res;
+        }
+    }
     u->session = NULL;
     u->sock_fd = -1;
     u->port = -1;

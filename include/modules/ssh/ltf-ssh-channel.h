@@ -5,10 +5,11 @@
 #include <libssh2.h>
 #include <lua.h>
 #include <lualib.h>
+#include <modules/ssh/ltf-ssh-session.h>
 
 typedef struct {
     LIBSSH2_CHANNEL *channel;
-    LIBSSH2_SESSION *session;
+    l_ssh_session_t *session;
 } l_ssh_channel_t;
 
 #define SSH_CHANNEL_MT "ltf-ssh-channel"
