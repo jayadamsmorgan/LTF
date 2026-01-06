@@ -25,8 +25,10 @@ ltf.test({
 		local test = log_obj.tests[1]
 		check.check_test(test, "Test minimal webdriver possibilities", "PASSED")
 		check.test_tags(test, { "module-webdriver" })
-		check.error_if(#test.output ~= 2, test, "Outputs not match")
+		check.error_if(#test.output ~= 4, test, "Outputs not match")
 		check.check_output(test, test.output[1], "https://github.com/", "INFO")
 		check.check_output(test, test.output[2], "GitHub", "INFO", true)
+		check.check_output(test, test.output[3], "https://www.google.com/", "INFO", true)
+		check.check_output(test, test.output[4], "Google", "INFO", true)
 	end,
 })
