@@ -10,6 +10,7 @@
 
 #include <json.h>
 
+#include <stdio.h>
 #include <string.h>
 
 static ltf_log_level log_level;
@@ -118,6 +119,7 @@ void ltf_log_test_run_finished() {
     // Create 'latest' symlinks:
     project_parsed_t *proj = get_parsed_project();
     if (proj->multitarget) {
+        asprintf(&latest_log, "%s/test_run_latest_output.log", logs_dir);
         asprintf(&latest_raw, "%s/test_run_latest_raw.json", logs_dir);
     } else {
         asprintf(&latest_log, "%s/test_run_latest_output.log", logs_dir);
