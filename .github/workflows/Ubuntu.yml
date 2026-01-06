@@ -16,8 +16,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install unzip meson curl json-c lua libserialport libunistring libssh2 unibilium chromedriver google-chrome 
-
+          brew install meson curl json-c lua libserialport libunistring libssh2 unibilium
       - name: Build & Install
         run: |
           export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
