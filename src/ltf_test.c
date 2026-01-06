@@ -32,6 +32,7 @@
 #include <lua.h>
 #include <lualib.h>
 
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -150,6 +151,13 @@ static void run_deferred(lua_State *L, ltf_state_t *state, const char *status) {
     LOG("Finished running defer queue.");
 }
 
+static volatile bool sigint = false;
+
+static void on_sigint(int sig) {
+    (void)sig;
+    sigint = true;
+}
+
 static int run_all_tests(lua_State *L, ltf_state_t *state) {
     LOG("Running tests...");
 
@@ -234,6 +242,11 @@ static int run_all_tests(lua_State *L, ltf_state_t *state) {
         }
 
         run_deferred(L, state, rc == LUA_OK ? "passed" : "failed");
+
+        if (sigint) {
+            ltf_tui_deinit();
+            exit(130);
+        }
 
         ltf_hooks_run(L, LTF_HOOK_FN_TEST_FINISHED);
     }
@@ -523,8 +536,14 @@ int ltf_test() {
         goto deinit;
     }
 
-    if (!opts->headless && ltf_tui_init(state)) {
-        goto deinit;
+    if (!opts->headless) {
+        if (ltf_tui_init(state)) {
+            goto deinit;
+        }
+        struct sigaction sa = {0};
+        sa.sa_handler = on_sigint;
+        sigemptyset(&sa.sa_mask);
+        sigaction(SIGINT, &sa, NULL);
     }
 
     if (opts->headless) {

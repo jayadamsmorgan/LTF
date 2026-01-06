@@ -370,8 +370,6 @@ static int test_result_to_color(ltf_state_test_t *test) {
 static void render_ui(pico_t *ui, void *ud) {
     (void)ud;
 
-    pico_remove_cursor();
-
     ltf_tui_project_header_render(ui);
 
     ltf_tui_test_progress_render(ui);
@@ -683,7 +681,9 @@ int ltf_tui_init(ltf_state_t *state) {
     if (!ui)
         return 1;
     pico_attach(ui);
-    pico_install_sigint_handler(ui);
+
+    pico_remove_cursor();
+
     return 0;
 }
 
