@@ -81,7 +81,7 @@ lua_dep = dependency(
   lua_pc_names,
   method: 'pkg-config',
   required: true,
-  static: true,
+  static: false,
 )
 #----------------------------------------------------------------------
 
