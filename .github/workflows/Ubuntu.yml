@@ -74,7 +74,6 @@ jobs:
     if: github.ref == 'refs/heads/master'
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    needs: build-and-test 
     runs-on: self-hosted
     steps:
       - name: Check out
