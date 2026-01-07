@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch: 
 
+permissions:
+  contents: write  
+
 jobs:
   build-and-test:
     name: Build for Ubuntu
@@ -68,6 +71,8 @@ jobs:
 
   docs:
     name: Docs Build and Deploy
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     needs: build-and-test 
     runs-on: self-hosted
     steps:
