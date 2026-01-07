@@ -89,7 +89,8 @@ sudo apt install -y \
   libcurl4-openssl-dev \
   libunibilium-dev \
   libserialport-dev \
-  libssh2-1-dev
+  libssh2-1-dev \
+  libgpg-error-dev
 ```
 
 #### Fedora
