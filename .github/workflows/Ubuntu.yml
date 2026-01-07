@@ -16,11 +16,19 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install meson curl json-c lua libserialport libunistring libssh2 unibilium
+          sudo apt update
+          sudo apt install -y \
+            meson ninja-build pkg-config \
+            gcc clang \
+            lua5.4 liblua5.4-dev \
+            libjson-c-dev \
+            libcurl4-openssl-dev \
+            libunibilium-dev \
+            libserialport-dev \
+            libssh2-1-dev \
+            libgpg-error-dev
       - name: Build & Install
         run: |
-          export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
-          export PKG_CONFIG_PATH="/home/linuxbrew/.linuxbrew/lib/pkgconfig:/home/linuxbrew/.linuxbrew/share/pkgconfig"
           meson setup build
           meson install -C build
 
@@ -29,7 +37,7 @@ jobs:
         run: |
           cd selftest
           set +e
-          modules=(http json proc ltf webdriver)
+          modules=(http json proc ltf webdriver util)
           FAILED=0
 
           for m in "${modules[@]}"; do
