@@ -2,7 +2,7 @@ name: Ubuntu
 
 on:
   push:
-    branches: [ "master", "dev" , "gh_actions" ]
+    branches: [ "master", "dev"]
   pull_request:
   workflow_dispatch: 
 
@@ -71,6 +71,7 @@ jobs:
 
   docs:
     name: Docs Build and Deploy
+    if: github.ref == 'refs/heads/master'
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     needs: build-and-test 
