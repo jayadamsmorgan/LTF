@@ -1,0 +1,3033 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://jayadamsmorgan.github.io/LTF/LTF_LIBS/ltf.webdriver/">
+      
+      
+        <link rel="prev" href="../ltf.ssh/">
+      
+      
+        <link rel="next" href="../../TESTS/LOGGING/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Webdriver - LTF</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#web-browser-automation-ltfwebdriver" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="LTF" class="md-header__button md-logo" aria-label="LTF" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            LTF
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Webdriver
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jayadamsmorgan/LTF" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jayadamsmorgan/LTF
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../PROJECT_SETUP/" class="md-tabs__link">
+          
+  
+  
+  Project
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../CLI/" class="md-tabs__link">
+          
+  
+  
+  CLI
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../HOOKS/HOOKS/" class="md-tabs__link">
+          
+  
+  
+  Hooks
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  LTF Libraries
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../TESTS/LOGGING/" class="md-tabs__link">
+          
+  
+  
+  Tests
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../raw_log_json_schema.json" class="md-tabs__link">
+          
+  
+  
+  Formats
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="LTF" class="md-nav__button md-logo" aria-label="LTF" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    LTF
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jayadamsmorgan/LTF" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jayadamsmorgan/LTF
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PROJECT_SETUP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    CLI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CLI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../HOOKS/HOOKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTF Libraries
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    LTF Libraries
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ltf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ltf.hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ltf.util/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ltf.http/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Http
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ltf.json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Json
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ltf.proc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ltf.serial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serial
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ltf.ssh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSH
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webdriver
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webdriver
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting started
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Session management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ltfwebdrivernew_sessionopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ltf.webdriver.new_session(opts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionclose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:close()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-session-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The session object
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The session object">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#browser-navigation-session-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browser navigation (session methods)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Browser navigation (session methods)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sessionopen_urlurl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:open_url(url)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionget_current_url-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:get_current_url() -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionget_title-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:get_title() -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessiongo_back" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:go_back()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessiongo_forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:go_forward()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionrefresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:refresh()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionresize_windowopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:resize_window(opts?)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-and-interacting-with-elements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding and interacting with elements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding and interacting with elements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sessionfind_elementopts-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:find_element(opts) -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionfind_elementsopts-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:find_elements(opts) -&gt; string[]
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionclickelement_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:click(element_id)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionget_textelement_id-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:get_text(element_id) -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionsend_keysopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:send_keys(opts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessioninput_textopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:input_text(opts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionwait_until_visibleopts-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:wait_until_visible(opts) -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionscroll_into_viewelement_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:scroll_into_view(element_id)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessiondrag_and_dropopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:drag_and_drop(opts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sessionexecuteopts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:execute(opts) -&gt; table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionscreenshot-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:screenshot() -&gt; string?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessioncmdopts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:cmd(opts) -&gt; table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-structures-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data structures &amp; types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data structures &amp; types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wd_spawn_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_spawn_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_cmd_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_cmd_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_find_elements_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_find_elements_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_send_keys_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_send_keys_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_input_text_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_input_text_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_wait_until_visible_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_wait_until_visible_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_drag_and_drop_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_drag_and_drop_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_execute_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_execute_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#low-level-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Low-level notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tests
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tests
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTS/LOGGING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTS/TAG_SYSTEM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTS/TEST_DESCRIPTION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Description
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTS/TEST_OVERRIDING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overriding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTS/TEST_SCENARIOS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenarios
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTS/TEST_SECRETS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Secrets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTS/TEST_TEARDOWN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Teardown
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTS/TEST_VARIABLES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formats
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Formats
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../raw_log_json_schema.json" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Raw log JSON schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting started
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Session management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ltfwebdrivernew_sessionopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ltf.webdriver.new_session(opts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionclose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:close()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-session-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The session object
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The session object">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#browser-navigation-session-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browser navigation (session methods)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Browser navigation (session methods)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sessionopen_urlurl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:open_url(url)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionget_current_url-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:get_current_url() -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionget_title-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:get_title() -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessiongo_back" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:go_back()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessiongo_forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:go_forward()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionrefresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:refresh()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionresize_windowopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:resize_window(opts?)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-and-interacting-with-elements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding and interacting with elements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding and interacting with elements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sessionfind_elementopts-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:find_element(opts) -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionfind_elementsopts-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:find_elements(opts) -&gt; string[]
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionclickelement_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:click(element_id)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionget_textelement_id-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:get_text(element_id) -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionsend_keysopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:send_keys(opts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessioninput_textopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:input_text(opts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionwait_until_visibleopts-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:wait_until_visible(opts) -&gt; string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionscroll_into_viewelement_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:scroll_into_view(element_id)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessiondrag_and_dropopts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:drag_and_drop(opts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sessionexecuteopts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:execute(opts) -&gt; table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionscreenshot-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:screenshot() -&gt; string?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessioncmdopts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        session:cmd(opts) -&gt; table
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-structures-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data structures &amp; types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data structures &amp; types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wd_spawn_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_spawn_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_cmd_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_cmd_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_find_elements_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_find_elements_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_send_keys_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_send_keys_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_input_text_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_input_text_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_wait_until_visible_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_wait_until_visible_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_drag_and_drop_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_drag_and_drop_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wd_session_execute_opts-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wd_session_execute_opts (table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#low-level-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Low-level notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    LTF Libraries
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/jayadamsmorgan/LTF/edit/master/docs/LTF_LIBS/ltf.webdriver.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/jayadamsmorgan/LTF/raw/master/docs/LTF_LIBS/ltf.webdriver.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5"/></svg>
+    </a>
+  
+
+
+<h1 id="web-browser-automation-ltfwebdriver">Web Browser Automation (<code>ltf.webdriver</code>)</h1>
+<p><code>ltf.webdriver</code> provides a W3C WebDriver client for automating browsers through a running WebDriver server (for example <code>chromedriver</code>, <code>geckodriver</code>). It helps you:</p>
+<ul>
+<li>spawn a driver process (<code>webdriver.spawn_webdriver</code>)</li>
+<li>start a browser session (<code>webdriver.new_session</code>)</li>
+<li>drive the browser via a <code>session</code> object (navigation, element actions, JS execution, screenshots, etc.)</li>
+<li>close the session (<code>session:close()</code>)</li>
+</ul>
+<blockquote>
+<p>This module is a <strong>client</strong>. You must have a WebDriver server binary installed (and typically available in your PATH), or provide an explicit executable path.</p>
+</blockquote>
+<hr />
+<h2 id="getting-started">Getting started</h2>
+<p><code>webdriver</code> is exposed as a submodule of <code>ltf</code>:</p>
+<pre><code class="language-lua">local ltf = require(&quot;ltf&quot;)
+local webdriver = ltf.webdriver
+````
+
+Typical flow:
+
+1. Spawn a WebDriver server process.
+2. Start a session (opens a browser).
+3. Interact with pages/elements.
+4. Close the session and kill the driver.
+
+---
+
+## Driver management
+
+### `ltf.webdriver.spawn_webdriver(opts)`
+
+Spawns a WebDriver server process listening on the given port.
+
+**Parameters:**
+
+* `opts` (`wd_spawn_opts`):
+
+  * `port` (`integer`, required): port for the driver to listen on
+  * `webdriver` (`string|webdriver`, optional): executable path/name. Default: `&quot;chromedriver&quot;`.
+  * `extraflags` (`string[]`, optional): additional CLI flags passed to the driver
+
+**Returns:**
+
+* (`proc_handle`): process handle (from `ltf.proc.spawn()`)
+
+**Notes:**
+
+* `spawn_webdriver` always injects the port flag by appending `--port=&lt;port&gt;` to the driver arguments.
+  Avoid passing your own `--port=...` in `extraflags` unless you want duplicates.
+
+**Example:**
+
+```lua
+local ltf = require(&quot;ltf&quot;)
+local webdriver = ltf.webdriver
+
+local driver = webdriver.spawn_webdriver({
+  webdriver = &quot;chromedriver&quot;,
+  port = 9515,
+})
+
+-- Always clean up the driver process
+ltf.defer(driver.kill, driver)
+</code></pre>
+<hr />
+<h2 id="session-management">Session management</h2>
+<h3 id="ltfwebdrivernew_sessionopts"><code>ltf.webdriver.new_session(opts)</code></h3>
+<p>Connects to the WebDriver server and starts a new browser session (which opens a browser window).</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<p><code>opts</code> (<code>wd_session_opts</code>):</p>
+</li>
+<li>
+<p><code>port</code> (<code>integer</code>, required): WebDriver server port</p>
+</li>
+<li><code>url</code> (<code>string</code>, optional): server URL. Default: <code>"http://localhost"</code>.</li>
+<li><code>request_object</code> (<code>table</code>, optional): full JSON body for the <code>POST /session</code> request (advanced)</li>
+<li><code>headless</code> (<code>boolean</code>, optional): create session in headless mode. Default: <code>false</code>.</li>
+<li><code>headless_implementation</code> (<code>webdriver</code>, optional): which driver’s default headless caps to apply.
+    Default: <code>"chromedriver"</code>. Supported defaults: <code>"chromedriver"</code>, <code>"operadriver"</code>, <code>"geckodriver"</code>, <code>"msedgedriver"</code>.</li>
+</ul>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>(<code>wd_session</code>): session object (methods below)</li>
+</ul>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>If <code>opts.request_object</code> is provided, it is used as the base JSON request body, then normalized into W3C <code>capabilities</code> shape.</li>
+<li>For older drivers, <code>desiredCapabilities</code> (if provided in <code>request_object</code>) is preserved.</li>
+<li>
+<p>If <code>opts.headless = true</code>, the module injects common headless flags into capabilities for supported implementations:</p>
+</li>
+<li>
+<p>Chrome/Opera: adds <code>--headless=new</code> and <code>--disable-gpu</code> into <code>goog:chromeOptions.args</code></p>
+</li>
+<li>Firefox: adds <code>-headless</code> into <code>moz:firefoxOptions.args</code></li>
+<li>Edge: adds <code>--headless=new</code> and <code>--disable-gpu</code> into <code>ms:edgeOptions.args</code></li>
+</ul>
+<h3 id="sessionclose"><code>session:close()</code></h3>
+<p>Ends the session (closes the browser).</p>
+<p><strong>Common pattern:</strong></p>
+<pre><code class="language-lua">local session = webdriver.new_session({ port = 9515 })
+ltf.defer(session.close, session)
+</code></pre>
+<hr />
+<h2 id="the-session-object">The <code>session</code> object</h2>
+<p>The <code>session</code> returned by <code>webdriver.new_session()</code> is your handle to a browser instance.</p>
+<h3 id="fields">Fields</h3>
+<ul>
+<li><code>base_url</code> (<code>string</code>)</li>
+<li><code>port</code> (<code>integer</code>)</li>
+<li><code>id</code> (<code>string</code>): session id</li>
+<li><code>headless</code> (<code>boolean</code>): true if created with <code>opts.headless = true</code></li>
+</ul>
+<h3 id="error-behavior">Error behavior</h3>
+<p>Some helpers surface WebDriver errors as Lua errors (notably: <code>new_session</code>, <code>click</code>, <code>send_keys</code>, <code>resize_window</code>, <code>wait_until_visible</code>).
+If you want to handle failures without aborting the test, wrap calls in <code>pcall</code>.</p>
+<hr />
+<h2 id="browser-navigation-session-methods">Browser navigation (session methods)</h2>
+<h3 id="sessionopen_urlurl"><code>session:open_url(url)</code></h3>
+<p>Navigates to <code>url</code>.</p>
+<h3 id="sessionget_current_url-string"><code>session:get_current_url() -&gt; string</code></h3>
+<p>Returns the current page URL.</p>
+<h3 id="sessionget_title-string"><code>session:get_title() -&gt; string</code></h3>
+<p>Returns the current page title.</p>
+<h3 id="sessiongo_back"><code>session:go_back()</code></h3>
+<p>Back in history.</p>
+<h3 id="sessiongo_forward"><code>session:go_forward()</code></h3>
+<p>Forward in history.</p>
+<h3 id="sessionrefresh"><code>session:refresh()</code></h3>
+<p>Reloads the page.</p>
+<h3 id="sessionresize_windowopts"><code>session:resize_window(opts?)</code></h3>
+<p>Resizes the browser window.</p>
+<ul>
+<li>If <code>opts</code> is <code>nil</code>: maximizes the window.</li>
+<li>If provided: <code>{ width = number, height = number }</code></li>
+</ul>
+<p>If the driver returns an error response, <code>resize_window</code> throws a Lua error.</p>
+<hr />
+<h2 id="finding-and-interacting-with-elements">Finding and interacting with elements</h2>
+<h3 id="sessionfind_elementopts-string"><code>session:find_element(opts) -&gt; string</code></h3>
+<p>Finds the first matching element.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<p><code>opts</code> (<code>wd_session_find_elements_opts</code>):</p>
+</li>
+<li>
+<p><code>using</code> (<code>string</code>): <code>"css selector"</code>, <code>"xpath"</code>, etc.</p>
+</li>
+<li><code>value</code> (<code>string</code>): selector value</li>
+</ul>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>(<code>string</code>): <code>element_id</code></li>
+</ul>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Element IDs are extracted using the W3C element key
+  <code>"element-6066-11e4-a52e-4f735466cecf"</code> and fall back to legacy <code>"ELEMENT"</code> if needed.</li>
+</ul>
+<h3 id="sessionfind_elementsopts-string"><code>session:find_elements(opts) -&gt; string[]</code></h3>
+<p>Finds all matching elements (returns array of <code>element_id</code>).</p>
+<h3 id="sessionclickelement_id"><code>session:click(element_id)</code></h3>
+<p>Clicks the element.</p>
+<p>Throws a Lua error if the driver returns an error response.</p>
+<h3 id="sessionget_textelement_id-string"><code>session:get_text(element_id) -&gt; string</code></h3>
+<p>Gets visible text for the element.</p>
+<h3 id="sessionsend_keysopts"><code>session:send_keys(opts)</code></h3>
+<p>Sends keystrokes to an element.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<p><code>opts</code> (<code>wd_session_send_keys_opts</code>):</p>
+</li>
+<li>
+<p><code>element_id</code> (<code>string</code>)</p>
+</li>
+<li><code>text</code> (<code>string</code>)</li>
+</ul>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Uses W3C <code>text</code> and includes a legacy <code>value</code> array of characters for compatibility.</li>
+</ul>
+<p>Throws a Lua error if the driver returns an error response.</p>
+<h3 id="sessioninput_textopts"><code>session:input_text(opts)</code></h3>
+<p>Convenience helper: clears the element (by default) and then sends keys.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<p><code>opts</code> (<code>wd_session_input_text_opts</code>):</p>
+</li>
+<li>
+<p><code>element_id</code> (<code>string</code>)</p>
+</li>
+<li><code>text</code> (<code>string</code>)</li>
+<li><code>clear_first</code> (<code>boolean</code>, optional, default: <code>true</code>)</li>
+</ul>
+<h3 id="sessionwait_until_visibleopts-string"><code>session:wait_until_visible(opts) -&gt; string</code></h3>
+<p>Polls until an element is visible (or times out). Returns the element id.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<p><code>opts</code> (<code>wd_session_wait_until_visible_opts</code>):</p>
+</li>
+<li>
+<p><code>using</code> (<code>string</code>)</p>
+</li>
+<li><code>value</code> (<code>string</code>)</li>
+<li><code>timeout</code> (<code>integer</code>, optional, default: <code>5000</code>)</li>
+</ul>
+<p><strong>Behavior:</strong></p>
+<ul>
+<li>Repeatedly calls <code>find_element</code> and then polls the element <code>.../displayed</code> endpoint until it becomes visible.</li>
+<li>Throws a Lua error on timeout.</li>
+</ul>
+<h3 id="sessionscroll_into_viewelement_id"><code>session:scroll_into_view(element_id)</code></h3>
+<p>Scrolls an element into view via JavaScript <code>scrollIntoView</code>.</p>
+<h3 id="sessiondrag_and_dropopts"><code>session:drag_and_drop(opts)</code></h3>
+<p>Drag-and-drop using W3C Actions with a single mouse pointer device.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<p><code>opts</code> (<code>wd_session_drag_and_drop_opts</code>):</p>
+</li>
+<li>
+<p><code>source_id</code> (<code>string</code>): element to grab</p>
+</li>
+<li><code>target_id</code> (<code>string</code>): element to drop on</li>
+</ul>
+<hr />
+<h2 id="advanced-usage">Advanced usage</h2>
+<h3 id="sessionexecuteopts-table"><code>session:execute(opts) -&gt; table</code></h3>
+<p>Executes synchronous JS (<code>POST /execute/sync</code>).</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<p><code>opts</code> (<code>wd_session_execute_opts</code>):</p>
+</li>
+<li>
+<p><code>script</code> (<code>string</code>): JS source</p>
+</li>
+<li><code>args</code> (<code>table</code>, optional): array of arguments</li>
+</ul>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>To pass an element as an argument, provide a W3C element reference object:
+  <code>{ ["element-6066-11e4-a52e-4f735466cecf"] = element_id }</code></li>
+</ul>
+<h3 id="sessionscreenshot-string"><code>session:screenshot() -&gt; string?</code></h3>
+<p>Returns a full-page screenshot as base64 PNG (driver-dependent).</p>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>(<code>string?</code>): base64 PNG on success, or <code>nil</code> if not available.</li>
+</ul>
+<p><strong>Note:</strong></p>
+<ul>
+<li>Most drivers return a base64 string. If the driver returns an unusual error shape, you may get a non-string <code>value</code>.
+  Use <code>pcall</code> if you want to handle driver quirks gracefully.</li>
+</ul>
+<h3 id="sessioncmdopts-table"><code>session:cmd(opts) -&gt; table</code></h3>
+<p>Low-level helper to call arbitrary WebDriver session endpoints.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<p><code>opts</code> (<code>wd_session_cmd_opts</code>):</p>
+</li>
+<li>
+<p><code>method</code> (<code>api_method</code>): <code>"GET"|"POST"|"PUT"|"DELETE"</code> (case-insensitive)</p>
+</li>
+<li><code>endpoint</code> (<code>string</code>): endpoint suffix after <code>/session/&lt;id&gt;/</code> (examples: <code>"url"</code>, <code>"element"</code>, <code>"actions"</code>, <code>"execute/sync"</code>)</li>
+<li><code>payload</code> (<code>table</code>, optional): payload (used for POST/PUT; ignored for GET/DELETE)</li>
+</ul>
+<p><strong>Returns:</strong></p>
+<ul>
+<li>(<code>table</code>): decoded JSON response (typically with a <code>value</code> field)</li>
+</ul>
+<p><strong>Important:</strong></p>
+<ul>
+<li><code>endpoint</code> should be a suffix like <code>"url"</code> — do <strong>not</strong> include <code>/session/&lt;id&gt;/</code> in it.</li>
+</ul>
+<hr />
+<h2 id="full-example">Full example</h2>
+<pre><code class="language-lua">local ltf = require(&quot;ltf&quot;)
+local webdriver = ltf.webdriver
+
+ltf.test({
+  name = &quot;Google Search with WebDriver&quot;,
+  tags = { &quot;e2e&quot;, &quot;smoke&quot; },
+  body = function()
+    -- 1) Spawn driver
+    ltf.log_info(&quot;Spawning chromedriver on port 9515...&quot;)
+    local driver = webdriver.spawn_webdriver({
+      webdriver = &quot;chromedriver&quot;,
+      port = 9515,
+    })
+    ltf.defer(driver.kill, driver)
+
+    -- Give the driver a moment to start
+    ltf.sleep(2000)
+
+    -- 2) Start session
+    ltf.log_info(&quot;Starting new browser session...&quot;)
+    local session = webdriver.new_session({
+      port = 9515,
+      headless = false, -- set true for headless mode
+    })
+    ltf.defer(session.close, session)
+
+    -- 3) Interact
+    session:open_url(&quot;https://www.google.com&quot;)
+    ltf.log_info(&quot;Opened google.com. Title:&quot;, session:get_title())
+
+    local search_box = session:wait_until_visible({
+      using = &quot;css selector&quot;,
+      value = &quot;textarea[name='q']&quot;,
+      timeout = 5000,
+    })
+
+    session:input_text({
+      element_id = search_box,
+      text = &quot;Test Automation Framework&quot;,
+      clear_first = true,
+    })
+
+    -- Most stable: submit with Enter (instead of chasing dynamic button selectors)
+    session:send_keys({
+      element_id = search_box,
+      text = &quot;\n&quot;,
+    })
+
+    ltf.sleep(3000)
+
+    local new_title = session:get_title()
+    ltf.log_info(&quot;Results page title:&quot;, new_title)
+    if not new_title:find(&quot;Test Automation Framework&quot;) then
+      ltf.log_error(&quot;Page title did not update as expected.&quot;)
+    end
+  end,
+})
+</code></pre>
+<hr />
+<h2 id="data-structures-types">Data structures &amp; types</h2>
+<h3 id="wd_spawn_opts-table"><code>wd_spawn_opts</code> (table)</h3>
+<ul>
+<li><code>webdriver</code> (<code>string|webdriver</code>, optional): executable path/name. Default: <code>"chromedriver"</code></li>
+<li><code>port</code> (<code>integer</code>, required)</li>
+<li><code>extraflags</code> (<code>string[]</code>, optional): extra CLI flags passed to the driver (port flag is appended automatically)</li>
+</ul>
+<h3 id="wd_session_opts-table"><code>wd_session_opts</code> (table)</h3>
+<ul>
+<li><code>port</code> (<code>integer</code>, required)</li>
+<li><code>url</code> (<code>string</code>, optional): default <code>"http://localhost"</code></li>
+<li><code>request_object</code> (<code>table</code>, optional): raw <code>POST /session</code> request body</li>
+<li><code>headless</code> (<code>boolean</code>, optional): default <code>false</code></li>
+<li><code>headless_implementation</code> (<code>webdriver</code>, optional): default <code>"chromedriver"</code>.
+  Supported defaults: <code>"chromedriver"</code>, <code>"operadriver"</code>, <code>"geckodriver"</code>, <code>"msedgedriver"</code>.</li>
+</ul>
+<h3 id="wd_session_cmd_opts-table"><code>wd_session_cmd_opts</code> (table)</h3>
+<ul>
+<li><code>method</code> (<code>api_method</code>): <code>"GET"|"POST"|"PUT"|"DELETE"</code> (case-insensitive)</li>
+<li><code>endpoint</code> (<code>string</code>): endpoint suffix after <code>/session/&lt;id&gt;/</code></li>
+<li><code>payload</code> (<code>table</code>, optional): payload for POST/PUT</li>
+</ul>
+<h3 id="wd_session_find_elements_opts-table"><code>wd_session_find_elements_opts</code> (table)</h3>
+<ul>
+<li><code>using</code> (<code>string</code>): <code>"css selector"</code>, <code>"xpath"</code>, etc.</li>
+<li><code>value</code> (<code>string</code>)</li>
+</ul>
+<h3 id="wd_session_send_keys_opts-table"><code>wd_session_send_keys_opts</code> (table)</h3>
+<ul>
+<li><code>element_id</code> (<code>string</code>)</li>
+<li><code>text</code> (<code>string</code>)</li>
+</ul>
+<h3 id="wd_session_input_text_opts-table"><code>wd_session_input_text_opts</code> (table)</h3>
+<ul>
+<li><code>element_id</code> (<code>string</code>)</li>
+<li><code>text</code> (<code>string</code>)</li>
+<li><code>clear_first</code> (<code>boolean</code>, optional, default: <code>true</code>)</li>
+</ul>
+<h3 id="wd_session_wait_until_visible_opts-table"><code>wd_session_wait_until_visible_opts</code> (table)</h3>
+<ul>
+<li><code>using</code> (<code>string</code>)</li>
+<li><code>value</code> (<code>string</code>)</li>
+<li><code>timeout</code> (<code>integer</code>, optional, default: <code>5000</code>)</li>
+</ul>
+<h3 id="wd_session_drag_and_drop_opts-table"><code>wd_session_drag_and_drop_opts</code> (table)</h3>
+<ul>
+<li><code>source_id</code> (<code>string</code>)</li>
+<li><code>target_id</code> (<code>string</code>)</li>
+</ul>
+<h3 id="wd_session_execute_opts-table"><code>wd_session_execute_opts</code> (table)</h3>
+<ul>
+<li><code>script</code> (<code>string</code>)</li>
+<li><code>args</code> (<code>table</code>, optional)</li>
+</ul>
+<hr />
+<h2 id="low-level-notes">Low-level notes</h2>
+<ul>
+<li>Element IDs are extracted using the W3C element key:
+  <code>"element-6066-11e4-a52e-4f735466cecf"</code>, with fallback to legacy <code>"ELEMENT"</code>.</li>
+<li>Driver errors are surfaced as Lua errors in helpers like <code>click</code>, <code>send_keys</code>, <code>resize_window</code>, <code>wait_until_visible</code>, and session creation.</li>
+<li><code>session:cmd()</code> is the escape hatch for anything not wrapped by higher-level helpers.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../ltf.ssh/" class="md-footer__link md-footer__link--prev" aria-label="Previous: SSH">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                SSH
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../TESTS/LOGGING/" class="md-footer__link md-footer__link--next" aria-label="Next: Logging">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Logging
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/jayadamsmorgan/LTF" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.path", "navigation.top", "navigation.tabs", "navigation.sections", "navigation.footer", "toc.follow", "search.suggest", "content.code.copy", "content.code.select", "navigation.tracking", "navigation.path", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
