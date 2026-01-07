@@ -29,8 +29,9 @@ jobs:
             libgpg-error-dev
       - name: Build & Install
         run: |
-          meson setup build
-          meson install -C build
+          meson setup build -Dbuildtype=release -Dltf_dir_path="$PWD"
+          meson compile -C build
+          ./build/ltf --version
 
       - name: Self-Tests
         id: run_test
@@ -42,7 +43,7 @@ jobs:
 
           for m in "${modules[@]}"; do
             echo "::group::module-$m"
-            ltf test selftest -t module-"$m" -e -v any=anyval,enum=value2
+            ../../build/ltf test selftest -t module-"$m" -e -v any=anyval,enum=value2
             STATUS=$?
             echo "::endgroup::"
 
