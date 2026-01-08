@@ -6,10 +6,10 @@
 
 typedef struct {
     char *project_name;
-    char *min_taf_ver_str;
-    int min_taf_ver_major;
-    int min_taf_ver_minor;
-    int min_taf_ver_patch;
+    char *min_ltf_ver_str;
+    int min_ltf_ver_major;
+    int min_ltf_ver_minor;
+    int min_ltf_ver_patch;
 
     char *project_path;
 

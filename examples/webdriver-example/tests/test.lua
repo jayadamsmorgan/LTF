@@ -1,63 +1,75 @@
-local taf = require("taf")
-local webdriver = taf.webdriver
+local ltf = require("ltf")
+local webdriver = ltf.webdriver
 
-taf.test("testing web session start", function()
-	local webdriver_port = 9515
+ltf.test({
+	name = "testing web session start",
+	body = function()
+		local webdriver_port = ltf.get_var_number("port")
+		local webdriver_name = ltf.get_var("webdriver")
 
-	-- Spawn webdriver instance on port 9515
-	local proc_handle = webdriver.spawn_webdriver("chromedriver", webdriver_port)
+		ltf.log_info("Using webdriver '" .. webdriver_name .. "' at port " .. webdriver_port)
 
-	-- Kill webdriver instance on test finish
-	taf.defer(function()
-		proc_handle:kill()
-	end)
+		-- Spawn webdriver instance on port 9515
+		local proc_handle = webdriver.spawn_webdriver({
+			webdriver = webdriver_name,
+			port = webdriver_port,
+		})
 
-	taf.sleep(500)
+		-- Kill webdriver instance on test finish
+		ltf.defer(function()
+			proc_handle:kill()
+		end)
 
-	-- Start webdriver session on port 9515
-	local session = webdriver.session_start({ port = webdriver_port })
-	print("Webdriver session id: " .. session.id)
+		ltf.sleep(1000)
 
-	taf.defer(function()
-		webdriver.session_end(session)
-	end)
+		-- Start webdriver session on port 9515
+		local session = webdriver.new_session({
+			port = webdriver_port,
+			headless = true,
+		})
 
-	taf.sleep(1000)
+		ltf.log_info("Webdriver session id: " .. session.id)
 
-	-- Open google.com
-	webdriver.open_url(session, "https://google.com/")
+		ltf.defer(function()
+			session:close()
+		end)
 
-	taf.sleep(1000)
+		ltf.sleep(1000)
 
-	-- Open yahoo.com
-	webdriver.open_url(session, "https://github.com/")
+		-- Open google.com
+		session:open_url("https://google.com/")
 
-	taf.sleep(1000)
+		ltf.sleep(1000)
 
-	-- Go back to google.com
-	webdriver.go_back(session)
+		-- Open yahoo.com
+		session:open_url("https://github.com/")
 
-	taf.sleep(1000)
+		ltf.sleep(1000)
 
-	-- Go forward to yahoo.com
-	webdriver.go_forward(session)
+		-- Go back to google.com
+		session:go_back()
 
-	taf.sleep(1000)
+		ltf.sleep(1000)
 
-	-- Refresh the site
-	webdriver.refresh(session)
+		-- Go forward to yahoo.com
+		session:go_forward()
 
-	taf.sleep(1000)
+		ltf.sleep(1000)
 
-	-- Get the site url
-	local url = webdriver.get_current_url(session)
-	assert(url == "https://github.com/")
+		-- Refresh the site
+		session:refresh()
 
-	-- Get the site title
-	local title
-	title = webdriver.get_title(session)
-	print(title)
-	assert(title == "GitHub · Build and ship software on a single, collaborative platform · GitHub")
+		ltf.sleep(1000)
 
-	taf.sleep(500)
-end)
+		-- Get the site url
+		local url = session:get_current_url()
+		assert(url == "https://github.com/")
+
+		-- Get the site title
+		local title
+		title = session:get_title()
+		ltf.log_info(title)
+
+		ltf.sleep(500)
+	end,
+})

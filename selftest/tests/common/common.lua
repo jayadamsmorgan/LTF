@@ -1,5 +1,9 @@
-local taf = require("taf")
+local ltf = require("ltf")
 
-taf.test("Test common TAF test", { "common" }, function()
-	taf.log_info("common")
-end)
+ltf.test({
+	name = "Test common LTF test",
+	tags = { "common" },
+	body = function()
+		ltf.log_info("common")
+	end,
+})

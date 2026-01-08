@@ -1,9 +1,17 @@
-local M = {}
+local ltf = require("ltf")
 
-M.port_name = "/dev/cu.usbmodem2102"
-M.baudrate = 1500000
-M.bits = 8
-M.parity = "none"
-M.stopbits = 1
-
-return M
+ltf.register_vars({
+	port_name = {},
+	baudrate = {
+		default = "1500000",
+	},
+	bits = {
+		default = "8",
+	},
+	parity = {
+		default = "none",
+	},
+	stopbits = {
+		default = "1",
+	},
+})

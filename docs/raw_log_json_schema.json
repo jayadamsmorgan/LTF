@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ltf.dev/schemas/test-run-raw-log.schema.json",
+  "title": "LTF Raw Test Run Log",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "project_name",
+    "ltf_version",
+    "os",
+    "os_version",
+    "started",
+    "finished",
+    "target",
+    "variables",
+    "tags",
+    "tests",
+    "total_amount",
+    "passed_amount",
+    "failed_amount",
+    "finished_amount"
+  ],
+  "properties": {
+    "project_name": { "type": "string", "minLength": 1 },
+    "ltf_version": { "type": "string", "minLength": 1 },
+
+    "os": { "type": "string", "minLength": 1 },
+    "os_version": { "type": "string", "minLength": 1 },
+
+    "started": { "$ref": "#/$defs/ltf_datetime" },
+    "finished": { "$ref": "#/$defs/ltf_datetime" },
+
+    "target": { "type": "string", "minLength": 1 },
+
+    "variables": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+
+    "tests": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/test_entry" }
+    },
+
+    "total_amount": { "type": "integer", "minimum": 0 },
+    "passed_amount": { "type": "integer", "minimum": 0 },
+    "failed_amount": { "type": "integer", "minimum": 0 },
+    "finished_amount": { "type": "integer", "minimum": 0 }
+  },
+
+  "$defs": {
+    "ltf_datetime": {
+      "type": "string",
+      "description": "LTF timestamp (typically MM.DD.YY-HH:MM:SS).",
+      "pattern": "^[0-9]{2}\\.[0-9]{2}\\.[0-9]{2}-[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+    },
+
+    "log_level": {
+      "type": "string",
+      "enum": ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"]
+    },
+
+    "test_status": {
+      "type": "string",
+      "description": "Test final status.",
+      "enum": ["PASSED", "FAILED"]
+    },
+
+    "test_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "line", "date_time", "level", "msg"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "line": { "type": "integer", "minimum": 1 },
+        "date_time": { "$ref": "#/$defs/ltf_datetime" },
+        "level": { "$ref": "#/$defs/log_level" },
+        "msg": { "type": "string" }
+      }
+    },
+
+    "test_keyword": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "started", "finished", "file", "line", "children"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "started": { "$ref": "#/$defs/ltf_datetime" },
+        "finished": { "$ref": "#/$defs/ltf_datetime" },
+        "file": { "type": "string", "minLength": 1 },
+        "line": { "type": "integer", "minimum": 1 },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/test_keyword" }
+        }
+      }
+    },
+
+    "test_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "started",
+        "finished",
+        "status",
+        "tags",
+        "failure_reasons",
+        "output",
+        "teardown_output",
+        "teardown_errors",
+        "keywords"
+      ],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "started": { "$ref": "#/$defs/ltf_datetime" },
+        "finished": { "$ref": "#/$defs/ltf_datetime" },
+
+        "status": { "$ref": "#/$defs/test_status" },
+
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+
+        "failure_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/test_output" }
+        },
+
+        "output": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/test_output" }
+        },
+
+        "teardown_output": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/test_output" }
+        },
+
+        "teardown_errors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/test_output" }
+        },
+
+        "keywords": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/test_keyword" }
+        }
+      }
+    }
+  }
+}

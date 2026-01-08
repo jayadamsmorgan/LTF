@@ -1,34 +1,53 @@
-local taf = require("taf")
-local serial = taf.serial
-local vars = require("variables")
+local ltf = require("ltf")
+local serial = ltf.serial
 
-taf.test("List serial devices", { "tag1", "tag2" }, function()
-	local devices = serial.list_devices()
-	for i, device in ipairs(devices) do
-		print("[" .. i .. "]: Found device: ", device.path, device.type, device.description)
-	end
-end)
+local port_name = ltf.get_var("port_name")
+local baudrate = ltf.get_var_number("baudrate")
+local bits = ltf.get_var_number("bits")
+local parity = ltf.get_var("parity")
+local stopbits = ltf.get_var_number("stopbits")
 
-taf.test("Get port info", { "tag2", "tag3" }, function()
-	local port = serial.get_port(vars.port_name)
-	local info = port:get_port_info()
-	print("Found device: ", info.path, info.type, info.description)
-end)
+ltf.test({
+	name = "List serial devices",
+	tags = { "list" },
+	body = function()
+		local devices = serial.list_devices()
+		for i, device in ipairs(devices) do
+			print("[" .. i .. "]: Found device: ", device.path, device.type, device.description)
+		end
+	end,
+})
 
-taf.test("Reading from serial device", { "tag2" }, function()
-	local port = serial.get_port(vars.port_name)
+ltf.test({
+	name = "Get port info",
+	tags = { "info" },
+	body = function()
+		local port = serial.get_port(port_name)
+		local info = port:get_port_info()
+		print("Found device: ", info.path, info.type, info.description)
+	end,
+})
 
-	port:open("rw")
+ltf.test({
+	name = "Reading from serial device",
+	tags = { "read" },
+	body = function()
+		local port = serial.get_port(port_name)
 
-	taf.defer(function()
-		port:close()
-	end)
+		port:open("rw")
+		ltf.defer(function()
+			port:close()
+		end)
 
-	port:set_baudrate(vars.baudrate)
-	port:set_bits(vars.bits)
-	port:set_parity(vars.parity)
-	port:set_stopbits(vars.stopbits)
+		port:set_baudrate(baudrate)
+		port:set_bits(bits)
+		port:set_parity(parity)
+		port:set_stopbits(stopbits)
 
-	local result = port:read_until("Hello Rockchip", 15000)
-	print(result)
-end)
+		local result = port:read_until({
+			pattern = "Hello",
+			timeout = 15000,
+		})
+		print(result)
+	end,
+})

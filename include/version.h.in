@@ -1,0 +1,25 @@
+#ifndef VERSION_H
+#define VERSION_H
+
+#include "git_version.h"
+
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
+#define LTF_VERSION_MAJOR @LTF_VERSION_MAJOR@
+#define LTF_VERSION_MINOR @LTF_VERSION_MINOR@
+#define LTF_VERSION_PATCH @LTF_VERSION_PATCH@
+
+#if LTF_IS_RELEASE == 1
+#define LTF_VERSION @LTF_VERSION@
+#else
+#define LTF_VERSION @LTF_VERSION@ "-" LTF_GIT_BRANCH "@" LTF_GIT_VERSION
+#endif // LTF_IS_RELEASE
+
+#define LTF_VERSION_NUM(MAJOR, MINOR, PATCH)                                   \
+    ((MAJOR) * 1000 + (MINOR) * 100 + (PATCH))
+
+#define LTF_VERSION_NUM_CURRENT                                                \
+    LTF_VERSION_NUM(LTF_VERSION_MAJOR, LTF_VERSION_MINOR, LTF_VERSION_PATCH)
+
+#endif // VERSION_H

@@ -1,46 +1,105 @@
 #include "test_case.h"
 
+#include "cmd_parser.h"
 #include "internal_logging.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static test_case_t *tests = NULL;
-static size_t tests_len = 0;
-static size_t tests_cap = 0;
+static da_t *tests = NULL;
 
-void test_case_enqueue(test_case_t *tc) {
+static void test_case_free(lua_State *L, test_case_t *tc) {
+    free((char *)tc->name);
+    free((char *)tc->desc);
+    size_t tags_amount = da_size(tc->tags);
+    for (size_t i = 0; i < tags_amount; i++) {
+        char **tag = da_get(tc->tags, i);
+        free(*tag);
+    }
+    da_free(tc->tags);
+    luaL_unref(L, LUA_REGISTRYINDEX, tc->ref);
+}
+
+int test_case_enqueue(lua_State *L, test_case_t *tc) {
     if (!tc) {
         LOG("Test case is NULL");
-        return;
+        return -1;
     }
-    for (size_t i = 0; i < tests_len; i++) {
-        if (!strcmp(tc->name, tests[i].name)) {
+    cmd_test_options *opts = cmd_parser_get_test_options();
+    size_t opts_tags_amount = da_size(opts->tags);
+    size_t test_tags_amount = da_size(tc->tags);
+    if (opts_tags_amount > 0) {
+        bool has_tag = false;
+        for (size_t i = 0; i < opts_tags_amount; i++) {
+            for (size_t j = 0; j < test_tags_amount; j++) {
+                char **opts_tag = da_get(opts->tags, i);
+                char **test_tag = da_get(tc->tags, j);
+                if (strcmp(*opts_tag, *test_tag) == 0) {
+                    has_tag = true;
+                    break;
+                }
+            }
+            if (has_tag)
+                break;
+        }
+        if (!has_tag) {
+            LOG("Skipping test '%s' registration, no tag found.", tc->name);
+            test_case_free(L, tc);
+            free(tc);
+            return 1;
+        }
+    }
+    if (!tests) {
+        tests = da_init(3, sizeof(test_case_t));
+    }
+    size_t tests_count = da_size(tests);
+    for (size_t i = 0; i < tests_count; i++) {
+        test_case_t *registered = da_get(tests, i);
+        if (!strcmp(tc->name, registered->name)) {
             LOG("Overwriting test '%s'...", tc->name);
-            memcpy(&tests[i], tc, sizeof(test_case_t));
-            return;
+            test_case_free(L, registered);
+            registered->name = tc->name;
+            registered->desc = tc->desc;
+            registered->ref = tc->ref;
+            registered->tags = tc->tags;
+            free(tc);
+            return 0;
         }
     }
     LOG("Adding test '%s' to the queue", tc->name);
-    if (tests_len == tests_cap) { /* grow 2× */
-        LOG("Reallocating: cap: %zu, len: %zu", tests_cap, tests_len);
-        tests_cap = tests_cap ? tests_cap * 2 : 8;
-        tests = realloc(tests, tests_cap * sizeof(test_case_t));
-        if (!tests) {
-            perror("realloc");
-            exit(EXIT_FAILURE);
-        }
-    }
-    memcpy(&tests[tests_len], tc, sizeof(test_case_t));
-    tests_len++;
+    da_append(tests, tc);
+    free(tc);
+
+    return 0;
 }
 
-test_case_t *test_case_get_all(size_t *amount) {
-    if (amount) {
-        *amount = tests_len;
+void test_case_order_tests() {
+    cmd_test_options *opts = cmd_parser_get_test_options();
+    if (!opts->scenario_parsed)
+        return;
+
+    size_t order_sz = da_size(opts->scenario.order);
+    if (order_sz == 0)
+        return;
+
+    size_t registered_sz = da_size(tests);
+
+    da_t *ordered = da_init(order_sz, sizeof(test_case_t));
+    for (size_t i = 0; i < order_sz; ++i) {
+        char **name = da_get(opts->scenario.order, i);
+        for (size_t j = 0; j < registered_sz; ++j) {
+            test_case_t *reg = da_get(tests, j);
+            if (strcmp(reg->name, *name) == 0) {
+                da_append(ordered, reg);
+            }
+        }
     }
-    return tests;
+
+    da_free(tests);
+    tests = ordered;
 }
+
+da_t *test_case_get_all() { return tests; }
 
 void test_case_free_all(lua_State *L) {
     LOG("Freeing test cases...");
@@ -48,11 +107,12 @@ void test_case_free_all(lua_State *L) {
         LOG("Tests are null.");
         return;
     }
-    for (size_t i = 0; i < tests_len; i++) {
-        LOG("Unrefing test '%s'", tests[i].name);
-        luaL_unref(L, LUA_REGISTRYINDEX, tests[i].ref);
+    size_t tests_count = da_size(tests);
+    for (size_t i = 0; i < tests_count; i++) {
+        test_case_t *tc = da_get(tests, i);
+        test_case_free(L, tc);
     }
-    free(tests);
-    tests_len = 0;
+    da_free(tests);
+    tests = NULL;
     LOG("Freeing tests OK.");
 }

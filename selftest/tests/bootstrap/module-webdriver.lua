@@ -1,17 +1,24 @@
-local taf = require("taf")
-local wd = taf.webdriver
+local ltf = require("ltf")
+local wd_util = require("webdriver_util")
 
-taf.test("Test minimal webdriver possibilities", { "module-webdriver" }, function()
-	local proc_handle = wd.spawn_webdriver("chromedriver", 9515)
-	taf.defer(function()
-		proc_handle:kill()
-	end)
-	taf.sleep(5000) -- wait for the webdriver to start just to make sure
-	local session = wd.session_start({ port = 9515, headless = "chromedriver" })
-	taf.defer(function()
-		wd.session_end(session)
-	end)
-	wd.open_url(session, "https://github.com/")
-	taf.log_info(wd.get_current_url(session))
-	taf.log_info(wd.get_title(session))
-end)
+ltf.test({
+	name = "Test minimal webdriver possibilities",
+	tags = { "module-webdriver" },
+	body = function()
+		local session = wd_util.setup()
+
+		session:open_url("https://github.com/")
+
+		session:open_url("https://google.com/")
+
+		session:go_back()
+
+		ltf.log_info(session:get_current_url())
+		ltf.log_info(session:get_title())
+
+		session:go_forward()
+
+		ltf.log_info(session:get_current_url())
+		ltf.log_info(session:get_title())
+	end,
+})

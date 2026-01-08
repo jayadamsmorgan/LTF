@@ -1,5 +1,8 @@
-local taf = require("taf")
+local ltf = require("ltf")
 
-taf.test("Test for target2", function()
-	print("Testing target2...")
-end)
+ltf.test({
+	name = "Test for target2",
+	body = function()
+		print("Testing target2...")
+	end,
+})

@@ -1,0 +1,21 @@
+{
+    "include": "base-scenario",
+
+    "cmd": {
+        "tags:remove": ["tag2"],
+        "vars:append": {
+            "var3": "somevar3"
+        },
+        "vars:remove": ["var2"],
+        "log_level": "debug"
+    },
+
+    "order:append": [
+        "Third test"
+    ],
+
+    "order:remove": [
+        "Second test"
+    ]
+
+}
