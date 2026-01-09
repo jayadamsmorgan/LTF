@@ -313,20 +313,21 @@ static void inject_modules_dir(lua_State *L) {
     lua_getfield(L, -1, "path"); /* pkg.path string */
     const char *old_path = lua_tostring(L, -1);
     if (directory_exists(project_common_test_dir_path)) {
-        lua_pushfstring(
-            L,
-            "%s;%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
-            "?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua",
-            old_path, ltf_lib_dir_path, ltf_lib_dir_path, project_lib_dir_path,
-            project_lib_dir_path, project_test_dir_path, project_test_dir_path,
-            project_common_test_dir_path, project_common_test_dir_path);
+        lua_pushfstring(L,
+                        "%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
+                        "?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s",
+                        ltf_lib_dir_path, ltf_lib_dir_path,
+                        project_lib_dir_path, project_lib_dir_path,
+                        project_test_dir_path, project_test_dir_path,
+                        project_common_test_dir_path,
+                        project_common_test_dir_path, old_path);
     } else {
         lua_pushfstring(L,
-                        "%s;%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
-                        "?.lua;%s/?/init.lua",
-                        old_path, ltf_lib_dir_path, ltf_lib_dir_path,
+                        "%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
+                        "?.lua;%s/?/init.lua;%s",
+                        ltf_lib_dir_path, ltf_lib_dir_path,
                         project_lib_dir_path, project_lib_dir_path,
-                        project_test_dir_path, project_test_dir_path);
+                        project_test_dir_path, project_test_dir_path, old_path);
     }
     lua_setfield(L, -3, "path"); /* package.path = … */
     lua_pop(L, 2);               /* pop path + package */
@@ -341,7 +342,7 @@ static void inject_cmodules_dir(lua_State *L) {
     lua_getfield(L, -1, "cpath"); /* pkg.spath string */
     const char *old_cpath = lua_tostring(L, -1);
 
-    lua_pushfstring(L, "%s;%s/?.so", old_cpath, project_lib_dir_path);
+    lua_pushfstring(L, "%s/?.so;%s", project_lib_dir_path, old_cpath);
 
     lua_setfield(L, -3, "cpath"); /* package.spath = … */
     lua_pop(L, 2);                /* pop spath + package */
