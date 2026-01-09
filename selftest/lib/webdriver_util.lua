@@ -17,7 +17,10 @@ M.setup = function()
 	-- Just making sure it runs:
 	ltf.sleep(5000)
 	local status = proc_handle:wait()
-	assert(status == nil)
+	if status ~= nil then
+		local stderr = proc_handle:read("stderr", nil)
+		error("Unable to start webdriver: " .. stderr)
+	end
 
 	local session = wd.new_session({
 		port = port,
