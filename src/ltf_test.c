@@ -334,6 +334,22 @@ static void inject_modules_dir(lua_State *L) {
     LOG("Successfully injected LTF library directory.");
 }
 
+static void inject_cmodules_dir(lua_State *L) {
+    LOG("Injecting LTF C modules directory...");
+
+    lua_getglobal(L, "package");
+    lua_getfield(L, -1, "cpath"); /* pkg.spath string */
+    const char *old_cpath = lua_tostring(L, -1);
+
+    lua_pushfstring(L, "%s;%s/?.so", old_cpath, project_lib_dir_path);
+
+    lua_setfield(L, -3, "cpath"); /* package.spath = … */
+    lua_pop(L, 2);                /* pop spath + package */
+
+    LOG("Successfully injected LTF C modules directory: %s/?.so",
+        ltf_lib_dir_path);
+}
+
 static void register_clua_module(lua_State *L, const char *name,
                                  lua_CFunction openf) {
     luaL_requiref(L, name, openf, 1);
@@ -359,6 +375,7 @@ void register_ltf_libs(lua_State *L) {
     register_clua_module(L, "ltf-util", l_module_util_register_module);
 
     inject_modules_dir(L);
+    inject_cmodules_dir(L);
 
     LOG("Test API registered.");
 }
