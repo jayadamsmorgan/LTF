@@ -167,23 +167,28 @@ local wd_post_json = function(url, body)
 	tm:defer(function()
 		handle:cleanup()
 	end)
+
 	handle
 		:setopt(http.OPT_URL, url)
+		:setopt(http.OPT_POST, 1) -- force POST
 		:setopt(http.OPT_POSTFIELDS, body)
-		:setopt(http.OPT_HTTPHEADER, { "Content-Type: application/json" })
+		:setopt(http.OPT_POSTFIELDSIZE, #body) -- avoid chunked/odd sizing
+		:setopt(http.OPT_HTTPHEADER, {
+			"Content-Type: application/json; charset=utf-8",
+			"Accept: application/json",
+			"Expect:", -- disable 100-continue
+		})
 		:setopt(http.OPT_WRITEFUNCTION, function(chunk, n)
 			result = result .. chunk
 			return n
 		end)
 
 	handle:perform()
-
 	return result
 end
 
 --- @param url string
---- @param body string
----
+--- @param body string -- JSON string
 --- @return string result
 local wd_put_json = function(url, body)
 	local result = ""
@@ -192,23 +197,27 @@ local wd_put_json = function(url, body)
 	tm:defer(function()
 		handle:cleanup()
 	end)
+
 	handle
 		:setopt(http.OPT_URL, url)
-		:setopt(http.OPT_POSTFIELDS, body)
 		:setopt(http.OPT_CUSTOMREQUEST, "PUT")
-		:setopt(http.OPT_HTTPHEADER, { "Content-Type: application/json" })
+		:setopt(http.OPT_POSTFIELDS, body)
+		:setopt(http.OPT_POSTFIELDSIZE, #body)
+		:setopt(http.OPT_HTTPHEADER, {
+			"Content-Type: application/json; charset=utf-8",
+			"Accept: application/json",
+			"Expect:",
+		})
 		:setopt(http.OPT_WRITEFUNCTION, function(chunk, n)
 			result = result .. chunk
 			return n
 		end)
 
 	handle:perform()
-
 	return result
 end
 
 --- @param url string
----
 --- @return string result
 local wd_get_json = function(url)
 	local result = ""
@@ -217,18 +226,23 @@ local wd_get_json = function(url)
 	tm:defer(function()
 		handle:cleanup()
 	end)
-	handle:setopt(http.OPT_URL, url):setopt(http.OPT_WRITEFUNCTION, function(chunk, n)
-		result = result .. chunk
-		return n
-	end)
+
+	handle
+		:setopt(http.OPT_URL, url)
+		:setopt(http.OPT_HTTPHEADER, {
+			"Accept: application/json",
+			"Expect:",
+		})
+		:setopt(http.OPT_WRITEFUNCTION, function(chunk, n)
+			result = result .. chunk
+			return n
+		end)
 
 	handle:perform()
-
 	return result
 end
 
 --- @param url string
----
 --- @return string result
 local wd_delete_json = function(url)
 	local result = ""
@@ -237,15 +251,20 @@ local wd_delete_json = function(url)
 	tm:defer(function()
 		handle:cleanup()
 	end)
+
 	handle
 		:setopt(http.OPT_URL, url)
 		:setopt(http.OPT_CUSTOMREQUEST, "DELETE")
+		:setopt(http.OPT_HTTPHEADER, {
+			"Accept: application/json",
+			"Expect:",
+		})
 		:setopt(http.OPT_WRITEFUNCTION, function(chunk, n)
 			result = result .. chunk
 			return n
 		end)
-	handle:perform()
 
+	handle:perform()
 	return result
 end
 
