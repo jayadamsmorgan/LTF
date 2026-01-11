@@ -24,7 +24,7 @@ M.setup = function()
 
 	local session = wd.new_session({
 		port = port,
-		headless = true,
+		headless = false,
 		headless_implementation = "geckodriver",
 	})
 	session:execute({
