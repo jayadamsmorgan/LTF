@@ -30,7 +30,7 @@ ltf.test({
 	body = function()
 		-- start new web session
 		local session = wd_util.setup()
-
+		session:resize_window()
 		-- go to site for testing
 		session:open_url("https://demoqa.com/elements")
 
@@ -42,10 +42,12 @@ ltf.test({
 			value = "//body/div[@id='app']/div[contains(@class,'body-height')]/div[contains(@class,'container playgound-body')]/div[contains(@class,'row')]/div[contains(@class,'col-md-3')]/div[contains(@class,'left-pannel')]/div[contains(@class,'accordion')]/div[1]/span[1]/div[1]/div[1]",
 		})
 
+		session:scroll_into_view(elements_id)
 		session:click(elements_id)
 
 		-- click Check box
 		local checkbox_id = session:find_element({ using = "xpath", value = "//span[normalize-space()='Check Box']" })
+		session:scroll_into_view(checkbox_id)
 		session:click(checkbox_id)
 
 		session:wait_until_visible({
@@ -59,6 +61,7 @@ ltf.test({
 		-- check checkbox interaction
 		local interact =
 			session:find_element({ using = "xpath", value = "//span[@class='rct-checkbox']//*[name()='svg']" })
+		session:scroll_into_view(interact)
 		session:click(interact)
 
 		-- check css selector search via @class
@@ -76,9 +79,6 @@ ltf.test({
 			value = "//*[contains(@class, 'text-success') and contains(.,'notes')]",
 		})
 
-		ltf.log_info(session:get_text(sucq))
-
-		-- check drag and drop and scroll_into_view
 		local interactions_id = session:find_element({
 			using = "xpath",
 			value = "//span[contains(@class,'group-header') and contains(.,'Interactions')]",

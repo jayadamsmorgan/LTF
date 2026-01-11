@@ -7,8 +7,9 @@ local wd = ltf.webdriver
 M.setup = function()
 	local port = 9515
 	local proc_handle = wd.spawn_webdriver({
-		webdriver = "chromium.chromedriver",
+		webdriver = "chromedriver",
 		port = port,
+		extraflags = { "--headless=new", "--window-size=1920,1080" },
 	})
 	ltf.defer(function()
 		proc_handle:kill()
@@ -25,6 +26,11 @@ M.setup = function()
 	local session = wd.new_session({
 		port = port,
 		headless = true,
+	})
+	session:execute({
+		script = [[
+    document.body.style.zoom = "50%";
+    ]],
 	})
 	ltf.defer(function()
 		session:close()
