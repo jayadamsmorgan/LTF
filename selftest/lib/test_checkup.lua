@@ -109,7 +109,7 @@ end
 --- @return log_obj_t
 M.load_log = function(args)
 	local proc_handle = proc.spawn({
-		exe = "ltf",
+		exe = "../build/ltf",
 		args = args,
 	})
 	while proc_handle:wait() == nil do
