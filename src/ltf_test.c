@@ -552,6 +552,8 @@ int ltf_test() {
         LOG("No tests found.");
         fprintf(stderr, "No tests to execute.\n");
         goto deinit;
+    } else {
+        state->total_amount = amount;
     }
 
     if (!opts->headless) {
