@@ -38,6 +38,7 @@ nav:
   - Getting Started: index.md
   - Project:
       - Setup: PROJECT_SETUP.md
+      - LSP Integration: LSP_INTEGRATION.md
   - CLI:
       - Overview: CLI.md
   - Hooks:
