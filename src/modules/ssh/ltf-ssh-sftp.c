@@ -229,76 +229,86 @@ static void normalize_abs_path_inplace(char *s) {
     if (!s || s[0] != '/')
         return;
 
-    // Stack of segment start positions in output buffer
+    // Read from a copy so we don't clobber unread input while writing output.
+    char *in = strdup(s);
+    if (!in)
+        return; // best-effort
+
     size_t seg_starts_cap = 64;
     size_t seg_starts_len = 0;
     size_t *seg_starts = (size_t *)malloc(seg_starts_cap * sizeof(size_t));
-    if (!seg_starts)
-        return; // best-effort; leave as-is
+    if (!seg_starts) {
+        free(in);
+        return; // best-effort
+    }
 
-    size_t r = 1; // read index (skip initial '/')
-    size_t w = 0; // write index
-    s[w++] = '/';
+    size_t r = 1; // read index in "in"
+    size_t w = 1; // write index in "s"
+    s[0] = '/';
 
-    while (s[r]) {
-        while (s[r] == '/')
+    while (in[r]) {
+        while (in[r] == '/')
             r++;
-        if (!s[r])
+        if (!in[r])
             break;
 
         size_t seg_start = r;
-        while (s[r] && s[r] != '/')
+        while (in[r] && in[r] != '/')
             r++;
         size_t seg_len = r - seg_start;
 
         // "."
-        if (seg_len == 1 && s[seg_start] == '.') {
+        if (seg_len == 1 && in[seg_start] == '.') {
             continue;
         }
 
         // ".."
-        if (seg_len == 2 && s[seg_start] == '.' && s[seg_start + 1] == '.') {
+        if (seg_len == 2 && in[seg_start] == '.' && in[seg_start + 1] == '.') {
             if (seg_starts_len > 0) {
-                w = seg_starts[--seg_starts_len]; // rewind to start of previous
-                                                  // segment
-                s[w] = '\0';
+                w = seg_starts[--seg_starts_len];
             } else {
-                // at root; stay at "/"
-                w = 1;
-                s[w] = '\0';
+                w = 1; // stay at "/"
             }
             continue;
         }
 
         // ensure capacity for stack push
         if (seg_starts_len == seg_starts_cap) {
-            seg_starts_cap *= 2;
-            size_t *p =
-                (size_t *)realloc(seg_starts, seg_starts_cap * sizeof(size_t));
+            size_t new_cap = seg_starts_cap * 2;
+            size_t *p = (size_t *)realloc(seg_starts, new_cap * sizeof(size_t));
             if (!p)
                 break; // best-effort
             seg_starts = p;
+            seg_starts_cap = new_cap;
         }
 
-        // record where this segment begins in output
-        seg_starts[seg_starts_len++] = w;
-
-        // add separator if not root-only
-        if (w > 1 && s[w - 1] != '/')
+        // If not root, add separator.
+        if (w > 1)
             s[w++] = '/';
 
-        // copy segment
-        memmove(s + w, s + seg_start, seg_len);
+        // Record rewind point (start of this segment including the separator we
+        // just added). Rewinding to this removes the last segment cleanly.
+        seg_starts[seg_starts_len++] = (w > 1) ? (w - 1) : 1;
+
+        // Copy segment
+        memcpy(s + w, in + seg_start, seg_len);
         w += seg_len;
-        s[w] = '\0';
     }
+
+    // terminate
+    if (w == 0) {
+        s[0] = '/';
+        w = 1;
+    }
+    s[w] = '\0';
 
     // remove trailing slash unless root
     if (w > 1 && s[w - 1] == '/') {
-        s[--w] = '\0';
+        s[w - 1] = '\0';
     }
 
     free(seg_starts);
+    free(in);
 }
 
 static char *join_abs_lexical(const char *base_abs, const char *rel) {
@@ -323,8 +333,14 @@ static char *join_abs_lexical(const char *base_abs, const char *rel) {
         snprintf(out, need, "%s%s", base_abs, rel);
     }
 
-    // If rel begins with '/', above would produce //; fix by normalizer anyway.
-    normalize_abs_path_inplace(out);
+    if (rel[0] == '/') {
+        char *out = strdup(rel);
+        if (!out)
+            return NULL;
+        normalize_abs_path_inplace(out);
+        return out;
+    }
+
     return out;
 }
 
