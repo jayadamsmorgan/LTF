@@ -520,6 +520,7 @@ int ltf_test() {
     if (ltf_parse_vars()) {
         goto deinit;
     }
+    ltf_state_register_vars(state);
 
     if (ltf_parse_secrets()) {
         goto deinit;

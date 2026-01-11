@@ -2,10 +2,10 @@
 
 #include "cmd_parser.h"
 #include "keyword_status.h"
-#include "project_parser.h"
 #include "ltf_hooks.h"
 #include "ltf_test.h"
 #include "ltf_vars.h"
+#include "project_parser.h"
 #include "version.h"
 
 #include "util/os.h"
@@ -643,30 +643,6 @@ ltf_state_t *ltf_state_new() {
         char *to_cpy = strdup(*tag);
         da_append(ltf_state->tags, &to_cpy);
     }
-    da_t *vars = ltf_get_vars();
-    if (vars) {
-        size_t vars_size = da_size(vars);
-        ltf_state->vars = da_init(vars_size, sizeof(ltf_var_entry_t));
-        for (size_t i = 0; i < vars_size; ++i) {
-            ltf_var_entry_t *e = da_get(vars, i);
-            size_t values_count = da_size(e->values);
-            da_t *values_cpy = da_init(values_count, sizeof(char *));
-            for (size_t j = 0; j < values_count; ++j) {
-                char **value = da_get(e->values, j);
-                char *tmp = strdup(*value);
-                da_append(values_cpy, &tmp);
-            }
-            ltf_var_entry_t cpy = {
-                .name = strdup(e->name),
-                .values = values_cpy,
-                .is_scalar = e->is_scalar,
-                .scalar = e->scalar ? strdup(e->scalar) : NULL,
-                .def_value = e->def_value ? strdup(e->def_value) : NULL,
-                .final_value = strdup(e->final_value),
-            };
-            da_append(ltf_state->vars, &cpy);
-        }
-    }
 
     ltf_state->test_run_started_cbs = da_init(1, sizeof(test_run_cb));
     ltf_state->test_run_finished_cbs = da_init(1, sizeof(test_run_cb));
@@ -695,6 +671,33 @@ ltf_state_t *ltf_state_new() {
     ltf_state->os_version = get_os_string();
 
     return ltf_state;
+}
+
+void ltf_state_register_vars(ltf_state_t *ltf_state) {
+    da_t *vars = ltf_get_vars();
+    if (vars) {
+        size_t vars_size = da_size(vars);
+        ltf_state->vars = da_init(vars_size, sizeof(ltf_var_entry_t));
+        for (size_t i = 0; i < vars_size; ++i) {
+            ltf_var_entry_t *e = da_get(vars, i);
+            size_t values_count = da_size(e->values);
+            da_t *values_cpy = da_init(values_count, sizeof(char *));
+            for (size_t j = 0; j < values_count; ++j) {
+                char **value = da_get(e->values, j);
+                char *tmp = strdup(*value);
+                da_append(values_cpy, &tmp);
+            }
+            ltf_var_entry_t cpy = {
+                .name = strdup(e->name),
+                .values = values_cpy,
+                .is_scalar = e->is_scalar,
+                .scalar = e->scalar ? strdup(e->scalar) : NULL,
+                .def_value = e->def_value ? strdup(e->def_value) : NULL,
+                .final_value = strdup(e->final_value),
+            };
+            da_append(ltf_state->vars, &cpy);
+        }
+    }
 }
 
 void ltf_state_register_test_run_started_cb(ltf_state_t *state,
