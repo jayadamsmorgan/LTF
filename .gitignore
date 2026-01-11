@@ -5,5 +5,8 @@ compile_commands.json
 build/
 .DS_Store
 
+# Selftests output
+README.md.copy
+
 #MkDocs build output
 site/

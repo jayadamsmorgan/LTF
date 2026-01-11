@@ -43,7 +43,7 @@ jobs:
         run: |
           cd selftest
           set +e
-          modules=(http json proc ltf webdriver util serial)
+          modules=(http json proc ltf webdriver util serial ssh)
           FAILED=0
 
           for m in "${modules[@]}"; do
