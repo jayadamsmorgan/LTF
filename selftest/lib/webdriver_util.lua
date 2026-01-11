@@ -7,7 +7,7 @@ local wd = ltf.webdriver
 M.setup = function()
 	local port = 9515
 	local proc_handle = wd.spawn_webdriver({
-		webdriver = "chromedriver",
+		webdriver = "chromium.chromedriver",
 		port = port,
 		extraflags = { "--headless=new", "--window-size=1920,1080" },
 	})
