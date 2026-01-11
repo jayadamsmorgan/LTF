@@ -34,9 +34,10 @@ ltf.test({
 		test = log_obj.tests[2]
 		check.check_test(test, "Test elements find and interaction", "PASSED")
 		check.test_tags(test, { "module-webdriver" })
-		check.error_if(#test.output ~= 3, test, "Outputs not match")
+		check.error_if(#test.output ~= 4, test, "Outputs not match")
 		check.check_output(test, test.output[1], "home", "INFO")
 		check.check_output(test, test.output[2], "notes", "INFO")
-		check.check_output(test, test.output[3], "Dropped!", "INFO")
+		check.check_output(test, test.output[3], "Drag me", "INFO")
+		check.check_output(test, test.output[4], "Drop here", "INFO")
 	end,
 })

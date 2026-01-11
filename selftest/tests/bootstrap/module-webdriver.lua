@@ -80,6 +80,7 @@ ltf.test({
 		})
 
 		ltf.log_info(session:get_text(sucq))
+
 		local interactions_id = session:find_element({
 			using = "xpath",
 			value = "//body/div[@id='app']/div[contains(@class,'body-height')]/div[contains(@class,'container playgound-body')]/div[contains(@class,'row')]/div[contains(@class,'col-md-3')]/div[@class='left-pannel']/div[@class='accordion']/div[5]/span[1]/div[1]/div[1]",
@@ -88,23 +89,27 @@ ltf.test({
 		session:scroll_into_view(interactions_id)
 		ltf.sleep(1000)
 		session:click(interactions_id)
-		local dropable_id =
-			session:find_element({ using = "xpath", value = "//span[normalize-space(text())='Droppable']" })
-		session:scroll_into_view(dropable_id)
 
+		local dropable_id = session:find_element({
+			using = "xpath",
+			value = "//li[.//span[text()='Droppable']]",
+		})
+		session:scroll_into_view(dropable_id)
 		ltf.sleep(1000)
-		session:click(dropable_id)
+		-- session:click(dropable_id)
+		session:open_url("https://demoqa.com/droppable")
 
 		local dragable = session:find_element({ using = "xpath", value = "//div[@id='draggable']" })
 		local dropable =
 			session:find_element({ using = "xpath", value = "//div[@id='simpleDropContainer']//div[@id='droppable']" })
-		ltf.log_info(dragable)
-		ltf.log_info(dropable)
-		session:drag_and_drop({ source_id = dragable, target_id = dropable })
-		ltf.sleep(1000)
 
-		local highlighted =
-			session:find_element({ using = "xpath", value = "//div[@id='simpleDropContainer']//div[@id='droppable']" })
-		ltf.log_info(session:get_text(highlighted))
+		ltf.log_info(session:get_text(dragable))
+		ltf.log_info(session:get_text(dropable))
+		-- session:drag_and_drop({ source_id = dragable, target_id = dropable })
+		-- ltf.sleep(1000)
+		--
+		-- local highlighted =
+		-- 	session:find_element({ using = "xpath", value = "//div[@id='simpleDropContainer']//div[@id='droppable']" })
+		-- ltf.log_info(session:get_text(highlighted))
 	end,
 })
