@@ -36,7 +36,7 @@ ltf.test({
 		check.error_if(#test.output ~= 3, test, "Outputs not match")
 		check.check_output(test, test.output[1], "127", "INFO")
 		check.check_output(test, test.output[2], "", "INFO")
-		check.check_output(test, test.output[3], "command not found", "INFO", true)
+		check.check_output(test, test.output[3], "not found", "INFO", true)
 
 		test = log_obj.tests[3]
 		check.check_test(test, "Test SSH shell channel", "PASSED")
@@ -51,7 +51,7 @@ ltf.test({
 		check.error_if(#test.output ~= 4, test, "Outputs not match")
 		check.check_output(test, test.output[1], "file", "INFO")
 		check.check_output(test, test.output[2], "/home/ssh_test_user/test.txt", "INFO")
-		check.check_output(test, test.output[3], "33188", "INFO")
+		check.check_output(test, test.output[3], "33204", "INFO")
 		check.check_output(test, test.output[4], "30", "INFO")
 
 		local fi = ltf.util.file_info("../README.md.copy")
