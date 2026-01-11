@@ -7,12 +7,7 @@ local wd = ltf.webdriver
 M.setup = function()
 	local port = 9515
 	local proc_handle = wd.spawn_webdriver({
-		webdriver = "systemd-run",
-		extraflags = {
-			"--user",
-			"--scope",
-			"geckodriver",
-		},
+		webdriver = "chromium.chromedriver",
 		port = port,
 	})
 	ltf.defer(function()
@@ -30,7 +25,7 @@ M.setup = function()
 	local session = wd.new_session({
 		port = port,
 		headless = true,
-		headless_implementation = "geckodriver",
+		headless_implementation = "chromedriver",
 	})
 	session:execute({
 		script = [[
