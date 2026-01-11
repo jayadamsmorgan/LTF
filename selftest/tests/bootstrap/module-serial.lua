@@ -61,9 +61,6 @@ ltf.test({
 		port:set_baudrate(115200)
 
 		port:write("PING\n")
-		ltf.json.serialize("", {
-			pretty = true,
-		})
 
 		local found, read = port:read_until({
 			chunk_size = 1,
