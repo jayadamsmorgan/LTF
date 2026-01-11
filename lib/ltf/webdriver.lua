@@ -726,11 +726,9 @@ M.new_session = function(opts)
 		end
 	end
 
-	-- Default browser if none chosen by user or headless path
-	am.browserName = am.browserName or "chrome"
-
 	-- Serialize and send
 	local body_str = json.serialize(body)
+
 	local url = ("%s:%d/session"):format(opts.url, opts.port)
 	local result = wd_post_json(url, body_str)
 
