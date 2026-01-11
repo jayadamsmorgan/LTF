@@ -27,11 +27,6 @@ M.setup = function()
 		headless = true,
 		headless_implementation = "chromedriver",
 	})
-	session:execute({
-		script = [[
-            document.body.style.zoom = "50%";
-        ]],
-	})
 	ltf.defer(function()
 		session:close()
 	end)
