@@ -20,15 +20,23 @@ ltf.test({
 		assert(log_obj.tags[1] == "module-webdriver")
 
 		assert(log_obj.tests ~= nil)
-		assert(#log_obj.tests == 1, "Expected 1 test, got " .. #log_obj.tests)
+		assert(#log_obj.tests == 2, "Expected 2 test, got " .. #log_obj.tests)
 
 		local test = log_obj.tests[1]
-		check.check_test(test, "Test minimal webdriver possibilities", "PASSED")
+		check.check_test(test, "Test page navigation", "PASSED")
 		check.test_tags(test, { "module-webdriver" })
 		check.error_if(#test.output ~= 4, test, "Outputs not match")
 		check.check_output(test, test.output[1], "https://github.com/", "INFO")
 		check.check_output(test, test.output[2], "GitHub", "INFO", true)
 		check.check_output(test, test.output[3], "https://www.google.com/", "INFO", true)
 		check.check_output(test, test.output[4], "Google", "INFO", true)
+
+		test = log_obj.tests[2]
+		check.check_test(test, "Test elements find and interaction", "PASSED")
+		check.test_tags(test, { "module-webdriver" })
+		check.error_if(#test.output ~= 3, test, "Outputs not match")
+		check.check_output(test, test.output[1], "home", "INFO")
+		check.check_output(test, test.output[2], "notes", "INFO")
+		check.check_output(test, test.output[3], "Dropped!", "INFO")
 	end,
 })
