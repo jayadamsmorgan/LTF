@@ -195,12 +195,6 @@ int l_module_ssh_session_close(lua_State *L) {
     }
 
     da_free(u->active_channels);
-    int rc = libssh2_session_free(u->session);
-    if (rc) {
-        lua_pushfstring(L, "libssh2_session_free failed with code: %s",
-                        ssh_err_to_str(rc));
-        return 1;
-    }
 
     if (u->sock_fd != -1) {
         int res = l_module_ssh_session_disconnect(L);
@@ -208,6 +202,14 @@ int l_module_ssh_session_close(lua_State *L) {
             return res;
         }
     }
+
+    int rc = libssh2_session_free(u->session);
+    if (rc) {
+        lua_pushfstring(L, "libssh2_session_free failed with code: %s",
+                        ssh_err_to_str(rc));
+        return 1;
+    }
+
     u->session = NULL;
     u->sock_fd = -1;
     u->port = -1;
