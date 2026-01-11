@@ -7,7 +7,7 @@ local wd = ltf.webdriver
 M.setup = function()
 	local port = 9515
 	local proc_handle = wd.spawn_webdriver({
-		webdriver = "chromium.chromedriver",
+		webdriver = "geckodriver",
 		port = port,
 	})
 	ltf.defer(function()
@@ -25,7 +25,7 @@ M.setup = function()
 	local session = wd.new_session({
 		port = port,
 		headless = true,
-		headless_implementation = "chromedriver",
+		headless_implementation = "geckodriver",
 	})
 	ltf.defer(function()
 		session:close()
