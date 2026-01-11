@@ -7,7 +7,12 @@ local wd = ltf.webdriver
 M.setup = function()
 	local port = 9515
 	local proc_handle = wd.spawn_webdriver({
-		webdriver = "geckodriver",
+		webdriver = "systemd-run",
+		extraflags = {
+			"--user",
+			"--scope",
+			"geckodriver",
+		},
 		port = port,
 	})
 	ltf.defer(function()
