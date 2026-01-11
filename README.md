@@ -98,13 +98,6 @@ All documentation lives [here](https://jayadamsmorgan.github.io/LTF/).
 
 ## Installation
 
-### Homebrew (macOS / Linux)
-
-```bash
-brew tap jayadamsmorgan/ltf
-brew install ltf
-```
-
 ### Build from source
 
 See **[Build Instructions](./BUILD.md)**.
