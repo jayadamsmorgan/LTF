@@ -170,8 +170,6 @@ M.low = ts
 ---
 --- @return boolean found, string read
 local read_until = function(port, opts)
-	port:flush("io")
-
 	local now_ms = function()
 		return ltf:millis()
 	end

@@ -59,30 +59,7 @@ ltf.test({
 })
 
 ltf.test({
-	name = "Test SSH exec channel (env)",
-	tags = { "module-ssh" },
-	body = function()
-		local session = new_session()
-
-		local channel = session:new_exec_channel()
-		ltf.defer(function()
-			channel:close()
-		end)
-
-		local result = channel:exec({
-			cmd = "/bin/echo $TEST",
-			env = {
-				TEST = "Testing!",
-			},
-		})
-		ltf.log_info(result.exitcode)
-		ltf.log_info(result.stdout)
-		ltf.log_info(result.stderr)
-	end,
-})
-
-ltf.test({
-	name = "Test SSH shell channel (success)",
+	name = "Test SSH shell channel",
 	tags = { "module-ssh" },
 	body = function()
 		local session = new_session()
@@ -103,5 +80,36 @@ ltf.test({
 
 		ltf.log_info(found)
 		ltf.log_info(result)
+	end,
+})
+
+ltf.test({
+	name = "Test SFTP file transfer",
+	tags = { "module-ssh" },
+	body = function()
+		local session = new_session()
+
+		local channel = session:new_sftp_channel()
+		ltf.defer(function()
+			channel:close()
+		end)
+
+		local info = channel:file_info("test.txt")
+		assert(info)
+		ltf.log_info(info.type)
+		ltf.log_info(info.path)
+		ltf.log_info(info.permissions)
+		ltf.log_info(info.size)
+
+		channel:send({
+			local_file = "../README.md",
+			remote_file = "README.md.copy",
+			mode = "overwrite",
+		})
+
+		channel:receive({
+			local_file = "../README.md.copy",
+			remote_file = "README.md.copy",
+		})
 	end,
 })

@@ -50,6 +50,8 @@ static int log_level_to_palindex_map[] = {
     9, 1, 3, 4, 2, 6,
 };
 
+static bool result_render = false;
+
 void ltf_tui_set_test_progress(double progress) {
     ui_state.current_test_progress = progress;
 }
@@ -143,6 +145,7 @@ void ltf_tui_hook_log(ltf_state_test_output_t *output) {
     pico_print_block(ui, tmp);
     free(tmp);
 }
+
 /*------------------- LTF UI functions -------------------*/
 static void ltf_tui_project_header_render(pico_t *ui) {
 
@@ -348,7 +351,11 @@ static void ltf_tui_summary_render(pico_t *ui, size_t size) {
 
     pico_ui_clear_line(ui, size + 2);
     pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    pico_ui_puts_yx(ui, size + 2, 0, "   ├─ ");
+    if (!result_render) {
+        pico_ui_puts_yx(ui, size + 2, 0, "   └─ ");
+    } else {
+        pico_ui_puts_yx(ui, size + 2, 0, "   ├─ ");
+    }
     pico_set_colors(ui, PICO_COLOR_BRIGHT_WHITE, -1);
     pico_ui_puts_yx(ui, size + 2, 6, "Elapsed Time: ");
     pico_set_colors(ui, PICO_COLOR_BRIGHT_YELLOW, -1);
@@ -430,12 +437,9 @@ static inline const char *pico_fg_color(int color) {
 void tui_render_result(void *ud) {
     (void)ud;
 
+    result_render = true;
     render_ui(ui, NULL);
 
-    pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
-    pico_ui_puts_yx(ui, 14, 0, "   ├─ ");
-
-    //  "-" Gap  between logs
     pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
     term_size_t terminal_size = get_term_size();
     for (int i = 0; i < terminal_size.cols - 1; ++i) {
@@ -444,6 +448,7 @@ void tui_render_result(void *ud) {
     }
     pico_set_colors(ui, PICO_COLOR_BRIGHT_MAGENTA, -1);
     pico_println(ui, "-");
+
     ltf_tui_deinit();
 
     // Remove gap between tui and new text
@@ -524,6 +529,8 @@ void tui_render_result(void *ud) {
     if (!opts->no_logs) {
         puts("\nFor more info: 'ltf logs info latest'");
     }
+
+    result_render = false;
 }
 
 void ltf_tui_test_started(ltf_state_test_t *test) {

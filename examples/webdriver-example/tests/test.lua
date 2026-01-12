@@ -20,7 +20,15 @@ ltf.test({
 			proc_handle:kill()
 		end)
 
+		-- Wait reasonable time for the webdriver to start up
 		ltf.sleep(1000)
+
+		-- Check that webdriver didn't exit.
+		-- Refer to `ltf.proc` docs and `proc-example` for more info on proc API
+		if proc_handle:wait() ~= nil then
+			local stderr = proc_handle:read("stderr")
+			error("Unable to start webdriver: " .. stderr)
+		end
 
 		-- Start webdriver session on port 9515
 		local session = webdriver.new_session({

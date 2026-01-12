@@ -7,7 +7,7 @@ local wd = ltf.webdriver
 M.setup = function()
 	local port = 9515
 	local proc_handle = wd.spawn_webdriver({
-		webdriver = "chromium.chromedriver",
+		webdriver = "geckodriver",
 		port = port,
 	})
 	ltf.defer(function()
@@ -17,11 +17,15 @@ M.setup = function()
 	-- Just making sure it runs:
 	ltf.sleep(5000)
 	local status = proc_handle:wait()
-	assert(status == nil)
+	if status ~= nil then
+		local stderr = proc_handle:read("stderr", nil)
+		error("Unable to start webdriver: " .. stderr)
+	end
 
 	local session = wd.new_session({
 		port = port,
 		headless = true,
+		headless_implementation = "geckodriver",
 	})
 	ltf.defer(function()
 		session:close()
