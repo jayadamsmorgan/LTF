@@ -1,0 +1,16 @@
+Package: ltf
+Version: 2.0.0-alpha+git
+Architecture: amd64
+Maintainer: Unknown <unknown@example.com>
+Depends: libc6 (>= 2.38), libcurl4t64 (>= 7.16.2), liblua5.4-0 (>= 5.4.6)
+Filename: pool/main/ltf_2.0.0-alpha+git_amd64.deb
+Size: 1869420
+MD5sum: 8ffa77c1cff0a7cac69525e22cd7569c
+SHA1: 8e56765ec4139d3468c2e4a76139ed64e626be23
+SHA256: 53c68806f7a93e0728416673043f976b833b5d1817fb00284d3067020e254809
+Section: utils
+Priority: optional
+Homepage: https://github.com/your/repo
+Description: LTF - Test Automation Framework (CLI)
+ Built from commit .
+
