@@ -1,9 +1,9 @@
 name: Publish APT Repo
 
 on:
-  workflow_run:
-    workflows: ["Build .deb (amd64, arm64)"]
-    types: [completed]
+  # workflow_run:
+  #   workflows: ["Build .deb (amd64, arm64)"]
+  #   types: [completed]
   workflow_dispatch:
   push:
     branches: ["deb_ci"]
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   publish:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
