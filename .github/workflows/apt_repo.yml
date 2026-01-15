@@ -1,12 +1,9 @@
 name: Publish APT Repo
 
 on:
-  # workflow_run:
-  #   workflows: ["Build .deb (amd64, arm64)"]
-  #   types: [completed]
-  workflow_dispatch:
-  push:
-    branches: ["deb_ci"]
+  workflow_run:
+    workflows: ["Build .deb (amd64, arm64)"]
+    types: [completed]
 
 permissions:
   contents: write
@@ -17,11 +14,11 @@ concurrency:
 
 jobs:
   publish:
-    # if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout (default branch)
+      - name: Checkout (for git worktree + push)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -67,7 +64,6 @@ jobs:
           SUITE="stable"
           COMP="main"
 
-          # Worktree for gh-pages
           rm -rf .gh-pages
           git fetch origin gh-pages:gh-pages || true
           git worktree add .gh-pages gh-pages 2>/dev/null || {
@@ -82,11 +78,9 @@ jobs:
           mkdir -p "${APT_ROOT}/dists/${SUITE}/${COMP}/binary-amd64"
           mkdir -p "${APT_ROOT}/dists/${SUITE}/${COMP}/binary-arm64"
 
-          # Copy .debs into pool
           cp -v artifacts/amd64/*.deb "${APT_ROOT}/pool/${COMP}/"
           cp -v artifacts/arm64/*.deb "${APT_ROOT}/pool/${COMP}/"
 
-          # Generate Packages + Packages.gz per arch
           pushd "${APT_ROOT}" >/dev/null
           dpkg-scanpackages --arch amd64 "pool/${COMP}" > "dists/${SUITE}/${COMP}/binary-amd64/Packages"
           gzip -9c "dists/${SUITE}/${COMP}/binary-amd64/Packages" > "dists/${SUITE}/${COMP}/binary-amd64/Packages.gz"
@@ -94,7 +88,6 @@ jobs:
           dpkg-scanpackages --arch arm64 "pool/${COMP}" > "dists/${SUITE}/${COMP}/binary-arm64/Packages"
           gzip -9c "dists/${SUITE}/${COMP}/binary-arm64/Packages" > "dists/${SUITE}/${COMP}/binary-arm64/Packages.gz"
 
-          # Release + signing
           cd "dists/${SUITE}"
           {
             echo "Origin: LTF"
@@ -118,16 +111,13 @@ jobs:
             gpg --batch --yes --clearsign -o InRelease Release
             gpg --batch --yes -abs -o Release.gpg Release
           fi
-
           popd >/dev/null
 
-          # Export public key into the hosted repo (THIS ANSWERS "WHERE SHOULD IT GO")
           mkdir -p "${APT_ROOT}/keys"
           gpg --batch --yes --export > "${APT_ROOT}/keys/ltf-archive-keyring.gpg"
           gpg --batch --yes --armor --export > "${APT_ROOT}/keys/ltf-archive-keyring.asc"
           chmod 0644 "${APT_ROOT}/keys/ltf-archive-keyring.gpg"
 
-          # Commit only gh-pages changes
           cd .gh-pages
           touch .nojekyll
           git add -A

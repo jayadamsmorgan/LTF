@@ -2,8 +2,11 @@ name: Build .deb (amd64, arm64)
 
 on:
   push:
-    branches: [ main, deb_ci ]
-    # tags: [ "v*" ]
+    branches: [ deb_ci ]
+    tags: [ "v*" ]
+
+permissions:
+  contents: read
 
 jobs:
   deb:
