@@ -8,15 +8,19 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
 jobs:
   docs:
     runs-on: self-hosted
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Check out
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configure Git Credentials
         run: |
@@ -27,16 +31,47 @@ jobs:
         with:
           python-version: 3.x
 
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
-
       - uses: actions/cache@v4
         with:
-          key: mkdocs-material-${{ env.cache_id }}
+          key: mkdocs-material-${{ runner.os }}-${{ hashFiles('**/mkdocs.yml') }}
           path: ~/.cache
           restore-keys: |
-            mkdocs-material-
+            mkdocs-material-${{ runner.os }}-
 
-      - run: pip install mkdocs-material
+      - name: Install mkdocs
+        run: pip install mkdocs-material
 
-      - run: mkdocs gh-deploy --force
+      - name: Build docs
+        run: mkdocs build
+
+      - name: Update gh-pages (preserve /apt)
+        run: |
+          set -euo pipefail
+
+          # Prepare a clean worktree for gh-pages
+          rm -rf .gh-pages
+          git fetch origin gh-pages:gh-pages || true
+          git worktree add .gh-pages gh-pages 2>/dev/null || {
+            # If gh-pages doesn't exist yet, create it
+            git checkout --orphan gh-pages
+            git reset --hard
+            mkdir -p .gh-pages
+            git worktree add .gh-pages gh-pages
+          }
+
+          # Copy docs site into gh-pages root, but preserve apt/
+          rsync -a --delete \
+            --exclude 'apt/' \
+            site/ .gh-pages/
+
+          # Commit & push if changed
+          cd .gh-pages
+          touch .nojekyll
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to publish."
+            exit 0
+          fi
+          git commit -m "docs: deploy"
+          git push origin gh-pages
 
