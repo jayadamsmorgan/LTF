@@ -1,7 +1,7 @@
 project(
   'ltf',
   'c',
-  version: '2.0.0-alpha',
+  version: '2.0.0-alpha2',
   default_options: [
     'c_std=gnu2x',
     'warning_level=3',
