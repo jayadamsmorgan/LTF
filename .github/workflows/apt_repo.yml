@@ -118,16 +118,17 @@ jobs:
           cp -v artifacts/amd64/*.deb "${APT_ROOT}/pool/${COMP}/"
           cp -v artifacts/arm64/*.deb "${APT_ROOT}/pool/${COMP}/"
 
+          # Work inside the repo root for correct paths and hashing
           pushd "${APT_ROOT}" >/dev/null
+
+          # Generate Packages + Packages.gz per arch
           dpkg-scanpackages --arch amd64 "pool/${COMP}" > "dists/${SUITE}/${COMP}/binary-amd64/Packages"
           gzip -9c "dists/${SUITE}/${COMP}/binary-amd64/Packages" > "dists/${SUITE}/${COMP}/binary-amd64/Packages.gz"
 
           dpkg-scanpackages --arch arm64 "pool/${COMP}" > "dists/${SUITE}/${COMP}/binary-arm64/Packages"
           gzip -9c "dists/${SUITE}/${COMP}/binary-arm64/Packages" > "dists/${SUITE}/${COMP}/binary-arm64/Packages.gz"
 
-          pushd "${APT_ROOT}" >/dev/null
-
-          # Generate Release with hashes
+          # Generate Release WITH hashes
           apt-ftparchive \
             -o APT::FTPArchive::Release::Origin="LTF" \
             -o APT::FTPArchive::Release::Label="LTF" \
@@ -151,22 +152,13 @@ jobs:
 
           popd >/dev/null
 
-          if [ -n "${APT_GPG_PASSPHRASE:-}" ]; then
-            gpg --batch --yes --pinentry-mode loopback --passphrase "${APT_GPG_PASSPHRASE}" \
-              --clearsign -o InRelease Release
-            gpg --batch --yes --pinentry-mode loopback --passphrase "${APT_GPG_PASSPHRASE}" \
-              -abs -o Release.gpg Release
-          else
-            gpg --batch --yes --clearsign -o InRelease Release
-            gpg --batch --yes -abs -o Release.gpg Release
-          fi
-          popd >/dev/null
-
+          # Export public key into hosted repo
           mkdir -p "${APT_ROOT}/keys"
           gpg --batch --yes --export > "${APT_ROOT}/keys/ltf-archive-keyring.gpg"
           gpg --batch --yes --armor --export > "${APT_ROOT}/keys/ltf-archive-keyring.asc"
           chmod 0644 "${APT_ROOT}/keys/ltf-archive-keyring.gpg"
 
+          # Commit & push gh-pages changes
           cd .gh-pages
           touch .nojekyll
           git add -A
