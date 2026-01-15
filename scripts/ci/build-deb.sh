@@ -95,5 +95,39 @@ cleanup_tmp_debian_ctx() {
 }
 trap cleanup_tmp_debian_ctx EXIT
 
-DEP_LINE="$(dpkg-shlibdeps -O -e "$STAGE_DIR/usr/bin/$PK
+DEP_LINE="$(dpkg-shlibdeps -O -e "$STAGE_DIR/usr/bin/$PKG_NAME" | tr -d '\n')"
+DEPENDS="${DEP_LINE#shlibs:Depends=}"
+if [[ "$DEPENDS" == "$DEP_LINE" ]]; then
+  DEPENDS="libc6"
+fi
+
+# ---- Create DEBIAN/control ----
+mkdir -p "$STAGE_DIR/DEBIAN"
+cat > "$STAGE_DIR/DEBIAN/control" <<EOF
+Package: $PKG_NAME
+Version: $DEB_VER
+Section: utils
+Priority: optional
+Architecture: $ARCH
+Maintainer: $(git log -1 --pretty=format:'%an <%ae>' 2>/dev/null || echo 'Unknown <unknown@example.com>')
+Depends: $DEPENDS
+Homepage: https://github.com/${GITHUB_REPOSITORY:-your/repo}
+Description: LTF - Test Automation Framework (CLI)
+ Built from commit ${GIT_SHA} at ${BUILD_STAMP} UTC.
+EOF
+
+chmod 0755 "$STAGE_DIR/DEBIAN"
+chmod 0644 "$STAGE_DIR/DEBIAN/control"
+
+# ---- Build the .deb ----
+OUT="dist"
+mkdir -p "$OUT"
+DEB_FILE="${OUT}/${PKG_NAME}_${DEB_VER}_${ARCH}.deb"
+
+fakeroot dpkg-deb --build "$STAGE_DIR" "$DEB_FILE"
+
+# ---- Quick sanity check ----
+dpkg-deb -I "$DEB_FILE" | sed -n '1,80p'
+echo "Built: $DEB_FILE"
+file "$DEB_FILE" || true
 
