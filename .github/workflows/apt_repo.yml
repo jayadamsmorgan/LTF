@@ -1,9 +1,9 @@
 name: Publish APT Repo
 
 on:
-  workflow_run:
-    workflows: ["Build .deb (amd64, arm64)"]
-    types: [completed]
+  # workflow_run:
+  #   workflows: ["Build .deb (amd64, arm64)"]
+  #   types: [completed]
   workflow_dispatch:
 
 permissions:
