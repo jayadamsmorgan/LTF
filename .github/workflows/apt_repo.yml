@@ -1,0 +1,171 @@
+name: Build .deb (amd64, arm64) & Publish APT Repo
+
+on:
+  push:
+    branches: [ deb_ci ]
+    tags: [ "v*" ]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU (for arm64)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build .deb (amd64)
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist
+
+          docker run --rm \
+            --platform "linux/amd64" \
+            -v "${GITHUB_WORKSPACE}:/ws" \
+            -w /ws \
+            ubuntu:24.04 \
+            bash -lc "./scripts/ci/build-deb.sh"
+
+          mkdir -p artifacts/amd64
+          cp -v dist/*.deb artifacts/amd64/
+
+      - name: Upload artifact (amd64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-amd64
+          path: artifacts/amd64/*.deb
+
+      - name: Build .deb (arm64)
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist
+
+          docker run --rm \
+            --platform "linux/arm64" \
+            -v "${GITHUB_WORKSPACE}:/ws" \
+            -w /ws \
+            ubuntu:24.04 \
+            bash -lc "./scripts/ci/build-deb.sh"
+
+          mkdir -p artifacts/arm64
+          cp -v dist/*.deb artifacts/arm64/
+
+      - name: Upload artifact (arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-arm64
+          path: artifacts/arm64/*.deb
+
+      - name: Install repo tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gnupg apt-utils dpkg-dev gzip rsync
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Import signing key
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          echo "${APT_GPG_PRIVATE_KEY}" | gpg --batch --import
+
+      - name: Update gh-pages /apt only
+        env:
+          APT_GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+
+          SUITE="stable"
+          COMP="main"
+
+          rm -rf .gh-pages
+          git fetch origin gh-pages:gh-pages || true
+          git worktree add .gh-pages gh-pages 2>/dev/null || {
+            git checkout --orphan gh-pages
+            git reset --hard
+            git worktree add .gh-pages gh-pages
+          }
+
+          APT_ROOT=".gh-pages/apt"
+          rm -rf "${APT_ROOT}"
+          mkdir -p "${APT_ROOT}/pool/${COMP}"
+          mkdir -p "${APT_ROOT}/dists/${SUITE}/${COMP}/binary-amd64"
+          mkdir -p "${APT_ROOT}/dists/${SUITE}/${COMP}/binary-arm64"
+
+          cp -v artifacts/amd64/*.deb "${APT_ROOT}/pool/${COMP}/"
+          cp -v artifacts/arm64/*.deb "${APT_ROOT}/pool/${COMP}/"
+
+          # Work inside the repo root for correct paths and hashing
+          pushd "${APT_ROOT}" >/dev/null
+
+          # Generate Packages + Packages.gz per arch
+          dpkg-scanpackages --arch amd64 "pool/${COMP}" > "dists/${SUITE}/${COMP}/binary-amd64/Packages"
+          gzip -9c "dists/${SUITE}/${COMP}/binary-amd64/Packages" > "dists/${SUITE}/${COMP}/binary-amd64/Packages.gz"
+
+          dpkg-scanpackages --arch arm64 "pool/${COMP}" > "dists/${SUITE}/${COMP}/binary-arm64/Packages"
+          gzip -9c "dists/${SUITE}/${COMP}/binary-arm64/Packages" > "dists/${SUITE}/${COMP}/binary-arm64/Packages.gz"
+
+          # Generate Release WITH hashes
+          apt-ftparchive \
+            -o APT::FTPArchive::Release::Origin="LTF" \
+            -o APT::FTPArchive::Release::Label="LTF" \
+            -o APT::FTPArchive::Release::Suite="${SUITE}" \
+            -o APT::FTPArchive::Release::Codename="${SUITE}" \
+            -o APT::FTPArchive::Release::Components="${COMP}" \
+            -o APT::FTPArchive::Release::Architectures="amd64 arm64" \
+            -o APT::FTPArchive::Release::Description="LTF APT repository" \
+            release "dists/${SUITE}" > "dists/${SUITE}/Release"
+
+          # Sign Release -> InRelease and Release.gpg
+          if [ -n "${APT_GPG_PASSPHRASE:-}" ]; then
+            gpg --batch --yes --pinentry-mode loopback --passphrase "${APT_GPG_PASSPHRASE}" \
+              --clearsign -o "dists/${SUITE}/InRelease" "dists/${SUITE}/Release"
+            gpg --batch --yes --pinentry-mode loopback --passphrase "${APT_GPG_PASSPHRASE}" \
+              -abs -o "dists/${SUITE}/Release.gpg" "dists/${SUITE}/Release"
+          else
+            gpg --batch --yes --clearsign -o "dists/${SUITE}/InRelease" "dists/${SUITE}/Release"
+            gpg --batch --yes -abs -o "dists/${SUITE}/Release.gpg" "dists/${SUITE}/Release"
+          fi
+
+          popd >/dev/null
+
+          # Export public key into hosted repo
+          mkdir -p "${APT_ROOT}/keys"
+          gpg --batch --yes --export > "${APT_ROOT}/keys/ltf-archive-keyring.gpg"
+          gpg --batch --yes --armor --export > "${APT_ROOT}/keys/ltf-archive-keyring.asc"
+          chmod 0644 "${APT_ROOT}/keys/ltf-archive-keyring.gpg"
+
+          # Commit & push gh-pages changes
+          cd .gh-pages
+          touch .nojekyll
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No APT repo changes."
+            exit 0
+          fi
+          git commit -m "apt: publish repo"
+          git push origin gh-pages
+
