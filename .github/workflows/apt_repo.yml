@@ -4,6 +4,7 @@ on:
   push:
     branches: [ deb_ci ]
     tags: [ "v*" ]
+  workflow_dispatch:
 
 permissions:
   contents: write
