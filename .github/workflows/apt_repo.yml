@@ -125,19 +125,31 @@ jobs:
           dpkg-scanpackages --arch arm64 "pool/${COMP}" > "dists/${SUITE}/${COMP}/binary-arm64/Packages"
           gzip -9c "dists/${SUITE}/${COMP}/binary-arm64/Packages" > "dists/${SUITE}/${COMP}/binary-arm64/Packages.gz"
 
-          cd "dists/${SUITE}"
-          {
-            echo "Origin: LTF"
-            echo "Label: LTF"
-            echo "Suite: ${SUITE}"
-            echo "Codename: ${SUITE}"
-            echo "Components: ${COMP}"
-            echo "Architectures: amd64 arm64"
-            echo "Description: LTF APT repository"
-            echo "Date: $(date -Ru)"
-            echo
-            apt-ftparchive release .
-          } > Release
+          pushd "${APT_ROOT}" >/dev/null
+
+          # Generate Release with hashes
+          apt-ftparchive \
+            -o APT::FTPArchive::Release::Origin="LTF" \
+            -o APT::FTPArchive::Release::Label="LTF" \
+            -o APT::FTPArchive::Release::Suite="${SUITE}" \
+            -o APT::FTPArchive::Release::Codename="${SUITE}" \
+            -o APT::FTPArchive::Release::Components="${COMP}" \
+            -o APT::FTPArchive::Release::Architectures="amd64 arm64" \
+            -o APT::FTPArchive::Release::Description="LTF APT repository" \
+            release "dists/${SUITE}" > "dists/${SUITE}/Release"
+
+          # Sign Release -> InRelease and Release.gpg
+          if [ -n "${APT_GPG_PASSPHRASE:-}" ]; then
+            gpg --batch --yes --pinentry-mode loopback --passphrase "${APT_GPG_PASSPHRASE}" \
+              --clearsign -o "dists/${SUITE}/InRelease" "dists/${SUITE}/Release"
+            gpg --batch --yes --pinentry-mode loopback --passphrase "${APT_GPG_PASSPHRASE}" \
+              -abs -o "dists/${SUITE}/Release.gpg" "dists/${SUITE}/Release"
+          else
+            gpg --batch --yes --clearsign -o "dists/${SUITE}/InRelease" "dists/${SUITE}/Release"
+            gpg --batch --yes -abs -o "dists/${SUITE}/Release.gpg" "dists/${SUITE}/Release"
+          fi
+
+          popd >/dev/null
 
           if [ -n "${APT_GPG_PASSPHRASE:-}" ]; then
             gpg --batch --yes --pinentry-mode loopback --passphrase "${APT_GPG_PASSPHRASE}" \
