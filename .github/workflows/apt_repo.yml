@@ -1,9 +1,9 @@
-name: Publish APT Repo
+name: Build .deb (amd64, arm64) & Publish APT Repo
 
 on:
-  workflow_run:
-    workflows: ["Build .deb (amd64, arm64)"]
-    types: [completed]
+  push:
+    branches: [ deb_ci ]
+    tags: [ "v*" ]
 
 permissions:
   contents: write
@@ -13,29 +13,66 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  build_and_publish:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout (for git worktree + push)
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Download amd64 artifact
-        uses: actions/download-artifact@v4
+      - name: Set up QEMU (for arm64)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build .deb (amd64)
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist
+
+          docker run --rm \
+            --platform "linux/amd64" \
+            -v "${GITHUB_WORKSPACE}:/ws" \
+            -w /ws \
+            ubuntu:24.04 \
+            bash -lc "./scripts/ci/build-deb.sh"
+
+          mkdir -p artifacts/amd64
+          cp -v dist/*.deb artifacts/amd64/
+
+      - name: Upload artifact (amd64)
+        uses: actions/upload-artifact@v4
         with:
           name: deb-amd64
-          path: artifacts/amd64
-          run-id: ${{ github.event.workflow_run.id }}
+          path: artifacts/amd64/*.deb
 
-      - name: Download arm64 artifact
-        uses: actions/download-artifact@v4
+      - name: Build .deb (arm64)
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist
+
+          docker run --rm \
+            --platform "linux/arm64" \
+            -v "${GITHUB_WORKSPACE}:/ws" \
+            -w /ws \
+            ubuntu:24.04 \
+            bash -lc "./scripts/ci/build-deb.sh"
+
+          mkdir -p artifacts/arm64
+          cp -v dist/*.deb artifacts/arm64/
+
+      - name: Upload artifact (arm64)
+        uses: actions/upload-artifact@v4
         with:
           name: deb-arm64
-          path: artifacts/arm64
-          run-id: ${{ github.event.workflow_run.id }}
+          path: artifacts/arm64/*.deb
 
       - name: Install repo tooling
         run: |
@@ -127,3 +164,4 @@ jobs:
           fi
           git commit -m "apt: publish repo"
           git push origin gh-pages
+
