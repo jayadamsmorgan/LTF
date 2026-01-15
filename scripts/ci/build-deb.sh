@@ -41,6 +41,7 @@ apt-get install -y --no-install-recommends \
 rm -rf "$BUILD_DIR" "$STAGE_DIR"
 meson setup "$BUILD_DIR" \
   --buildtype=release \
+  --prefix=/usr \
   -Dltf_dir_path="$INSTALL_LTF_DIR"
 
 # Now we can introspect the version
