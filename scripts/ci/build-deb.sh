@@ -38,7 +38,8 @@ apt-get install -y --no-install-recommends \
   libunibilium-dev \
   libserialport-dev \
   libssh2-1-dev \
-  liblua5.4-dev
+  liblua5.4-dev \
+  libgpg-error-dev
 
 # ---- Build (release) ----
 rm -rf "$BUILD_DIR" "$STAGE_DIR"
