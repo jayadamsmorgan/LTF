@@ -8,14 +8,10 @@ BUILD_DIR="build"
 STAGE_DIR="pkgroot"
 
 # ---- Determine version ----
-# Uses Meson project version; for CI you may append git sha for uniqueness
 GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || true)"
 
-# We'll read Meson version via introspection (needs jq)
-# If jq isn't available, fall back to a simple default.
 MESON_VER="0.0.0"
 if command -v meson >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
-  # meson introspect needs a configured build dir, so do it after setup
   :
 fi
 
@@ -60,6 +56,36 @@ DESTDIR="$PWD/$STAGE_DIR" meson install -C "$BUILD_DIR"
 ARCH="$(dpkg --print-architecture)"   # amd64 / arm64 inside the container
 
 # ---- Generate runtime Depends automatically ----
+# dpkg-shlibdeps expects a Debian *source package* context and will try to read ./debian/control.
+# We create a minimal temporary debian/control (and substvars) just for dependency computation.
+HAD_DEBIAN_DIR=0
+if [[ -d debian ]]; then
+  HAD_DEBIAN_DIR=1
+fi
+
+mkdir -p debian
+: > debian/substvars
+
+cat > debian/control <<EOF
+Source: $PKG_NAME
+Section: utils
+Priority: optional
+Maintainer: $(git log -1 --pretty=format:'%an <%ae>' 2>/dev/null || echo 'Unknown <unknown@example.com>')
+Standards-Version: 4.6.2
+
+Package: $PKG_NAME
+Architecture: any
+Description: Temporary control file for CI shlibdeps calculation
+EOF
+
+cleanup_tmp_debian_ctx() {
+  rm -f debian/control debian/substvars
+  if [[ "$HAD_DEBIAN_DIR" -eq 0 ]]; then
+    rmdir debian 2>/dev/null || true
+  fi
+}
+trap cleanup_tmp_debian_ctx EXIT
+
 # This inspects linked shared libraries and emits a dependency string.
 DEP_LINE="$(dpkg-shlibdeps -O -e "$STAGE_DIR/usr/bin/$PKG_NAME" | tr -d '\n')"
 # Format: "shlibs:Depends=libc6 (>= ...), libcurl4 (>= ...), ..."
@@ -98,3 +124,4 @@ fakeroot dpkg-deb --build "$STAGE_DIR" "$DEB_FILE"
 dpkg-deb -I "$DEB_FILE" | sed -n '1,80p'
 echo "Built: $DEB_FILE"
 file "$DEB_FILE" || true
+
