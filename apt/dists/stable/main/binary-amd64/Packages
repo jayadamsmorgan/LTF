@@ -1,13 +1,13 @@
 Package: ltf
-Version: 2.0.0-alpha+git
+Version: 2.0.0-alpha2+git
 Architecture: amd64
 Maintainer: Unknown <unknown@example.com>
 Depends: libc6 (>= 2.38), libcurl4t64 (>= 7.16.2), liblua5.4-0 (>= 5.4.6)
-Filename: pool/main/ltf_2.0.0-alpha+git_amd64.deb
-Size: 1870846
-MD5sum: f72f027a7ad1e7917ef4b188de326ef0
-SHA1: 2519a4d80c3e54c6dfcbe9278e2aaac32e543dbc
-SHA256: ffcc228d476c387dba30692df3f0953968b427f1403e8c14b4f555b902bdaaab
+Filename: pool/main/ltf_2.0.0-alpha2+git_amd64.deb
+Size: 1870776
+MD5sum: d7e1fce914b8dd783e228ed3c9069ec0
+SHA1: dbb1ad24e0f074bd5c3db6a217a6eedb3f3ba68f
+SHA256: 59934838ae51c6905e6b4ba42e7e7d73df63abced6dfaa22317b9ee6748c907a
 Section: utils
 Priority: optional
 Homepage: https://github.com/your/repo
