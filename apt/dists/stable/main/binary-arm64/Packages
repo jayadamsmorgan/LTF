@@ -1,16 +1,16 @@
 Package: ltf
-Version: 2.0.0~alpha+git20260115214955+9a2c243
+Version: 2.0.0~alpha2+git20260115230744+1852519
 Architecture: arm64
 Maintainer: Unknown <unknown@example.com>
 Depends: libc6 (>= 2.38), libcurl4t64 (>= 7.16.2), liblua5.4-0 (>= 5.4.6)
-Filename: pool/main/ltf_2.0.0~alpha+git20260115214955+9a2c243_arm64.deb
-Size: 1732042
-MD5sum: 6283decceaae54b87458a3e369a2c153
-SHA1: 7fba907cdbcc7cad0ea848ed7f603ced3d19289c
-SHA256: c75ce68f056c7b2ca0856d032b06030e983c5a07a5b240ecd299021e224fb048
+Filename: pool/main/ltf_2.0.0~alpha2+git20260115230744+1852519_arm64.deb
+Size: 1732090
+MD5sum: fb272207a77fae11e8d5ded54889ed8b
+SHA1: 06a6ba0d4abf4cb652982bf8ec332b4fce230237
+SHA256: 2a51b11b97bc384636a520b595caeb60cb123bb323e1658118913259d9be70bf
 Section: utils
 Priority: optional
 Homepage: https://github.com/jayadamsmorgan/LTF
 Description: LTF - Test Automation Framework (CLI)
- Built from commit 9a2c243 at 20260115214955 UTC.
+ Built from commit 1852519 at 20260115230744 UTC.
 
