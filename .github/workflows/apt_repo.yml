@@ -4,6 +4,7 @@ on:
   push:
     branches: [ deb_ci ]
     tags: [ "v*" ]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -22,6 +23,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Compute a single stamp once so both architectures get the SAME version
+      - name: Compute version stamp (UTC) + git sha
+        run: |
+          set -euo pipefail
+          echo "LTF_BUILD_STAMP=$(date -u +%Y%m%d%H%M%S)" >> "$GITHUB_ENV"
+          echo "LTF_GIT_SHA=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_ENV"
+
       - name: Set up QEMU (for arm64)
         uses: docker/setup-qemu-action@v3
         with:
@@ -38,6 +46,9 @@ jobs:
 
           docker run --rm \
             --platform "linux/amd64" \
+            -e LTF_BUILD_STAMP="${LTF_BUILD_STAMP}" \
+            -e LTF_GIT_SHA="${LTF_GIT_SHA}" \
+            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
             -v "${GITHUB_WORKSPACE}:/ws" \
             -w /ws \
             ubuntu:24.04 \
@@ -60,6 +71,9 @@ jobs:
 
           docker run --rm \
             --platform "linux/arm64" \
+            -e LTF_BUILD_STAMP="${LTF_BUILD_STAMP}" \
+            -e LTF_GIT_SHA="${LTF_GIT_SHA}" \
+            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
             -v "${GITHUB_WORKSPACE}:/ws" \
             -w /ws \
             ubuntu:24.04 \
@@ -110,25 +124,26 @@ jobs:
           }
 
           APT_ROOT=".gh-pages/apt"
-          rm -rf "${APT_ROOT}"
+
+          # Keep old packages for downgrade support
           mkdir -p "${APT_ROOT}/pool/${COMP}"
+
+          # Recreate indexes each run, but keep pool/
+          rm -rf "${APT_ROOT}/dists/${SUITE}"
           mkdir -p "${APT_ROOT}/dists/${SUITE}/${COMP}/binary-amd64"
           mkdir -p "${APT_ROOT}/dists/${SUITE}/${COMP}/binary-arm64"
 
           cp -v artifacts/amd64/*.deb "${APT_ROOT}/pool/${COMP}/"
           cp -v artifacts/arm64/*.deb "${APT_ROOT}/pool/${COMP}/"
 
-          # Work inside the repo root for correct paths and hashing
           pushd "${APT_ROOT}" >/dev/null
 
-          # Generate Packages + Packages.gz per arch
           dpkg-scanpackages --arch amd64 "pool/${COMP}" > "dists/${SUITE}/${COMP}/binary-amd64/Packages"
           gzip -9c "dists/${SUITE}/${COMP}/binary-amd64/Packages" > "dists/${SUITE}/${COMP}/binary-amd64/Packages.gz"
 
           dpkg-scanpackages --arch arm64 "pool/${COMP}" > "dists/${SUITE}/${COMP}/binary-arm64/Packages"
           gzip -9c "dists/${SUITE}/${COMP}/binary-arm64/Packages" > "dists/${SUITE}/${COMP}/binary-arm64/Packages.gz"
 
-          # Generate Release WITH hashes
           apt-ftparchive \
             -o APT::FTPArchive::Release::Origin="LTF" \
             -o APT::FTPArchive::Release::Label="LTF" \
@@ -139,7 +154,6 @@ jobs:
             -o APT::FTPArchive::Release::Description="LTF APT repository" \
             release "dists/${SUITE}" > "dists/${SUITE}/Release"
 
-          # Sign Release -> InRelease and Release.gpg
           if [ -n "${APT_GPG_PASSPHRASE:-}" ]; then
             gpg --batch --yes --pinentry-mode loopback --passphrase "${APT_GPG_PASSPHRASE}" \
               --clearsign -o "dists/${SUITE}/InRelease" "dists/${SUITE}/Release"
@@ -152,13 +166,11 @@ jobs:
 
           popd >/dev/null
 
-          # Export public key into hosted repo
           mkdir -p "${APT_ROOT}/keys"
           gpg --batch --yes --export > "${APT_ROOT}/keys/ltf-archive-keyring.gpg"
           gpg --batch --yes --armor --export > "${APT_ROOT}/keys/ltf-archive-keyring.asc"
           chmod 0644 "${APT_ROOT}/keys/ltf-archive-keyring.gpg"
 
-          # Commit & push gh-pages changes
           cd .gh-pages
           touch .nojekyll
           git add -A

@@ -7,12 +7,16 @@ INSTALL_LTF_DIR="/usr/share/ltf"
 BUILD_DIR="build"
 STAGE_DIR="pkgroot"
 
-# ---- Determine version ----
-GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || true)"
+# ---- Determine version inputs (prefer env passed from CI for consistency) ----
+# Important: both arches must get the SAME stamp or apt will see different versions.
+GIT_SHA="${LTF_GIT_SHA:-}"
+if [[ -z "${GIT_SHA}" ]]; then
+  GIT_SHA="$(git rev-parse --short=7 HEAD 2>/dev/null || true)"
+fi
 
-MESON_VER="0.0.0"
-if command -v meson >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
-  :
+BUILD_STAMP="${LTF_BUILD_STAMP:-}"
+if [[ -z "${BUILD_STAMP}" ]]; then
+  BUILD_STAMP="$(date -u +%Y%m%d%H%M%S)"
 fi
 
 # ---- Install build deps (Ubuntu/Debian) ----
@@ -44,9 +48,15 @@ meson setup "$BUILD_DIR" \
   --prefix=/usr \
   -Dltf_dir_path="$INSTALL_LTF_DIR"
 
-# Now we can introspect the version
+# Introspect the version from Meson
 MESON_VER="$(meson introspect --projectinfo "$BUILD_DIR" | jq -r .version)"
-DEB_VER="${MESON_VER}+git${GIT_SHA}"
+
+# Convert "2.0.0-alpha2" -> "2.0.0~alpha2" (Debian best practice for pre-releases)
+# Only the first "-" is replaced.
+MESON_VER_DEB="${MESON_VER/-/\~}"
+
+# Stamp build: +gitYYYYMMDDHHMMSS+<sha>
+DEB_VER="${MESON_VER_DEB}+git${BUILD_STAMP}+${GIT_SHA}"
 
 meson compile -C "$BUILD_DIR"
 
@@ -57,8 +67,6 @@ DESTDIR="$PWD/$STAGE_DIR" meson install -C "$BUILD_DIR"
 ARCH="$(dpkg --print-architecture)"   # amd64 / arm64 inside the container
 
 # ---- Generate runtime Depends automatically ----
-# dpkg-shlibdeps expects a Debian *source package* context and will try to read ./debian/control.
-# We create a minimal temporary debian/control (and substvars) just for dependency computation.
 HAD_DEBIAN_DIR=0
 if [[ -d debian ]]; then
   HAD_DEBIAN_DIR=1
@@ -87,12 +95,9 @@ cleanup_tmp_debian_ctx() {
 }
 trap cleanup_tmp_debian_ctx EXIT
 
-# This inspects linked shared libraries and emits a dependency string.
 DEP_LINE="$(dpkg-shlibdeps -O -e "$STAGE_DIR/usr/bin/$PKG_NAME" | tr -d '\n')"
-# Format: "shlibs:Depends=libc6 (>= ...), libcurl4 (>= ...), ..."
 DEPENDS="${DEP_LINE#shlibs:Depends=}"
 if [[ "$DEPENDS" == "$DEP_LINE" ]]; then
-  # Fallback (should not happen); keep it installable but you may need to fix deps.
   DEPENDS="libc6"
 fi
 
@@ -108,7 +113,7 @@ Maintainer: $(git log -1 --pretty=format:'%an <%ae>' 2>/dev/null || echo 'Unknow
 Depends: $DEPENDS
 Homepage: https://github.com/${GITHUB_REPOSITORY:-your/repo}
 Description: LTF - Test Automation Framework (CLI)
- Built from commit ${GIT_SHA}.
+ Built from commit ${GIT_SHA} at ${BUILD_STAMP} UTC.
 EOF
 
 chmod 0755 "$STAGE_DIR/DEBIAN"
