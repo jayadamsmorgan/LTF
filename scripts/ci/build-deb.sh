@@ -53,7 +53,7 @@ MESON_VER="$(meson introspect --projectinfo "$BUILD_DIR" | jq -r .version)"
 
 # Convert "2.0.0-alpha2" -> "2.0.0~alpha2" (Debian best practice for pre-releases)
 # Only the first "-" is replaced.
-MESON_VER_DEB="${MESON_VER/-/~}"
+MESON_VER_DEB="${MESON_VER/-/\~}"
 
 # Stamp build: +gitYYYYMMDDHHMMSS+<sha>
 DEB_VER="${MESON_VER_DEB}+git${BUILD_STAMP}+${GIT_SHA}"
