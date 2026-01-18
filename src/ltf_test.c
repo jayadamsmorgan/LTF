@@ -32,10 +32,10 @@
 #include <lua.h>
 #include <lualib.h>
 
+#include <pwd.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
-
 static int g_first = 0;
 static int g_last = 0;
 
@@ -303,31 +303,54 @@ static char *get_ltf_lib_dir() {
 
     return strdup(default_path);
 }
+static const char *get_home_dir(void) {
+    const char *home = getenv("HOME");
+    if (home && home[0])
+        return home;
 
+    struct passwd *pw = getpwuid(getuid());
+    return pw ? pw->pw_dir : NULL;
+}
 static void inject_modules_dir(lua_State *L) {
     LOG("Injecting LTF library directory...");
 
     ltf_lib_dir_path = get_ltf_lib_dir();
 
+    const char *home = get_home_dir();
+    if (!home)
+        return;
+
+    lua_getglobal(L, "_VERSION");
+    const char *ver = lua_tostring(L, -1);
+
+    char lua_ver[8];
+    sscanf(ver, "Lua %7s", lua_ver);
+
+    lua_pop(L, 1);
+
     lua_getglobal(L, "package");
-    lua_getfield(L, -1, "path"); /* pkg.path string */
+    lua_getfield(L, -1, "path");
+
     const char *old_path = lua_tostring(L, -1);
     if (directory_exists(project_common_test_dir_path)) {
-        lua_pushfstring(L,
-                        "%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
-                        "?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s",
-                        ltf_lib_dir_path, ltf_lib_dir_path,
-                        project_lib_dir_path, project_lib_dir_path,
-                        project_test_dir_path, project_test_dir_path,
-                        project_common_test_dir_path,
-                        project_common_test_dir_path, old_path);
+        lua_pushfstring(
+            L,
+            "%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
+            "?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/.luarocks/share/lua/"
+            "%s/?.lua;%s/.luarocks/share/lua/?/init.lua;%s",
+            ltf_lib_dir_path, ltf_lib_dir_path, project_lib_dir_path,
+            project_lib_dir_path, project_test_dir_path, project_test_dir_path,
+            project_common_test_dir_path, project_common_test_dir_path, home,
+            lua_ver, home, lua_ver, old_path);
     } else {
         lua_pushfstring(L,
                         "%s/?.lua;%s/?/init.lua;%s/?.lua;%s/?/init.lua;%s/"
-                        "?.lua;%s/?/init.lua;%s",
+                        "?.lua;%s/?/init.lua;%s/.luarocks/share/lua/%s/"
+                        "?.lua;%s/.luarocks/share/lua/%s/?/init.lua;%s",
                         ltf_lib_dir_path, ltf_lib_dir_path,
                         project_lib_dir_path, project_lib_dir_path,
-                        project_test_dir_path, project_test_dir_path, old_path);
+                        project_test_dir_path, project_test_dir_path, home,
+                        lua_ver, home, lua_ver, old_path);
     }
     lua_setfield(L, -3, "path"); /* package.path = … */
     lua_pop(L, 2);               /* pop path + package */
@@ -338,11 +361,23 @@ static void inject_modules_dir(lua_State *L) {
 static void inject_cmodules_dir(lua_State *L) {
     LOG("Injecting LTF C modules directory...");
 
+    lua_getglobal(L, "_VERSION");
+    const char *ver = lua_tostring(L, -1);
+
+    char lua_ver[8];
+    sscanf(ver, "Lua %7s", lua_ver);
+
+    lua_pop(L, 1);
+    const char *home = get_home_dir();
+    if (!home)
+        return;
+
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "cpath"); /* pkg.spath string */
     const char *old_cpath = lua_tostring(L, -1);
 
-    lua_pushfstring(L, "%s/?.so;%s", project_lib_dir_path, old_cpath);
+    lua_pushfstring(L, "%s/?.so;%s/.luarocks/lib/lua/%s/?.so;%s",
+                    project_lib_dir_path, home, lua_ver, old_cpath);
 
     lua_setfield(L, -3, "cpath"); /* package.spath = … */
     lua_pop(L, 2);                /* pop spath + package */
