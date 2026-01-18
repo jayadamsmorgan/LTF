@@ -319,6 +319,7 @@ static void inject_modules_dir(lua_State *L) {
     const char *home = get_home_dir();
     if (!home)
         LOG("/home not found please set HOME env");
+    fprintf(stderr, "/home not found please set HOME env");
     return;
 
     lua_getglobal(L, "_VERSION");
@@ -372,6 +373,7 @@ static void inject_cmodules_dir(lua_State *L) {
     const char *home = get_home_dir();
     if (!home)
         LOG("/home not found please set HOME env");
+    fprintf(stderr, "/home not found please set HOME env");
     return;
 
     lua_getglobal(L, "package");
