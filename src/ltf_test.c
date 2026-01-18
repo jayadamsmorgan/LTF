@@ -317,11 +317,11 @@ static void inject_modules_dir(lua_State *L) {
     ltf_lib_dir_path = get_ltf_lib_dir();
 
     const char *home = get_home_dir();
-    if (!home)
+    if (!home) {
         LOG("/home not found please set HOME env");
-    fprintf(stderr, "/home not found please set HOME env");
-    return;
-
+        fprintf(stderr, "/home not found please set HOME env");
+        exit(EXIT_FAILURE);
+    }
     lua_getglobal(L, "_VERSION");
     const char *ver = lua_tostring(L, -1);
 
@@ -371,10 +371,11 @@ static void inject_cmodules_dir(lua_State *L) {
 
     lua_pop(L, 1);
     const char *home = get_home_dir();
-    if (!home)
+    if (!home) {
         LOG("/home not found please set HOME env");
-    fprintf(stderr, "/home not found please set HOME env");
-    return;
+        fprintf(stderr, "/home not found please set HOME env");
+        exit(EXIT_FAILURE);
+    }
 
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "cpath"); /* pkg.spath string */
