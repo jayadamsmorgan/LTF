@@ -318,7 +318,8 @@ static void inject_modules_dir(lua_State *L) {
 
     const char *home = get_home_dir();
     if (!home)
-        return;
+        LOG("/home not found please set HOME env");
+    return;
 
     lua_getglobal(L, "_VERSION");
     const char *ver = lua_tostring(L, -1);
@@ -370,7 +371,8 @@ static void inject_cmodules_dir(lua_State *L) {
     lua_pop(L, 1);
     const char *home = get_home_dir();
     if (!home)
-        return;
+        LOG("/home not found please set HOME env");
+    return;
 
     lua_getglobal(L, "package");
     lua_getfield(L, -1, "cpath"); /* pkg.spath string */
