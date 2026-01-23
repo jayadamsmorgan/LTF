@@ -37,32 +37,35 @@ int ltf_eval() {
     luaL_openlibs(L);
     register_ltf_libs(L);
 
-    LOG("Trying to pars project libs...");
+    // We will return to this in future
 
-    const char *project = file_find_upwards(".ltf.json");
-
-    if (project) {
-        LOG("We are in existing project directory");
-        if (project_parser_parse()) {
-            return EXIT_FAILURE;
-        }
-
-        char *project_dir = strdup(project);
-        project_dir = dirname(project_dir);
-        asprintf(&project_lib_dir_path, "%s/lib", project_dir);
-
-        LOG("Project lib directory path: %s", project_lib_dir_path);
-        if (load_lua_dir(project_lib_dir_path, L) == -2) {
-            LOG("Error while trying to upload libraries");
-            goto deinit;
-        } else {
-            LOG("Libs were successfully uploaded ");
-        }
-
-    } else {
-        LOG("We are not in existing project directory. Skipping project libs "
-            "loading...");
-    }
+    // LOG("Trying to pars project libs...");
+    //
+    // const char *project = file_find_upwards(".ltf.json");
+    //
+    // if (project) {
+    //     LOG("We are in existing project directory");
+    //     if (project_parser_parse()) {
+    //         return EXIT_FAILURE;
+    //     }
+    //
+    //     char *project_dir = strdup(project);
+    //     project_dir = dirname(project_dir);
+    //     asprintf(&project_lib_dir_path, "%s/lib", project_dir);
+    //
+    //     LOG("Project lib directory path: %s", project_lib_dir_path);
+    //     if (load_lua_dir(project_lib_dir_path, L) == -2) {
+    //         LOG("Error while trying to upload libraries");
+    //         goto deinit;
+    //     } else {
+    //         LOG("Libs were successfully uploaded ");
+    //     }
+    //
+    // } else {
+    //     LOG("We are not in existing project directory. Skipping project libs
+    //     "
+    //         "loading...");
+    // }
 
     size_t argc = da_size(opts->args);
 
