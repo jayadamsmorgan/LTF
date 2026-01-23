@@ -2,17 +2,16 @@
 
 #include "cmd_parser.h"
 #include "internal_logging.h"
+#include "libgen.h"
 #include "ltf_test.h"
 #include "project_parser.h"
-
 #include "util/files.h"
 #include "util/time.h"
-
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
 #include <stdio.h>
-
+#include <string.h>
 static char *project_lib_dir_path = NULL;
 
 int ltf_eval() {
@@ -48,7 +47,9 @@ int ltf_eval() {
             return EXIT_FAILURE;
         }
 
-        asprintf(&project_lib_dir_path, "%s/lib", project);
+        char *project_dir = strdup(project);
+        project_dir = dirname(project_dir);
+        asprintf(&project_lib_dir_path, "%s/lib", project_dir);
 
         LOG("Project lib directory path: %s", project_lib_dir_path);
         if (load_lua_dir(project_lib_dir_path, L) == -2) {
