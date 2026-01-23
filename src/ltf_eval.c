@@ -37,6 +37,8 @@ int ltf_eval() {
     luaL_openlibs(L);
     register_ltf_libs(L);
 
+    // We will return to this in future
+
     // LOG("Trying to pars project libs...");
     //
     // const char *project = file_find_upwards(".ltf.json");

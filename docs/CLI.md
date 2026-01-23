@@ -253,5 +253,6 @@ Hello, LTF
 test
 ```
 
+> **Note:** In eval scripts, currently you can not use secrets and vars from project, if you use it in your library and you want to import this library to eval script, do not. 
 > **Note:** In eval scripts, only the following functions from the [LTF Core Library](./LTF_LIBS/ltf.md) can be used: sleep, millis. Using any others may lead to undefined behavior. 
 
