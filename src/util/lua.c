@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "util/lua.h"
 
 int lua_table_is_array(lua_State *L, int index, lua_Integer *max_out) {
@@ -18,6 +20,25 @@ int lua_table_is_array(lua_State *L, int index, lua_Integer *max_out) {
     if (max_out)
         *max_out = max;
     return array_like && max > 0;
+}
+
+static int lua_table_forced_array(lua_State *L, int index) {
+    int is_array = 0;
+
+    index = lua_absindex(L, index);
+
+    if (!lua_getmetatable(L, index))
+        return 0; /* no metatable */
+
+    lua_getfield(L, -1, "__json_type");
+    if (lua_type(L, -1) == LUA_TSTRING) {
+        const char *s = lua_tostring(L, -1);
+        if (s && strcmp(s, "array") == 0)
+            is_array = 1;
+    }
+
+    lua_pop(L, 2); /* pop __json_type and metatable */
+    return is_array;
 }
 
 json_object *lua_to_json(lua_State *L, int index) {
@@ -47,33 +68,32 @@ json_object *lua_to_json(lua_State *L, int index) {
         return json_object_new_string(lua_tostring(L, index));
 
     case LUA_TTABLE: {
-        /* Decide array vs object */
         lua_Integer max;
-        int is_array = lua_table_is_array(L, index, &max);
+        int forced_array = lua_table_forced_array(L, index);
+        int is_array = forced_array || lua_table_is_array(L, index, &max);
 
         json_object *j =
             is_array ? json_object_new_array() : json_object_new_object();
 
         lua_pushnil(L);
         while (lua_next(L, index)) {
-            /* stack: key at -2, value at -1 */
             json_object *child = lua_to_json(L, lua_gettop(L));
 
             if (is_array) {
+                lua_Integer k = lua_tointeger(L, -2);
                 json_object_array_put_idx(
-                    j, lua_tointeger(L, -2) - 1, /* 0-based */
-                    child ? child : json_object_new_null());
+                    j, (int)(k - 1), child ? child : json_object_new_null());
             } else {
                 const char *kstr = lua_tostring(L, -2);
                 if (!kstr)
-                    kstr = luaL_tolstring(L, -2, NULL); /* stringify key */
+                    kstr = luaL_tolstring(L, -2, NULL);
                 json_object_object_add(j, kstr,
                                        child ? child : json_object_new_null());
                 if (lua_type(L, -2) != LUA_TSTRING)
-                    lua_pop(L, 1); /* popped tolstring */
+                    lua_pop(L, 1);
             }
 
-            lua_pop(L, 1); /* pop value, keep key for next iteration */
+            lua_pop(L, 1); /* pop value */
         }
         return j;
     }

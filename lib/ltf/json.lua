@@ -57,4 +57,12 @@ M.deserialize = function(str)
 	return json:deserialize(str)
 end
 
+--- Explicitly mark Lua object as a JSON array
+--- @param obj table?
+---
+--- @return table obj
+M.json_array = function(obj)
+	return setmetatable(obj or {}, { __json_type = "array" })
+end
+
 return M
