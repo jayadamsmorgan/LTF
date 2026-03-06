@@ -128,8 +128,8 @@ ltf.test({
   name = "JSON explicit array serialization",
   body = function()
     local empty_json_array = json.json_array()
-    json.serialize(empty_json_array)
-    ltf.print(pretty)
+    local result = json.serialize(empty_json_array)
+    ltf.print(result)
   end,
 })
 ```
