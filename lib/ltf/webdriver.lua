@@ -492,7 +492,7 @@ local execute = function(session, script, args)
 		endpoint = "execute/sync",
 		payload = {
 			script = script,
-			args = args,
+			args = args or { "nill" }, -- We need to pass at least one arg, lead js error otherwise
 		},
 	})
 	return res
