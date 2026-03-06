@@ -487,14 +487,26 @@ end
 ---
 --- @return table result
 local execute = function(session, script, args)
-	local res = session:cmd({
-		method = "POST",
-		endpoint = "execute/sync",
-		payload = {
-			script = script,
-			args = args or { "nill" }, -- We need to pass at least one arg, lead js error otherwise
-		},
-	})
+	local res
+	if not args or #args == 0 then
+		res = session:cmd({
+			method = "POST",
+			endpoint = "execute/sync",
+			payload = {
+				script = script,
+				args = { [1] = nil },
+			},
+		})
+	else
+		res = session:cmd({
+			method = "POST",
+			endpoint = "execute/sync",
+			payload = {
+				script = script,
+				args = args,
+			},
+		})
+	end
 	return res
 end
 
