@@ -106,6 +106,36 @@ ltf.test({
 
 ---
 
+### `ltf.json.json_array(obj)`
+
+Explicitly mark Lua object as a JSON array.
+
+**Parameters:**
+
+* `obj` (`table`, optional): object to mark as a JSON array
+
+**Returns:**
+
+* (`obj`): object marked as a JSON array
+
+**Example:**
+
+```lua
+local ltf = require("ltf")
+local json = ltf.json
+
+ltf.test({
+  name = "JSON explicit array serialization",
+  body = function()
+    local empty_json_array = json.json_array()
+    json.serialize(empty_json_array)
+    ltf.print(pretty)
+  end,
+})
+```
+
+---
+
 ### Low-level access
 
 #### `ltf.json.low`
