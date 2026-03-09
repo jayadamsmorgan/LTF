@@ -17,6 +17,7 @@ ltf.test({
 				testbool = true,
 				testnil = nil,
 			},
+			test_empty_arr = json.json_array({ "1", "2" }),
 		}
 
 		local json_str = json.serialize(test_obj, { spaced = true, pretty = true })

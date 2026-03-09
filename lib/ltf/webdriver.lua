@@ -492,7 +492,7 @@ local execute = function(session, script, args)
 		endpoint = "execute/sync",
 		payload = {
 			script = script,
-			args = args,
+			args = json.json_array(args),
 		},
 	})
 	return res
