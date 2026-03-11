@@ -291,6 +291,7 @@ void ltf_hooks_run(lua_State *L, ltf_hook_fn fn) {
     ltf_state->current_stage = HOOK_STAGE;
     if (hooks_count == 0) {
         LOG("No hooks found for type %d", fn);
+        ltf_state->current_stage = TEST_STAGE;
         return;
     }
     for (size_t i = 0; i < hooks_count; i++) {
@@ -305,6 +306,7 @@ void ltf_hooks_run(lua_State *L, ltf_hook_fn fn) {
             LOG("Error running hook with type %d and ref %d:\n%s", fn, ref,
                 err);
             run_ltf_hook_failed_cbs(fn, err);
+            ltf_state->current_stage = TEST_STAGE;
             continue;
         }
         LOG("Successfully ran hook with type %d and ref %d", fn, ref);

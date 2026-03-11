@@ -41,7 +41,6 @@ char *ltf_log_get_raw_log_file_path() {
 void ltf_log_test(ltf_state_test_t *test, ltf_state_test_output_t *output) {
 
     if (output->level <= log_level) {
-        LOG("Writing to output log file...");
         fprintf(output_log_file, "[%s][%s][%s][%s:%d]: ", output->date_time,
                 ltf_log_level_to_str(output->level), test->name, output->file,
                 output->line);
@@ -49,8 +48,6 @@ void ltf_log_test(ltf_state_test_t *test, ltf_state_test_output_t *output) {
         fputs("\n\n", output_log_file);
         LOG("Wrote to output log file.");
     }
-
-    LOG("Successfully LTF logged.");
 }
 
 void ltf_log_test_started(ltf_state_test_t *test) {

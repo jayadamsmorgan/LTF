@@ -8,13 +8,14 @@
 static da_t *lua_call_hooks = NULL;
 static da_t *lua_ret_hooks = NULL;
 static da_t *lua_line_hooks = NULL;
-
+static da_t *lua_tail_hooks = NULL;
 static da_t *_file_whitelist = NULL;
 
 static void master_hook(lua_State *L, lua_Debug *ar) {
-    if (!lua_getinfo(L, "nSl", ar)) {
+    if (!lua_getinfo(L, "Sl", ar)) {
         return;
     }
+
     const char *src = ar->source;
     if (src[0] == '@')
         src++;
@@ -32,7 +33,6 @@ static void master_hook(lua_State *L, lua_Debug *ar) {
         return;
 
     da_t *hooks;
-
     switch (ar->event) {
     case LUA_HOOKCALL: {
         hooks = lua_call_hooks;
@@ -42,6 +42,9 @@ static void master_hook(lua_State *L, lua_Debug *ar) {
         hooks = lua_ret_hooks;
         break;
     }
+    case LUA_HOOKTAILCALL:
+        hooks = lua_tail_hooks;
+        break;
     case LUA_HOOKLINE: {
         hooks = lua_line_hooks;
         break;
@@ -68,6 +71,10 @@ void lua_hooks_add(int type, lua_hook_fn fn) {
         da_append(lua_ret_hooks, &fn);
         break;
     }
+    case LUA_HOOKTAILCALL: {
+        da_append(lua_tail_hooks, &fn);
+        break;
+    }
     case LUA_HOOKLINE: {
         da_append(lua_line_hooks, &fn);
         break;
@@ -80,8 +87,10 @@ void lua_hooks_add(int type, lua_hook_fn fn) {
 }
 
 void lua_hooks_init(lua_State *L, da_t *file_whitelist) {
+
     lua_call_hooks = da_init(1, sizeof(lua_hook_fn));
     lua_ret_hooks = da_init(1, sizeof(lua_hook_fn));
+    lua_tail_hooks = da_init(1, sizeof(lua_hook_fn));
     lua_line_hooks = da_init(1, sizeof(lua_hook_fn));
 
     _file_whitelist = file_whitelist;
@@ -92,5 +101,6 @@ void lua_hooks_init(lua_State *L, da_t *file_whitelist) {
 void lua_hooks_deinit() {
     da_free(lua_call_hooks);
     da_free(lua_ret_hooks);
+    da_free(lua_tail_hooks);
     da_free(lua_line_hooks);
 }
