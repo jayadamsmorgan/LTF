@@ -610,10 +610,10 @@ int ltf_test() {
     if (opts->headless) {
         ltf_headless_init(state);
     }
-
     lua_hooks_whitelist = da_init(2, sizeof(char *));
     da_append(lua_hooks_whitelist, &project_test_dir_path);
     da_append(lua_hooks_whitelist, &project_lib_dir_path);
+    da_append(lua_hooks_whitelist, &ltf_lib_dir_path);
     lua_hooks_init(L, lua_hooks_whitelist);
 
     if (!opts->headless) {
@@ -621,7 +621,7 @@ int ltf_test() {
         lua_hooks_add(LUA_HOOKLINE, line_hook);
     }
 
-    keyword_status_init(state);
+    keyword_status_init(state, ltf_lib_dir_path);
 
     exitcode = run_all_tests(L, state);
 

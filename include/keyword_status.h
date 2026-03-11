@@ -13,11 +13,12 @@ typedef struct {
     char *started;
     char *finished; // Nullable
 
+    bool ignored;
     char *file;
     int line;
 
 } keyword_status_t;
 
-void keyword_status_init(ltf_state_t *state);
+void keyword_status_init(ltf_state_t *state, const char *_blackkist_dir);
 
 #endif // KEYWORD_STATUS_H
