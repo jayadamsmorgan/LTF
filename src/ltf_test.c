@@ -575,16 +575,15 @@ int ltf_test() {
         goto deinit;
     }
 
-    if (!opts->no_logs) {
-        ltf_log_init(state);
-    }
-
     ltf_hooks_init(state);
     asprintf(&project_hooks_dir_path, "%s/hooks", proj->project_path);
     if (!opts->skip_hooks && load_lua_dir(project_hooks_dir_path, L) == -2) {
         goto deinit;
     }
 
+    if (!opts->no_logs) {
+        ltf_log_init(state);
+    }
     test_case_order_tests();
 
     size_t amount = da_size(test_case_get_all());

@@ -50,6 +50,17 @@ void ltf_log_test(ltf_state_test_t *test, ltf_state_test_output_t *output) {
     }
 }
 
+void ltf_log_hook(ltf_state_test_output_t *output) {
+
+    if (output->level <= log_level) {
+        fprintf(output_log_file, "[%s][HOOK][%s][%s:%d]: ", output->date_time,
+                ltf_log_level_to_str(output->level), output->file,
+                output->line);
+        fwrite(output->msg, 1, output->msg_len, output_log_file);
+        fputs("\n\n", output_log_file);
+        LOG("Wrote to output log file.");
+    }
+}
 void ltf_log_test_started(ltf_state_test_t *test) {
 
     fprintf(output_log_file, "[%s][%s]: Test Started.\n\n", test->started,
@@ -209,6 +220,7 @@ void ltf_log_init(ltf_state_t *state) {
                                                  ltf_log_defer_queue_finished);
     ltf_state_register_test_defer_failed_cb(state, ltf_log_defer_failed);
     ltf_state_register_test_run_finished_cb(state, ltf_log_test_run_finished);
+    ltf_hooks_register_hook_log_cb(ltf_log_hook);
 
     LOG("Successfully started LTF test logging.");
 }

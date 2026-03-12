@@ -2,9 +2,11 @@
 
 #include "cmd_parser.h"
 #include "ltf_hooks.h"
+#include "ltf_state.h"
 #include "util/time.h"
 #include "version.h"
 
+#include "internal_logging.h"
 #include <stdio.h>
 
 static ltf_state_t *ltf_state = NULL;
@@ -44,6 +46,16 @@ static void ltf_headless_log_test(ltf_state_test_t *,
     print_delim(stdout);
 }
 
+void ltf_headless_log_hook(ltf_state_test_output_t *output) {
+    if (output->level > level) {
+        return;
+    }
+    printf("%s [HOOK][%s]:\n", output->date_time,
+           ltf_log_level_to_str(output->level));
+    printf("(%s:%d):\n", output->file, output->line);
+    printf("%.*s\n", (int)output->msg_len, output->msg);
+    print_delim(stdout);
+}
 static void ltf_headless_test_finished(ltf_state_test_t *test) {
     if (test->status == TEST_STATUS_FAILED) {
         fprintf(stderr, "%s Test '%s' FAILED:\n", test->finished, test->name);
@@ -157,4 +169,5 @@ void ltf_headless_init(ltf_state_t *state) {
     ltf_hooks_register_hook_started_cb(ltf_headless_hook_started);
     ltf_hooks_register_hook_finished_cb(ltf_headless_hook_finished);
     ltf_hooks_register_hook_failed_cb(ltf_headless_hook_failed);
+    ltf_hooks_register_hook_log_cb(ltf_headless_log_hook);
 }
